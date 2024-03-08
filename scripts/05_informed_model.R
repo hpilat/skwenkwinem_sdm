@@ -15,7 +15,7 @@ library(overlapping)
 
 # North American extent (west coast to continental divide)
 # new geographic extent created in 02_continental_divide.Rmd
-# extent cropped to smaller extent in 03_data_prep_ranunculus.R
+# extent cropped to smaller extent in 04_data_processing.R
 # read in extent objects:
 # raster to use as a basemap
 na_bound_rast <- rast("data/extents/na_bound_rast.tif")
@@ -24,8 +24,8 @@ na_bound_vect <- vect("data/extents/na_bound_vect.shp")
 # sf object masked to study extent, for area calculations
 na_bound_sf <- read_sf("data/extents/na_bound_sf.shp")
 
-# read in Ranunculus glaberrimus occurrences:
-# cropped to proper study extent in 03_data_prep_ranunculus.R
+# read in skwenkwinem occurrences:
+# cropped to proper study extent in 04_data_processing.R
 skwenkwinem_vect <- vect("data/processed/skwenkwinem_sf.shp")
 # mask to study area (all occurrences outside bounds set to NA)
 skwenkwinem_vect <- mask(skwenkwinem_vect, na_bound_vect)
@@ -33,7 +33,7 @@ skwenkwinem_vect <- mask(skwenkwinem_vect, na_bound_vect)
 skwenkwinem_sf <- st_as_sf(skwenkwinem_vect)
 
 # read in multilayer raster with predictor data, created in
-# 03_data_prep_ranunculus
+# 04_data_processing.R
 predictors_multi <- rast("data/processed/predictors_multi.tif")
 
 
@@ -83,7 +83,7 @@ ggplot() +
 # choice of 5 and 15km is arbitrary
 # select 10 times as many pseudoabsences as presences 
 # (recommended 10 000 pseudoabsences by lit review)
-# ran_occ_thin will then have presences and pseudoabsences
+# pres_abs will then have presences and pseudoabsences
 set.seed(1234567)
 pres_abs <- sample_pseudoabs(thin_dist, 
                                  n = 10 * nrow(thin_dist), 
@@ -112,7 +112,7 @@ pres_abs_pred <- pres_abs %>%
   bind_cols(terra::extract(predictors_multi, pres_abs, ID = FALSE, na.rm = TRUE))
 nrow(pres_abs_pred) # 9449
 
-# after this step, no NA values in ran_occ_thin (predictors_multi equivalent) from tutorial
+# after this step, no NA values in predictors_multi equivalent from tutorial
 # but I have NA values from predictors_multi
 summary(pres_abs_pred) # still some NAs, bioclim script magically has none at this point
 
@@ -237,12 +237,12 @@ skwenkwinem_ensemble_metrics <-  collect_metrics(skwenkwinem_ensemble)
 # default is taking the mean of the predictions from each model
 # line below uses over 10GB of RAM
 # need to input uncorrelated predictor data
-# prediction_present_multirast <- predict_raster(ran_ensemble, predictors_multi_input)
+# prediction_present_multirast <- predict_raster(skwenkwinem_ensemble, predictors_multi_input)
 
 # ggplot() +
 # geom_spatraster(data = prediction_present_multirast, aes (fill = mean)) +
 # scale_fill_terrain_c()# + # c for continuous
-# geom_sf(data = ran_pres_abs_pred %>% filter(class == "presence"))
+# geom_sf(data = pres_abs_pred %>% filter(class == "presence"))
 
 # subset the ensemble to only use the best models (AUC > 0.8)
 # note: had to subset to 0.7 to include any models when pseudoabsence discs 
@@ -258,7 +258,7 @@ ggplot() +
   geom_spatraster(data = prediction_present_best, aes(fill = mean)) +
   scale_fill_terrain_c() +
   labs(title = "Skwenkwinem Present Prediction", subtitle = "Informed Model", xlab = "Longitude", ylab = "Latitude")# +
-#  geom_sf(data = ran_pres_abs_pred %>% filter(class == "presence"))
+#  geom_sf(data = pres_abs_pred %>% filter(class == "presence"))
 
 # write to file
 writeRaster(prediction_present_best, filename = "outputs/informed_predict-present.tif")
@@ -272,7 +272,7 @@ writeRaster(prediction_present_best, filename = "outputs/informed_predict-presen
 
 # desirable to have binary predictions (presence/absence) rather than probability of occurrence
 # calibrate threshold used to convert probabilities into classes
-ran_ensemble <- calib_class_thresh(ran_ensemble,
+skwenkwinem_ensemble <- calib_class_thresh(skwenkwinem_ensemble,
                                    class_thresh = "tss_max")
 
 prediction_present_binary <- predict_raster(skwenkwinem_ensemble, 
@@ -299,8 +299,8 @@ writeRaster(prediction_present_binary, filename = "outputs/informed_predict-pres
 # using DALEX library, integrated with tidysdm
 # create an explainer object
 library(DALEX)
-explainer_ran_ensemble <- explain_tidysdm(ran_ensemble)
-vip_ensemble <- model_parts(explainer = explainer_ran_ensemble, 
+explainer_skwenkwinem_ensemble <- explain_tidysdm(skwenkwinem_ensemble)
+vip_ensemble <- model_parts(explainer = explainer_skwenkwinem_ensemble, 
                             type = "variable_importance")
 vip_ensemble
 
@@ -313,15 +313,15 @@ vip_ensemble
 predictors_uncorr
 
 # investigate the contribution of anth_biome:
-anth_biome_prof <- ran_recipe %>%  # recipe from above
+anth_biome_prof <- skwenkwinem_recipe %>%  # recipe from above
   step_profile(-anth_biome, profile = vars(anth_biome)) %>% 
-  prep(training = ran_pres_abs_pred)
+  prep(training = pres_abs_pred)
 
 anth_biome_data <- bake(anth_biome_prof, new_data = NULL)
 
 anth_biome_data <- anth_biome_data %>% 
   mutate(
-    pred = predict(ran_ensemble, anth_biome_data)$mean
+    pred = predict(skwenkwinem_ensemble, anth_biome_data)$mean
   )
 
 ggplot(anth_biome_data, aes(x = anth_biome, y = pred)) +
@@ -329,15 +329,15 @@ ggplot(anth_biome_data, aes(x = anth_biome, y = pred)) +
 
 
 # investigate the contribution of Climate (climate_zones):
-climate_zones_prof <- ran_recipe %>%  # recipe from above
-  step_profile(-climate_zones, profile = vars(Climate)) %>% 
-  prep(training = ran_pres_abs_pred)
+climate_zones_prof <- skwenkwinem_recipe %>%  # recipe from above
+  step_profile(-climate_zones, profile = vars(climate_zones)) %>% 
+  prep(training = pres_abs_pred)
 
 climate_zones_data <- bake(climate_zones_prof, new_data = NULL)
 
 climate_zones_data <- climate_zones_data %>% 
   mutate(
-    pred = predict(ran_ensemble, climate_zones_data)$mean
+    pred = predict(skwenkwinem_ensemble, climate_zones_data)$mean
   )
 
 ggplot(climate_zones_data, aes(x = climate_zones, y = pred)) +
@@ -345,15 +345,15 @@ ggplot(climate_zones_data, aes(x = climate_zones, y = pred)) +
 
 
 # investigate the contribution of ecoregions:
-ecoregions_prof <- ran_recipe %>%  # recipe from above
+ecoregions_prof <- skwenkwinem_recipe %>%  # recipe from above
   step_profile(-ecoregions, profile = vars(ecoregions)) %>% 
-  prep(training = ran_pres_abs_pred)
+  prep(training = pres_abs_pred)
 
 ecoregions_data <- bake(ecoregions_prof, new_data = NULL)
 
 ecoregions_data <- ecoregions_data %>% 
   mutate(
-    pred = predict(ran_ensemble, ecoregions_data)$mean
+    pred = predict(skwenkwinem_ensemble, ecoregions_data)$mean
   )
 
 ggplot(ecoregions_data, aes(x = ecoregions, y = pred)) +
@@ -361,15 +361,15 @@ ggplot(ecoregions_data, aes(x = ecoregions, y = pred)) +
 
 
 # investigate the contribution of elevation:
-elevation_prof <- ran_recipe %>%  # recipe from above
+elevation_prof <- skwenkwinem_recipe %>%  # recipe from above
   step_profile(-elevation, profile = vars(elevation)) %>% 
-  prep(training = ran_pres_abs_pred)
+  prep(training = pres_abs_pred)
 
 elevation_data <- bake(elevation_prof, new_data = NULL)
 
 elevation_data <- elevation_data %>% 
   mutate(
-    pred = predict(ran_ensemble, elevation_data)$mean
+    pred = predict(skwenkwinem_ensemble, elevation_data)$mean
   )
 
 ggplot(elevation_data, aes(x = elevation, y = pred)) +
@@ -377,15 +377,15 @@ ggplot(elevation_data, aes(x = elevation, y = pred)) +
 
 
 # investigate the contribution of lndcvr_na:
-landcover_prof <- ran_recipe %>%  # recipe from above
+landcover_prof <- skwenkwinem_recipe %>%  # recipe from above
   step_profile(-landcover, profile = vars(landcover)) %>% 
-  prep(training = ran_pres_abs_pred)
+  prep(training = pres_abs_pred)
 
 landcover_data <- bake(landcover_prof, new_data = NULL)
 
 landcover_data <- landcover_data %>% 
   mutate(
-    pred = predict(ran_ensemble, landcover_data)$mean
+    pred = predict(skwenkwinem_ensemble, landcover_data)$mean
   )
 
 ggplot(landcover_data, aes(x = landcover, y = pred)) +
@@ -393,15 +393,15 @@ ggplot(landcover_data, aes(x = landcover, y = pred)) +
 
 
 # investigate the contribution of soil_temp_5_15:
-soil_temp_5_15_prof <- ran_recipe %>%  # recipe from above
+soil_temp_5_15_prof <- skwenkwinem_recipe %>%  # recipe from above
   step_profile(-soil_temp_5_15, profile = vars(soil_temp_5_15)) %>% 
-  prep(training = ran_pres_abs_pred)
+  prep(training = pres_abs_pred)
 
 soil_temp_5_15_data <- bake(soil_temp_5_15_prof, new_data = NULL)
 
 soil_temp_5_15_data <- soil_temp_5_15_data %>% 
   mutate(
-    pred = predict(ran_ensemble, soil_temp_5_15_data)$mean
+    pred = predict(skwenkwinem_ensemble, soil_temp_5_15_data)$mean
   )
 
 ggplot(soil_temp_5_15_data, aes(x = soil_temp_5_15, y = pred)) +
@@ -409,15 +409,15 @@ ggplot(soil_temp_5_15_data, aes(x = soil_temp_5_15, y = pred)) +
 
 
 # investigate the contribution of watersheds:
-watersheds_prof <- ran_recipe %>%  # recipe from above
+watersheds_prof <- skwenkwinem_recipe %>%  # recipe from above
   step_profile(-watersheds, profile = vars(watersheds)) %>% 
-  prep(training = ran_pres_abs_pred)
+  prep(training = pres_abs_pred)
 
 watersheds_data <- bake(watersheds_prof, new_data = NULL)
 
 watersheds_data <- watersheds_data %>% 
   mutate(
-    pred = predict(ran_ensemble, watersheds_data)$mean
+    pred = predict(skwenkwinem_ensemble, watersheds_data)$mean
   )
 
 ggplot(watersheds_data, aes(x = watersheds, y = pred)) +
@@ -437,26 +437,26 @@ set.seed(123) # make sure seed is set outside of the loop
 
 for (i_repeat in 1:3) {
   # thin the data
-  ran_thin_rep <- thin_by_cell(ran_occ_sf, raster = predictors_multi)
-  ran_thin_rep <- thin_by_dist(ran_thin_rep, dist_min = 15)
+  thin_rep <- thin_by_cell(skwenkwinem_sf, raster = predictors_multi)
+  thin_rep <- thin_by_dist(thin_rep, dist_min = 15)
   # sample pseudo-absences
-  ran_thin_rep <- sample_pseudoabs(ran_thin_rep,
-                                   n = 3 * nrow(ran_thin_rep),
+  thin_rep <- sample_pseudoabs(thin_rep,
+                                   n = 3 * nrow(thin_rep),
                                    raster = predictors_multi,
                                    method = c("dist_disc", 50, 90)
   )
   # get climate
-  ran_thin_rep <- ran_thin_rep %>%
-    bind_cols(terra::extract(predictors_multi, ran_thin_rep, ID = FALSE))
+  thin_rep <- thin_rep %>%
+    bind_cols(terra::extract(predictors_multi, thin_rep, ID = FALSE))
   # create folds
-  ran_thin_rep_cv <- spatial_block_cv(ran_thin_rep, v = 5) # 5 folds
+  thin_rep_cv <- spatial_block_cv(thin_rep, v = 5) # 5 folds
   # create a recipe
-  ran_thin_rep_rec <- recipe(ran_thin_rep, formula = class ~ .)
+  thin_rep_rec <- recipe(thin_rep, formula = class ~ .)
   # create a workflow_set
-  ran_thin_rep_models <-
+  thin_rep_models <-
     # create the workflow_set
     workflow_set(
-      preproc = list(default = ran_thin_rep_rec),
+      preproc = list(default = thin_rep_rec),
       models = list(
         # the standard glm specs
         glm = sdm_spec_glm(),
@@ -470,30 +470,30 @@ for (i_repeat in 1:3) {
     option_add(control = control_ensemble_grid())
   
   # train the model
-  ran_thin_rep_models <-
-    ran_thin_rep_models %>%
+  thin_rep_models <-
+    thin_rep_models %>%
     workflow_map("tune_grid",
-                 resamples = ran_thin_rep_cv, grid = 10,
+                 resamples = thin_rep_cv, grid = 10,
                  metrics = sdm_metric_set(), verbose = TRUE
     )
   # make an simple ensemble and add it to the list
   ensemble_list[[i_repeat]] <- simple_ensemble() %>%
-    add_member(ran_thin_rep_models, metric = "roc_auc")
+    add_member(thin_rep_models, metric = "roc_auc")
 }
 
 # now create repeat_ensemble from the list:
-ran_thin_rep_ens <- repeat_ensemble() %>% add_repeat(ensemble_list)
-ran_thin_rep_ens
+thin_rep_ens <- repeat_ensemble() %>% add_repeat(ensemble_list)
+thin_rep_ens
 
 # predict by taking the mean and median of all models
-ran_thin_rep_ens <- predict_raster(ran_thin_rep_ens, 
-                                   predictors_multi_input, 
-                                   fun = c("mean", "median")
+thin_rep_ens <- predict_raster(thin_rep_ens, 
+                               predictors_multi_input, 
+                               fun = c("mean", "median")
 )
 
 ggplot() +
-  geom_spatraster(data = ran_thin_rep_ens, aes(fill = mean)) +
+  geom_spatraster(data = thin_rep_ens, aes(fill = mean)) +
   scale_fill_terrain_c()
 
-ran_thin_rep_ens
+thin_rep_ens
 # convert to binary and calculate area?
