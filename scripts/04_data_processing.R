@@ -1,4 +1,4 @@
-# This is script 04/08
+# This is script 04/07
 # This script prepares spatial extent, occurrence records, and predictor data
 # for input into the tidysdm pipeline
 # Please first run these scripts in the following order:
@@ -28,7 +28,7 @@ na_bound_rast <- rast("data/extents/na_bound_rast.tif")
 
 # import files (already downloaded in 01_data_download.R)
 # raw files are appended with _na or _global, cropped files are not
-skwenkwinem_vect <- vect("data/extents/skwenkwinem_sf.shp")
+skwenkwinem_vect <- vect("data/processed/skwenkwinem_masked.shp")
 worldclim_future_na <- rast("data/raw/wc2.1_30s_bioc_HadGEM3-GC31-LL_ssp126_2081-2100.tif")
 anth_biome_na <- rast("data/raw/anthromes_EqArea.tif")
 climate_zones_na <- vect("data/raw/North_America_Climate_Zones.shp")
