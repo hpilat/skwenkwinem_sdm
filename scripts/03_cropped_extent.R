@@ -1,4 +1,4 @@
-# This is script 03/08
+# This is script 03/07
 # This script prepares our spatial extent for input into the tidysdm pipeline
 # Please first run these scripts in the following order:
 # 01_data_download_ranunculus.R
@@ -8,6 +8,8 @@
 library(tidyverse)
 library(sf)
 library(terra)
+library(tidyterra)
+library(ggplot2)
 
 ### Spatial Extents ###
 
@@ -57,15 +59,11 @@ ggplot()+
   geom_spatraster(data = na_bound_rast, aes(fill = layer)) +
   geom_sf(data = skwenkwinem_sf)
 
-# looks like we have an outlier (up in Alaska) - let's check it out
-skwenkwinem_occ[which(skwenkwinem_occ$decimalLongitude)<(-130),]
+# looks like we have an outlier (up in Alaska) - let's crop it out
 
 # extend limits with 2 degree buffer in all directions, but shrink extent at ymax
 xlims <- c(ext(skwenkwinem_sf)$xmin - 2, ext(skwenkwinem_sf)$xmax + 2)
 ylims <- c(ext(skwenkwinem_sf)$ymin - 2, ext(skwenkwinem_sf)$ymax -3)
-
-# xlims <- c(-130, -102.5)
-# ylims <- c(30, 70)
 
 # now crop all layers:
 extent.test <- terra::ext(xlims, ylims)
@@ -78,7 +76,7 @@ skwenkwinem_sf <- st_crop(skwenkwinem_sf, extent.test)
 ggplot()+
   geom_spatraster(data = na_bound_rast, aes(fill = layer)) +
   geom_sf(data = skwenkwinem_sf)
-# overall extent looks good, but boundary polygon is too small
+# overall extent looks good
 
 # write na_bound_rast to file for reuse
 writeRaster(na_bound_rast, filename = "data/extents/na_bound_rast.tif", overwrite = TRUE)
@@ -105,21 +103,15 @@ plot(skeetch_sf)
 
 # maps from tidysdm were cutting off part of the Territory boundary
 # need to expand extent by a small amount
- # extent is -121.4859, -120.2995, 50.38478, 51.48137
 # expand extent by 0.5 degrees in each direction
-xlims_skeetch <- c(skeetch_sf$xmin - 0.5, ext(skeetch_sf)$xmax + 0.5)
+xlims_skeetch <- c(ext(skeetch_sf)$xmin - 0.5, ext(skeetch_sf)$xmax + 0.5)
 ylims_skeetch <- c(ext(skeetch_sf)$ymin - 0.5, ext(skeetch_sf)$ymax + 0.5)
-
 extent_skeetch <- terra::ext(xlims_skeetch, ylims_skeetch)
-# error, expected 4 numbers
-# try inputting bounding box directly, round up existing extent
-extent_skeetch <- terra::ext(-121.49, -120.30, 50.40, 51.50)
-skeetch_vect_extended <- crop(skeetch_sf, extent_skeetch)
+
+# crop original sf object to new extent
+skeetch_vect_extended <- st_crop(skeetch_sf, extent_skeetch)
 skeetch_vect_extended
 
-
-# transform back to Albers for use in area calculations
-skeetch_vect_cropped <- project(skeetch_vect_extended, "EPSG:3005")
-plot(skeetch_vect_cropped)
 # write to file for reuse
-writeVector(skeetch_vect_cropped, filename = "data/extents/skeetch_vect_cropped_albers.shp", overwrite = TRUE)
+st_write(skeetch_vect_extended, dsn = "data/extents/skeetch_vect_cropped_albers.shp", append = FALSE)
+
