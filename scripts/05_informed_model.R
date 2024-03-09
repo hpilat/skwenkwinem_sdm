@@ -26,7 +26,7 @@ na_bound_sf <- read_sf("data/extents/na_bound_sf.shp")
 
 # read in skwenkwinem occurrences:
 # cropped to proper study extent in 04_data_processing.R
-skwenkwinem_vect <- vect("data/processed/skwenkwinem_sf.shp")
+skwenkwinem_vect <- vect("data/processed/skwenkwinem_masked.shp")
 # mask to study area (all occurrences outside bounds set to NA)
 skwenkwinem_vect <- mask(skwenkwinem_vect, na_bound_vect)
 # cast to sf object
@@ -209,6 +209,8 @@ skwenkwinem_models <-
 autoplot(skwenkwinem_models)
 model_metrics <- collect_metrics(skwenkwinem_models)
 
+# write to file
+write.csv(model_metrics, file = "outputs/skwenkwinem_informed_model-metrics.csv")
 
 
 #### Ensemble ####
@@ -226,6 +228,9 @@ autoplot(skwenkwinem_ensemble)
 # a tabular form of the model metrics:
 skwenkwinem_ensemble_metrics <-  collect_metrics(skwenkwinem_ensemble) 
 # need tidysdm version > 0.9.3 for this to work
+
+# write to file:
+write.csv(skwenkwinem_ensemble_metrics, file = "outputs/skwenkwinem_ensemble_metrics.csv")
 
 
 
@@ -251,8 +256,7 @@ skwenkwinem_ensemble_metrics <-  collect_metrics(skwenkwinem_ensemble)
 # take the mean of the available model predictions (default is the mean)
 prediction_present_best <- predict_raster(skwenkwinem_ensemble, predictors_multi_input, 
                                           metric_thresh = c("roc_auc", 0.8), 
-                                          fun = "mean"
-)
+                                          fun = "mean")
 
 ggplot() +
   geom_spatraster(data = prediction_present_best, aes(fill = mean)) +
@@ -261,7 +265,7 @@ ggplot() +
 #  geom_sf(data = pres_abs_pred %>% filter(class == "presence"))
 
 # write to file
-writeRaster(prediction_present_best, filename = "outputs/informed_predict-present.tif")
+writeRaster(prediction_present_best, filename = "outputs/informed_predict-present.tif", overwrite = TRUE)
 
 
 
@@ -283,11 +287,11 @@ prediction_present_binary <- predict_raster(skwenkwinem_ensemble,
 
 ggplot() +
   geom_spatraster(data = prediction_present_binary, aes(fill = binary_mean)) +
-  geom_sf(data= pres_abs_pred %>% filter(class == "presence")) +
+  # geom_sf(data= pres_abs_pred %>% filter(class == "presence")) +
   labs(title = "Skwenkwinem Present Prediction", subtitle = "Informed Model", xlab = "Longitude", ylab = "Latitude")
 
 # write to file
-writeRaster(prediction_present_binary, filename = "outputs/informed_predict-present-binary.tif")
+writeRaster(prediction_present_binary, filename = "outputs/informed_predict-present-binary.tif", overwrite = TRUE)
 
 
 
@@ -303,6 +307,7 @@ explainer_skwenkwinem_ensemble <- explain_tidysdm(skwenkwinem_ensemble)
 vip_ensemble <- model_parts(explainer = explainer_skwenkwinem_ensemble, 
                             type = "variable_importance")
 vip_ensemble
+plot(vip_ensemble)
 
 
 # marginal response curves can show the effect of a variable while keeping
@@ -313,7 +318,7 @@ vip_ensemble
 predictors_uncorr
 
 # investigate the contribution of anth_biome:
-anth_biome_prof <- skwenkwinem_recipe %>%  # recipe from above
+anth_biome_prof <- model_recipe %>%  # recipe from above
   step_profile(-anth_biome, profile = vars(anth_biome)) %>% 
   prep(training = pres_abs_pred)
 
@@ -329,7 +334,7 @@ ggplot(anth_biome_data, aes(x = anth_biome, y = pred)) +
 
 
 # investigate the contribution of Climate (climate_zones):
-climate_zones_prof <- skwenkwinem_recipe %>%  # recipe from above
+climate_zones_prof <- model_recipe %>%  # recipe from above
   step_profile(-climate_zones, profile = vars(climate_zones)) %>% 
   prep(training = pres_abs_pred)
 
@@ -345,7 +350,7 @@ ggplot(climate_zones_data, aes(x = climate_zones, y = pred)) +
 
 
 # investigate the contribution of ecoregions:
-ecoregions_prof <- skwenkwinem_recipe %>%  # recipe from above
+ecoregions_prof <- model_recipe %>%  # recipe from above
   step_profile(-ecoregions, profile = vars(ecoregions)) %>% 
   prep(training = pres_abs_pred)
 
@@ -361,7 +366,7 @@ ggplot(ecoregions_data, aes(x = ecoregions, y = pred)) +
 
 
 # investigate the contribution of elevation:
-elevation_prof <- skwenkwinem_recipe %>%  # recipe from above
+elevation_prof <- model_recipe %>%  # recipe from above
   step_profile(-elevation, profile = vars(elevation)) %>% 
   prep(training = pres_abs_pred)
 
@@ -377,7 +382,7 @@ ggplot(elevation_data, aes(x = elevation, y = pred)) +
 
 
 # investigate the contribution of lndcvr_na:
-landcover_prof <- skwenkwinem_recipe %>%  # recipe from above
+landcover_prof <- model_recipe %>%  # recipe from above
   step_profile(-landcover, profile = vars(landcover)) %>% 
   prep(training = pres_abs_pred)
 
@@ -393,7 +398,7 @@ ggplot(landcover_data, aes(x = landcover, y = pred)) +
 
 
 # investigate the contribution of soil_temp_5_15:
-soil_temp_5_15_prof <- skwenkwinem_recipe %>%  # recipe from above
+soil_temp_5_15_prof <- model_recipe %>%  # recipe from above
   step_profile(-soil_temp_5_15, profile = vars(soil_temp_5_15)) %>% 
   prep(training = pres_abs_pred)
 
@@ -409,7 +414,7 @@ ggplot(soil_temp_5_15_data, aes(x = soil_temp_5_15, y = pred)) +
 
 
 # investigate the contribution of watersheds:
-watersheds_prof <- skwenkwinem_recipe %>%  # recipe from above
+watersheds_prof <- model_recipe %>%  # recipe from above
   step_profile(-watersheds, profile = vars(watersheds)) %>% 
   prep(training = pres_abs_pred)
 
