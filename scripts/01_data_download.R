@@ -1,4 +1,4 @@
-# This script is 01/08 
+# This script is 01/07 
 # Here, we download the occurrence and predictor data required to run tidysdm
 
 # dir.create("data/")
