@@ -6,7 +6,7 @@
 # 03_cropped_extent.R
 # 04_data_processing.R
 
-library(tidysdm)
+library(tidysdm) # version >= 0.9.3
 library(tidyterra)
 library(terra)
 library(sf)

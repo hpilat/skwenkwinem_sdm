@@ -7,9 +7,7 @@
 # 03_cropped_extent.R
 # 04_data_processing.R
 
-# dir.create("outputs/")
-
-library(tidysdm)
+library(tidysdm) # version >= 0.9.3
 library(tidyterra)
 library(sf)
 library(terra)
