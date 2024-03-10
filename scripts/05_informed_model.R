@@ -12,6 +12,7 @@ library(terra)
 library(sf)
 library(ggplot2)
 library(overlapping)
+library(xgboost)
 
 # North American extent (west coast to continental divide)
 # new geographic extent created in 02_continental_divide.Rmd
