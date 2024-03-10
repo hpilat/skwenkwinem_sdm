@@ -18,14 +18,14 @@ library(sf)
 # Predictions:
 
 # Continuous:
-informed_present_continuous <- rast("outputs/ran_informed_prediction_present.tif")
-bioclim30s_present_continuous <- rast("outputs/ran_bioclim30s_predict-present.tif")
-bioclim30s_future_continuous <- rast("outputs/ran_predict_future_bioclim30s.tif")
+informed_present_continuous <- rast("outputs/skwenkwinem_informed_predict_present_cont.tif")
+bioclim30s_present_continuous <- rast("outputs/skwenkwinem_bioclim30s_predict_present_cont.tif")
+bioclim30s_future_continuous <- rast("outputs/skwenkwinem_bioclim30s_predict_future_cont.tif")
 
 # Binary:
-informed_present_binary <- rast("outputs/ran_informed_prediction_present_binary.tif")
-bioclim30s_present_binary <- rast("outputs/ran_bioclim30s_predict-present-binary.tif")
-bioclim30s_future_binary <- rast("outputs/ran_bioclim30s_predict-future-binary.tif")
+informed_present_binary <- rast("outputs/skwenkwinem_informed_predict_present_binary.tif")
+bioclim30s_present_binary <- rast("outputs/skwenkwinem_bioclim30s_predict_present_binary.tif")
+bioclim30s_future_binary <- rast("outputs/skwenkwinem_bioclim30s_predict_future_binary.tif")
 
 
 
@@ -53,19 +53,19 @@ plot(informed_prediction_present_skeetch)
 lines(skeetch_vectWGS84)
 
 # write to .tif file:
-writeRaster(informed_prediction_present_skeetch, filename = "outputs/informed_prediction_present_skeetch.tif", overwrite = TRUE)
+writeRaster(informed_prediction_present_skeetch, filename = "outputs/skwenkwinem_informed_predict_present_cont_skeetch.tif", overwrite = TRUE)
 
 # Bioclim30s Present Prediction:
 bioclim30s_present_continuous_skeetch <- crop(bioclim30s_present_continuous, skeetch_vectWGS84)
 plot(bioclim30s_present_continuous_skeetch)
-writeRaster(bioclim30s_present_continuous_skeetch, filename = "outputs/bioclim30s_present_continuous_skeetch.tif", overwrite = TRUE)
+writeRaster(bioclim30s_present_continuous_skeetch, filename = "outputs/skwenkwinem_bioclim30s_present__skeetch.tif", overwrite = TRUE)
 
 # plot with skeetch_vectWGS84 overlaid
 plot(bioclim30s_present_continuous_skeetch)
 lines(skeetch_vectWGS84)
 
 # write to .tif file:
-writeRaster(bioclim30s_present_continuous_skeetch, filename = "outputs/informed_prediction_present_skeetch.tif", overwrite = TRUE)
+writeRaster(bioclim30s_present_continuous_skeetch, filename = "outputs/skwenkwinem_informed_predict_present_cont_skeetch.tif", overwrite = TRUE)
 
 
 # Bioclim30s Future Prediction:
@@ -77,11 +77,12 @@ plot(bioclim30s_future_continuous_skeetch)
 lines(skeetch_vectWGS84)
 
 # write to .tif file:
-writeRaster(bioclim30s_future_continuous_skeetch, filename = "outputs/bioclim30s_future_continuous_skeetch.tif", overwrite = TRUE)
+writeRaster(bioclim30s_future_continuous_skeetch, filename = "outputs/skwenkwinem_bioclim30s_predict_future_cont_skeetch.tif", overwrite = TRUE)
 
 
 
 # Area Calculations
+
 
 
 # Overall study extent:
@@ -102,7 +103,8 @@ skeetch_area <- units::set_units(st_area(skeetch_sf), km^2) # 6996 km^2
 
 
 
-## Informed Model (Present Projections Only)
+# Present Suitable Area from Informed Model:
+
 
 
 # turn presence into polygon so we can calculate suitable area
@@ -129,13 +131,15 @@ informed_present_area <- units::set_units(st_area(informed_present_sf), km^2)
 # 936 476 km^2 of suitable habitat
 
 # divide predicted present area by total study area to get proportion
-proportion_suitable_present <- informed_present_area/na_bound_area # 24.6%
+proportion_suitable_informed_present <- informed_present_area/na_bound_area # 24.6%
 
 
-# Present Suitable Area for Skeetchestn, from Informed Model:
+
+# Present Suitable area for Skeetchestn Territory from Informed Model:
 
 
-# crop results to Skeetchestn territory - convert CRS to Albers first?
+
+# crop results to Skeetchestn territory
 informed_binary_skeetch <- crop(informed_present_binary, skeetch_vectWGS84)
 informed_binary_skeetch <- mask(informed_binary_skeetch, skeetch_vectWGS84)
 plot(informed_binary_skeetch)
@@ -167,7 +171,7 @@ proportion_suitable_informed_present_skeetch <- informed_present_skeetch_area/sk
 
 
 
-# Bioclim30s Present Area:
+# Present Suitable Area from Bioclim30s Model:
 
 
 
@@ -199,7 +203,9 @@ proportion_suitable_bioclim30s_present <- bioclim30s_present_area/na_bound_area
 # 24.9%
 
 
-# Present Suitable Area for Skeetchestn from Bioclim30s Model:
+
+# Present Suitable Area for Skeetchestn Territory from Bioclim30s Model:
+
 
 
 # crop results to Skeetchestn territory - convert CRS to Albers first?
@@ -233,7 +239,7 @@ proportion_suitable_bioclim30s_present_skeetch <- bioclim30s_present_skeetch_are
 
 
 
-# Bioclim30s Future Area:
+# Future Suitable Area from Bioclim30s Model:
 
 
 
@@ -274,7 +280,9 @@ percent_change <- (change_area_present_to_2100/bioclim30s_future_area_num)* 100
 # -4.1281... % decrease in suitable habitat?? That can't be right
 
 
-# Future Suitable Area Calculations for Skeetchestn
+
+# Future Suitable Area in Skeetchestn Territory from Bioclim30s Model:
+
 
 
 # crop and mask total projection to Skeetchestn Territory

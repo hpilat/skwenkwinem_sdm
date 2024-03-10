@@ -1,3 +1,4 @@
+# This is script 06/07
 # Following tidysdm tutorial, we input Skwenkwinem (Claytonia lanceolata) occurrence records 
 # and WorldClim predictors at 30 arcsec resolution into the tidysdm pipeline
 # Please first run scripts in the following order: 
@@ -11,7 +12,7 @@
 library(tidysdm)
 library(tidyterra)
 library(sf)
-library(pastclim)
+library(terra)
 library(ggplot2)
 library(overlapping)
 
@@ -28,13 +29,12 @@ na_bound_sf <- read_sf("data/extents/na_bound_sf.shp")
 
 # read in skwenkwinem occurrences:
 # cropped to proper study extent in 04_data_processing.R
-skwenkwinem_vect <- vect("data/processed/skwenkwinem_sf.shp")
+skwenkwinem_vect <- vect("data/processed/skwenkwinem_masked.shp")
 # mask to study area (all occurrences outside bounds set to NA)
 skwenkwinem_vect <- mask(skwenkwinem_vect, na_bound_vect)
 # cast to sf object
 skwenkwinem_sf <- st_as_sf(skwenkwinem_vect)
 
-# plot occurrences directly on raster with predictor variables
 # read in processed WorldClim rasters
 climate_present <- rast("data/processed/worldclim_present_masked.tif")
 climate_future <- rast("data/processed/worldclim_future_masked.tif")
@@ -61,17 +61,10 @@ ggplot() +
   geom_spatraster(data = na_bound_rast, aes(fill = layer)) +
   geom_sf(data = thin_cell) # thinned occurrences
 
-# thin further to remove points closer than 5km
-# default is metres, could input 5000 or use km2m(5)
-# attempted 5km, filter_high_cor below wouldn't run, so try 10
-# 10 still didn't work, try 15?
+# thin further to remove points closer than 15km
 set.seed(1234567)
 thin_dist <- thin_by_dist(skwenkwinem_sf, dist_min = km2m(15))
-nrow(thin_dist) # 1400 at 5km thinning, 1046 at 10km thinning
-# 1040 at 10km thinning with reduced spatial extent
-# but failed to project with high res bioclim data
-# 827 at 15 km thinning
-# 653 at 20km spatial thinning
+nrow(thin_dist) # 859
 
 ggplot() +
   geom_spatraster(data = na_bound_rast, aes(fill = layer)) +
@@ -84,21 +77,18 @@ ggplot() +
 
 
 # sample pseudoabsences/background points
-# constrain pseudoabsences to be between 5 and 15km from any presences
-# choice of 5 and 15km is arbitrary
+# constrain pseudoabsences to be between 50 and 75km from any presences
+# choice of disc size is arbitrary but was found to optimize model performance
 # select 10 times as many pseudoabsences as presences 
-# (recommended 10 000 pseudoabsences by lit review)
 # pres_abs_pred will then have presences and pseudoabsences
 set.seed(1234567)
 pres_abs <- sample_pseudoabs(thin_dist, 
                              n = 10 * nrow(thin_dist), 
                              raster = na_bound_rast, 
                              method = c("dist_disc", km2m(50), km2m(75))
-)
-nrow(pres_abs) 
-# 11 440 with 10km thinning
-# 9097 with 15km thinning
-# 7183 with 20km thinning
+                             )
+nrow(pres_abs) # 9449
+
 
 # plot presences and absences
 ggplot() +
@@ -110,20 +100,18 @@ ggplot() +
 ### Variable Selection ###
 
 # Extract variables from predictors_multirast for all presences and pseudoabsences
-summary(climate_present) # 50 000 + NAs per column
-nrow(pres_abs) # 11 440
-nrow(climate_present) # 4042
+summary(climate_present) # 40 000 + NAs per column
+nrow(pres_abs) # 9449
+nrow(climate_present) # 3143
 
 pres_abs_pred <- pres_abs %>% 
   bind_cols(terra::extract(climate_present, pres_abs, ID = FALSE, na.rm = TRUE))
-nrow(pres_abs_pred) # 11 440
-# after this step, no NA values in equivalent from tutorial
-# but I have NA values from predictors_multi
+nrow(pres_abs_pred) # 9449
 summary(pres_abs_pred) # still some NAs
 
 # remove rows with NA values
 pres_abs_pred <- na.omit(pres_abs_pred)
-nrow(pres_abs_pred) # 11 415, 25 rows removed
+nrow(pres_abs_pred) # 9208, 241 rows removed
 summary(pres_abs_pred) # No NA values
 
 # skipped non-overlapping distribution step in tutorial
@@ -131,6 +119,7 @@ summary(pres_abs_pred) # No NA values
 # need a smaller sample to calculate collinearity between variables
 
 # try sample size of 5000 cells
+set.seed(1234567)
 predictors_sample <- terra::spatSample(climate_present, size = 5000, 
                                        method = "random", replace = FALSE, 
                                        na.rm = FALSE, as.raster = TRUE,
@@ -153,6 +142,7 @@ pres_abs_pred
 
 # now subset the uncorrelated predictors from climate_present
 climate_present_uncorr <- climate_present[[predictors_uncorr]]
+climate_present_uncorr
 
 
 
@@ -195,9 +185,6 @@ autoplot(cross_val)
 
 # use block CV folds to tune and assess models
 # tutorial uses 3 combos of hyperparameters and says this is far too few for real life
-# 10 combos of hyperparameters = ~ 3 mins computation time, less crowded plots
-# 20 combos of hyperparameters = ~ 3 mins computation time, crowded plots
-# 10 combos = 25 minute computation time on February 14th
 set.seed(1234567)
 skwenkwinem_models <- 
   skwenkwinem_models %>% 
@@ -211,6 +198,8 @@ skwenkwinem_models <-
 autoplot(skwenkwinem_models)
 model_metrics <- collect_metrics(skwenkwinem_models)
 
+# write to file
+write.csv(model_metrics, file = "outputs/skwenkwinem_bioclim30s_model-metrics.csv")
 
 
 
@@ -228,6 +217,9 @@ skwenkwinem_ensemble
 autoplot(skwenkwinem_ensemble)
 # need to have tidysdm version 0.9.3 or greater for this to work
 skwenkwinem_ensemble_metrics <- collect_metrics(skwenkwinem_ensemble)
+
+# write to file:
+write.csv(skwenkwinem_ensemble_metrics, file = "outputs/skwenkwinem_bioclim30s_ensemble_metrics.csv")
 
 
 
@@ -258,7 +250,7 @@ ggplot() +
 # model gives us probability of occurrence
 
 # write to file
-writeRaster(prediction_present_best, filename = "outputs/skwenkwinem_bioclim30s_predict-present.tif")
+writeRaster(prediction_present_best, filename = "outputs/skwenkwinem_bioclim30s_predict_present_cont.tif")
 
 
 # can convert to binary predictions (present vs absence)
@@ -280,7 +272,7 @@ ggplot() +
 # geom_sf(data = pres_abs_pred %>% filter(class == "presence"))
 
 # write to file
-writeRaster(prediction_present_binary, filename = "outputs/skwenkwinem_bioclim30s_predict-present-binary.tif", overwrite = TRUE)
+writeRaster(prediction_present_binary, filename = "outputs/skwenkwinem_bioclim30s_predict_present_binary.tif", overwrite = TRUE)
 
 
 
@@ -288,8 +280,8 @@ writeRaster(prediction_present_binary, filename = "outputs/skwenkwinem_bioclim30
 
 
 
-# all 19 bioclimatic variables, no altitude (because it doesn't change over time)
-# select a subset of 5 uncorrelated predictors, using suggested_vars from before:
+# all 19 bioclimatic variables
+# subset uncorrelated predictors from climate_future
 climate_future_uncorr <- climate_future[[predictors_uncorr]]
 climate_future_uncorr
 
@@ -311,7 +303,7 @@ ggplot() +
   labs(title = "Skwenkwinem Future Prediction", subtitle = "Bioclim Model", xlab = "Longitude", ylab = "Latitude")
 
 # write to file
-writeRaster(prediction_future_best, filename = "outputs/skwenkwinem_predict_future_bioclim30s.tif", overwrite = TRUE)
+writeRaster(prediction_future_best, filename = "outputs/skwenkwinem_bioclim30s_predict_future_cont.tif", overwrite = TRUE)
 
 
 
@@ -337,7 +329,7 @@ ggplot() +
 # geom_sf(data = pres_abs_pred %>% filter(class == "presence"))
 
 # write to file
-writeRaster(prediction_future_binary, filename = "outputs/skwenkwinem_bioclim30s_predict-future-binary.tif", overwrite = TRUE)
+writeRaster(prediction_future_binary, filename = "outputs/skwenkwinem_bioclim30s_predict_future_binary.tif", overwrite = TRUE)
 
 
 
@@ -400,18 +392,18 @@ ggplot(bio03_data, aes(x = bio03, y = pred)) +
 
 
 # investigate the contribution of bio05:
-bio04_prof <- skwenkwinem_recipe %>%  # recipe from above
-  step_profile(-bio04, profile = vars(bio04)) %>% 
+bio07_prof <- skwenkwinem_recipe %>%  # recipe from above
+  step_profile(-bio07, profile = vars(bio07)) %>% 
   prep(training = pres_abs_pred)
 
-bio04_data <- bake(bio04_prof, new_data = NULL)
+bio07_data <- bake(bio07_prof, new_data = NULL)
 
-bio04_data <- bio04_data %>% 
+bio07_data <- bio07_data %>% 
   mutate(
-    pred = predict(skwenkwinem_ensemble, bio04_data)$mean
+    pred = predict(skwenkwinem_ensemble, bio07_data)$mean
   )
 
-ggplot(bio04_data, aes(x = bio04, y = pred)) +
+ggplot(bio07_data, aes(x = bio07, y = pred)) +
   geom_point(alpha = .5, cex = 1)
 
 
@@ -448,18 +440,18 @@ ggplot(bio09_data, aes(x = bio09, y = pred)) +
 
 
 # investigate the contribution of bio14:
-bio14_prof <- skwenkwinem_recipe %>%  # recipe from above
-  step_profile(-bio14, profile = vars(bio14)) %>% 
+bio13_prof <- skwenkwinem_recipe %>%  # recipe from above
+  step_profile(-bio13, profile = vars(bio13)) %>% 
   prep(training = pres_abs_pred)
 
-bio14_data <- bake(bio14_prof, new_data = NULL)
+bio13_data <- bake(bio13_prof, new_data = NULL)
 
-bio14_data <- bio14_data %>% 
+bio13_data <- bio13_data %>% 
   mutate(
-    pred = predict(skwenkwinem_ensemble, bio14_data)$mean
+    pred = predict(skwenkwinem_ensemble, bio13_data)$mean
   )
 
-ggplot(bio14_data, aes(x = bio14, y = pred)) +
+ggplot(bio13_data, aes(x = bio13, y = pred)) +
   geom_point(alpha = .5, cex = 1)
 
 
@@ -481,7 +473,7 @@ ggplot(bio15_data, aes(x = bio15, y = pred)) +
 
 # investigate the contribution of bio18:
 bio18_prof <- skwenkwinem_recipe %>%  # recipe from above
-  step_profile(-bio05, profile = vars(bio18)) %>% 
+  step_profile(-bio18, profile = vars(bio18)) %>% 
   prep(training = pres_abs_pred)
 
 bio18_data <- bake(bio18_prof, new_data = NULL)

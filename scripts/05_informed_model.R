@@ -8,8 +8,8 @@
 
 library(tidysdm)
 library(tidyterra)
+library(terra)
 library(sf)
-library(pastclim)
 library(ggplot2)
 library(overlapping)
 
@@ -128,6 +128,7 @@ pairs(predictors_multi)
 # may need a smaller sample to calculate collinearity between variables
 
 # try sample size of 5000 cells
+set.seed(1234567)
 predictors_sample <- terra::spatSample(predictors_multi, size = 5000, 
                                        method = "random", replace = FALSE, 
                                        na.rm = FALSE, as.raster = TRUE,
@@ -213,6 +214,7 @@ model_metrics <- collect_metrics(skwenkwinem_models)
 write.csv(model_metrics, file = "outputs/skwenkwinem_informed_model-metrics.csv")
 
 
+
 #### Ensemble ####
 
 
@@ -230,7 +232,7 @@ skwenkwinem_ensemble_metrics <-  collect_metrics(skwenkwinem_ensemble)
 # need tidysdm version > 0.9.3 for this to work
 
 # write to file:
-write.csv(skwenkwinem_ensemble_metrics, file = "outputs/skwenkwinem_ensemble_metrics.csv")
+write.csv(skwenkwinem_ensemble_metrics, file = "outputs/skwenkwinem_informed_ensemble_metrics.csv")
 
 
 
@@ -265,7 +267,7 @@ ggplot() +
 #  geom_sf(data = pres_abs_pred %>% filter(class == "presence"))
 
 # write to file
-writeRaster(prediction_present_best, filename = "outputs/informed_predict-present.tif", overwrite = TRUE)
+writeRaster(prediction_present_best, filename = "outputs/skwenkwinem_informed_predict_present_cont.tif", overwrite = TRUE)
 
 
 
@@ -291,7 +293,7 @@ ggplot() +
   labs(title = "Skwenkwinem Present Prediction", subtitle = "Informed Model", xlab = "Longitude", ylab = "Latitude")
 
 # write to file
-writeRaster(prediction_present_binary, filename = "outputs/informed_predict-present-binary.tif", overwrite = TRUE)
+writeRaster(prediction_present_binary, filename = "outputs/skwenkwinem_informed_predict_present_binary.tif", overwrite = TRUE)
 
 
 
