@@ -212,7 +212,7 @@ autoplot(skwenkwinem_models)
 model_metrics <- collect_metrics(skwenkwinem_models)
 
 # write to file
-write.csv(model_metrics, file = "outputs/skwenkwinem_informed_model-metrics.csv")
+write.csv(model_metrics, file = "outputs/skwenkwinem_informed_model_metrics.csv")
 
 
 
