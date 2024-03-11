@@ -63,8 +63,13 @@ plot(bioclim30s_present_continuous_skeetch)
 writeRaster(bioclim30s_present_continuous_skeetch, filename = "outputs/skwenkwinem_bioclim30s_present__skeetch.tif", overwrite = TRUE)
 
 # plot with skeetch_vectWGS84 overlaid
-plot(bioclim30s_present_continuous_skeetch)
-lines(skeetch_vectWGS84)
+# first, convert skeetch_vect_WGS84 from polygon to lines geometry:
+skeetch_lines <- as.lines(skeetch_vectWGS84)
+
+ggplot() +
+  geom_spatraster(data = bioclim30s_present_continuous_skeetch, aes(fill = mean)) +
+  geom_spatvector(data = skeetch_lines, aes(fill = "Id", colour = "white")) +
+  scale_fill_continuous() 
 
 # write to .tif file:
 writeRaster(bioclim30s_present_continuous_skeetch, filename = "outputs/skwenkwinem_informed_predict_present_cont_skeetch.tif", overwrite = TRUE)
@@ -332,73 +337,134 @@ percent_change_skeetch <- proportion_suitable_future_skeetch - proportion_suitab
 
 
 
-# Isolate presence cells from the binary maps:
-
-# Informed Prediction:
-
-informed_present_cells <- informed_present_binary %>% 
-  dplyr::filter(binary_mean == "presence")
-# need to re-name layer so it's distinguished from bioclim30s layer:
-names(informed_present_cells) <- "Informed_Only"
-# change values
-informed_present_cells[[informed_present_cells == "presence"]] <- "Informed_Only"
-
-# Bioclim30s Prediction:
-bioclim30s_present_cells <- bioclim30s_present_binary %>% 
-  dplyr::filter(binary_mean == "presence")
-# need to re-name layer so it's distinguished from informed layer:
-names(bioclim30s_present_cells) <- "Bioclim_Only"
-
-
-# Area of agreement (same cells classified as present in both informed and bioclim predictions)
-agreed_present_cells <- informed_present_cells == bioclim30s_present_cells
-# change layer name:
-names(agreed_present_cells) <- "Model_Overlap"
-
-# Try terra::intersect
-model_intersection <- terra::intersect(informed_present_cells, bioclim30s_present_cells)
-names(model_intersection) <- "Model_Intersection"
-
-# merge rasters into one:
-agreement_rast <- c(informed_present_cells, bioclim30s_present_cells, agreed_present_cells)
-
-
-# need to distinguish presence values between informed and bioclim30s layers
-# convert cell values from "presence" to 1 for informed model
-informed_present_cells_num <-as.numeric(informed_present_cells)
-
-plot(informed_present_cells_num)
-plot(bioclim30s_present_cells, col = "purple", background = "transparent", alpha = 0.75)
-
-
-ggplot() +
-  geom_spatraster(data = agreed_present_cells, aes(fill = Model_Overlap)) +
-  geom_spatraster(data = informed_present_cells_num, aes(fill = Informed_Only)) +
-  geom_spatraster(data = bioclim30s_present_cells, aes (fill = Bioclim_Only))
+# Get area of agreement between Informed and Bioclim30s (present) models:
 
 
 
+# Informed
+# Use binary prediction raster
+plot(informed_present_binary)
+summary(informed_present_binary)
 
-# plot Skeetchestn prediction with 3D elevation
-elevation <- rast("data/processed/elevation.tif")
+# need to reclassify cells from presence to 1 and pseudoabsence to 0
+# terra::classify requires us to provide a matrix of values from -> values to
+# create a list so 1 (presence) stays as 1 and 2 (pseudoabsence) becomes 0
+matrix_informed_cols <- c(1, 2, 1, 0)
+matrix_informed <- matrix(matrix_informed_cols, ncol=2)
+matrix_informed
 
-# Calculate hillshade
-slopes <- terra::terrain(elevation, "slope", unit = "radians")
-aspect <- terra::terrain(elevation, "aspect", unit = "radians")
-hillshade <- terra::shade(slopes, aspect)
+# reclassify values to 1 (presence) and 0 (pseudoabsence)
+informed_classified <- terra::classify(informed_present_binary, matrix_informed)
+plot(informed_classified)
 
-# Plot hillshading as a basemap:
-# Use Skeetchestn Territory as x and y limits:
-terra::plot(hillshade, col = gray(0:100 / 100), legend = FALSE, axes = FALSE, add = TRUE)
-# overlay with elevation:
-terra::contour(elevation, col = terrain.colors(25), alpha = 0.5, legend = FALSE, axes = FALSE, add = TRUE)
-# add contour lines:
-terra::plot(hillshade, col = "gray40", add = TRUE)
+# Bioclim
+# use binary prediction raster:
+plot(bioclim30s_present_binary)
 
+# reclassify cells, starting with creating matrix
+# want values to go from 1 (presence) to 2 (distinguished from informed raster)
+  # and 2 (pseudoabsences) to 0 (same as in informed raster)
+matrix_bioclim_cols <- c(1, 2, 2, 0)
+matrix_bioclim <- matrix(matrix_bioclim_cols, ncol=2)
+matrix_bioclim
+
+# classify binary raster according to matrix
+bioclim_classified <- classify(bioclim30s_present_binary, matrix_bioclim)
+plot(bioclim_classified)
+
+# add informed_classified and bioclim_classified together
+model_agreement <- (informed_classified + bioclim_classified)
+plot(model_agreement)
+# 0 = pseudoabsence
+# 1 = informed prediction of presence
+# 2 = bioclim30s prediction of presence
+# 3 = agreement between both informed and bioclim30s predicted presence
+
+# save to file
+writeRaster(model_agreement, filename = "outputs/model_agreement.tif")
+
+# calculate area of agreement:
+# first need to project to Albers equal area projection
+model_agreement_albers <- project(model_agreement, "EPSG:3005")
+
+# filter out cells in agreement between models (value = 3)
+model_agreement_filt <- model_agreement_albers %>% 
+  dplyr::filter(binary_mean == 3)
+plot(model_agreement_filt)
+
+# convert raster cells to polygons so we can convert to an sf object:
+model_agreement_polygons <- as.polygons(model_agreement_filt)
+
+# convert to sf object so we can calculate area:
+model_agreement_sf <- st_as_sf(model_agreement_polygons)
+crs(model_agreement_sf) # BC Albers
+
+# calculate area
+model_agreement_area <- st_area(model_agreement_sf) # 6.48e+11
+# convert from m^2 to km^2
+model_agreement_area <- units::set_units(st_area(model_agreement_sf), km^2) 
+# 647 603 km^2 of suitable habitat
+
+
+
+# Repeat above steps to get area of agreement between bioclim present and future predictions
+
+
+
+# will reuse Bioclim30s present from above: bioclim_classified
+# Bioclim30s Future:
+# use binary prediction raster:
+plot(bioclim30s_future_binary)
+
+# reclassify cells, starting with creating matrix
+# want values to go from 1 (presence) to 2 (distinguished from informed raster)
+# and 2 (pseudoabsences) to 0 (same as in informed raster)
+matrix_bioclim_fut_cols <- c(1, 2, 4, 0)
+matrix_bioclim_fut <- matrix(matrix_bioclim_fut_cols, ncol=2)
+matrix_bioclim_fut
+
+# classify binary raster according to matrix
+bioclim_classified_fut <- classify(bioclim30s_future_binary, matrix_bioclim_fut)
+plot(bioclim_classified_fut)
+
+# add informed_classified and bioclim_classified together
+model_agreement_fut <- (bioclim_classified + bioclim_classified_fut)
+plot(model_agreement_fut)
+# 0 = pseudoabsence
+# 2 = bioclim present prediction
+# 4 = bioclim future prediction
+# 6 = agreement between both bioclim present and future predictions
+
+# save to file
+writeRaster(model_agreement_fut, filename = "outputs/model_agreement_future.tif")
+
+# calculate area of agreement:
+# first need to project to Albers equal area projection
+model_agreement_fut_albers <- project(model_agreement_fut, "EPSG:3005")
+
+# filter out cells in agreement between models (value = 3)
+model_agreement_fut_filt <- model_agreement_fut_albers %>% 
+  dplyr::filter(binary_mean == 6)
+plot(model_agreement_fut_filt)
+
+# convert raster cells to polygons so we can convert to an sf object:
+model_agreement_fut_polygons <- as.polygons(model_agreement_fut_filt)
+
+# convert to sf object so we can calculate area:
+model_agreement_fut_sf <- st_as_sf(model_agreement_fut_polygons)
+crs(model_agreement_fut_sf) # BC Albers
+
+# calculate area
+model_agreement_fut_area <- st_area(model_agreement_fut_sf) # 6.44e+11
+# convert from m^2 to km^2
+model_agreement_fut_area <- units::set_units(st_area(model_agreement_fut_sf), km^2) 
+# 644 494 km^2 of suitable habitat
 
 
 
 # Isolate AUC metrics from model metrics:
+
+
 
 # read in model metrics csv files:
 informed_model_metrics <- read.csv("outputs/skwenkwinem_informed_model_metrics.csv", header = TRUE)
@@ -425,12 +491,48 @@ bioclim30s_ensemble_metrics <- read.csv("outputs/skwenkwinem_bioclim30s_ensemble
 # select only relevant columns and filter out all rows except roc_auc
 informed_ensemble_metrics_AUC <- informed_ensemble_metrics %>% 
   dplyr::select("wflow_id", ".metric", "mean", "std_err") %>% 
-  dplyr::filter(.metric == "roc_auc")
+  dplyr::filter(.metric == "roc_auc") %>% 
+  # drop .metric column
+  dplyr::select("wflow_id", "mean", "std_err") %>% 
+  # rename columns to be more informative
+  dplyr::rename(algorithm = wflow_id) %>% 
+  # add model column and input "informed" in the rows
+  add_column(model = "informed", .before = "algorithm")
 
 bioclim30s_ensemble_metrics_AUC <- bioclim30s_ensemble_metrics %>% 
   dplyr::select("wflow_id", ".metric", "mean", "std_err") %>% 
-  dplyr::filter(.metric == "roc_auc")
+  dplyr::filter(.metric == "roc_auc") %>% 
+  # drop .metric column
+  dplyr::select("wflow_id", "mean", "std_err") %>% 
+  # rename columns to be more informative
+  dplyr::rename(algorithm = wflow_id) %>% 
+  # add model column and input "informed" in the rows
+  add_column(model = "bioclim30s", .before = "algorithm")
+
+# now bind the rows together into 1 object:
+ensemble_AUC <- rbind(informed_ensemble_metrics_AUC, bioclim30s_ensemble_metrics_AUC)
+
+ggplot(ensemble_AUC, aes(x = "algorithm", y = "mean")) +
+  geom_pointrange(aes(ymin = lower, ymax = upper))
 
 # write to new csv to import into word
 write.csv(informed_ensemble_metrics_AUC, file = "outputs/skwenkwinem_informed_ensemble_metrics_AUC.csv")
 write.csv(bioclim30s_ensemble_metrics_AUC, file = "outputs/skwenkwinem_bioclim30s_ensemble_metrics_AUC.csv")
+
+
+
+# plot Skeetchestn prediction with 3D elevation
+elevation <- rast("data/processed/elevation.tif")
+
+# Calculate hillshade
+slopes <- terra::terrain(elevation, "slope", unit = "radians")
+aspect <- terra::terrain(elevation, "aspect", unit = "radians")
+hillshade <- terra::shade(slopes, aspect)
+
+# Plot hillshading as a basemap:
+# Use Skeetchestn Territory as x and y limits:
+terra::plot(hillshade, col = gray(0:100 / 100), legend = FALSE, axes = FALSE, add = TRUE)
+# overlay with elevation:
+terra::contour(elevation, col = terrain.colors(25), alpha = 0.5, legend = FALSE, axes = FALSE, add = TRUE)
+# add contour lines:
+terra::plot(hillshade, col = "gray40", add = TRUE)
