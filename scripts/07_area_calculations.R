@@ -14,6 +14,8 @@ library(tidyverse)
 library(tidyterra)
 library(terra)
 library(sf)
+library(devtools)
+# devtools::install_github("h-a-graham/rayvista", dependencies = TRUE)
 
 # Predictions:
 
@@ -112,7 +114,7 @@ skeetch_area <- units::set_units(st_area(skeetch_sf), km^2) # 6996 km^2
 informed_present_binary_Albers <- project(informed_present_binary, "EPSG:3005")
 # then need to filter out presence cells from raster
 informed_present_presence <- informed_present_binary %>% 
-  filter(binary_mean == "presence")
+  dplyr::filter(binary_mean == "presence")
 
 # vectorize raster to get a polygon around presences
 # need to turn raster into data.frame first
@@ -147,7 +149,7 @@ plot(informed_binary_skeetch)
 # turn presence into polygon so we can calculate suitable area
 # first need to filter out presence cells from raster
 informed_present_presence_skeetch <- informed_binary_skeetch %>% 
-  filter(binary_mean == "presence")
+  dplyr::filter(binary_mean == "presence")
 
 # vectorize raster to get a polygon around presences
 # need to turn raster into data.frame first
@@ -180,7 +182,7 @@ proportion_suitable_informed_present_skeetch <- informed_present_skeetch_area/sk
 bioclim30s_present_binary_Albers <- project(bioclim30s_present_binary, "EPSG:3005")
 # then need to filter out presence cells from raster
 bioclim30s_present_presence <- bioclim30s_present_binary %>% 
-  filter(binary_mean == "presence")
+  dplyr::filter(binary_mean == "presence")
 
 # vectorize raster to get a polygon around presences
 # need to turn raster into data.frame first
@@ -216,7 +218,7 @@ plot(bioclim30s_binary_skeetch)
 # turn presence into polygon so we can calculate suitable area
 # first need to filter out presence cells from raster
 bioclim30s_present_presence_skeetch <- bioclim30s_binary_skeetch %>% 
-  filter(binary_mean == "presence")
+  dplyr::filter(binary_mean == "presence")
 
 # vectorize raster to get a polygon around presences
 # need to turn raster into data.frame first
@@ -246,7 +248,7 @@ proportion_suitable_bioclim30s_present_skeetch <- bioclim30s_present_skeetch_are
 # turn presence into polygon so we can calculate suitable area
 # first need to filter out presence cells from raster
 bioclim30s_future_presence <- bioclim30s_future_binary %>% 
-  filter(binary_mean == "presence")
+  dplyr::filter(binary_mean == "presence")
 
 # vectorize raster to get a polygon around presences
 # need to turn raster into data.frame first
@@ -296,7 +298,7 @@ ggplot() +
 # turn presence into polygon so we can calculate suitable area
 # first need to filter out presence cells from raster
 bioclim30s_future_presence_skeetch <- bioclim30s_future_binary_skeetch %>% 
-  filter(binary_mean == "presence")
+  dplyr::filter(binary_mean == "presence")
 
 # vectorize raster to get a polygon around presences
 # need to turn raster into data.frame first
@@ -327,3 +329,108 @@ change_skeetch_present_to_2100 <- bioclim30s_future_skeetch_num - bioclim30s_pre
 # percent change in suitable habitat from present to future:
 percent_change_skeetch <- proportion_suitable_future_skeetch - proportion_suitable_bioclim30s_present_skeetch
 # -25%
+
+
+
+# Isolate presence cells from the binary maps:
+
+# Informed Prediction:
+
+informed_present_cells <- informed_present_binary %>% 
+  dplyr::filter(binary_mean == "presence")
+# need to re-name layer so it's distinguished from bioclim30s layer:
+names(informed_present_cells) <- "Informed_Only"
+# change values
+informed_present_cells[[informed_present_cells == "presence"]] <- "Informed_Only"
+
+# Bioclim30s Prediction:
+bioclim30s_present_cells <- bioclim30s_present_binary %>% 
+  dplyr::filter(binary_mean == "presence")
+# need to re-name layer so it's distinguished from informed layer:
+names(bioclim30s_present_cells) <- "Bioclim_Only"
+
+
+# Area of agreement (same cells classified as present in both informed and bioclim predictions)
+agreed_present_cells <- informed_present_cells == bioclim30s_present_cells
+# change layer name:
+names(agreed_present_cells) <- "Model_Overlap"
+
+# Try terra::intersect
+model_intersection <- terra::intersect(informed_present_cells, bioclim30s_present_cells)
+names(model_intersection) <- "Model_Intersection"
+
+# merge rasters into one:
+agreement_rast <- c(informed_present_cells, bioclim30s_present_cells, agreed_present_cells)
+
+
+# need to distinguish presence values between informed and bioclim30s layers
+# convert cell values from "presence" to 1 for informed model
+informed_present_cells_num <-as.numeric(informed_present_cells)
+
+plot(informed_present_cells_num)
+plot(bioclim30s_present_cells, col = "purple", background = "transparent", alpha = 0.75)
+
+
+ggplot() +
+  geom_spatraster(data = agreed_present_cells, aes(fill = Model_Overlap)) +
+  geom_spatraster(data = informed_present_cells_num, aes(fill = Informed_Only)) +
+  geom_spatraster(data = bioclim30s_present_cells, aes (fill = Bioclim_Only))
+
+
+
+
+# plot Skeetchestn prediction with 3D elevation
+elevation <- rast("data/processed/elevation.tif")
+
+# Calculate hillshade
+slopes <- terra::terrain(elevation, "slope", unit = "radians")
+aspect <- terra::terrain(elevation, "aspect", unit = "radians")
+hillshade <- terra::shade(slopes, aspect)
+
+# Plot hillshading as a basemap:
+# Use Skeetchestn Territory as x and y limits:
+terra::plot(hillshade, col = gray(0:100 / 100), legend = FALSE, axes = FALSE, add = TRUE)
+# overlay with elevation:
+terra::contour(elevation, col = terrain.colors(25), alpha = 0.5, legend = FALSE, axes = FALSE, add = TRUE)
+# add contour lines:
+terra::plot(hillshade, col = "gray40", add = TRUE)
+
+
+
+
+# Isolate AUC metrics from model metrics:
+
+# read in model metrics csv files:
+informed_model_metrics <- read.csv("outputs/skwenkwinem_informed_model_metrics.csv", header = TRUE)
+bioclim30s_model_metrics <- read.csv("outputs/skwenkwinem_bioclim30s_model_metrics.csv", header = TRUE)
+
+# select only relevant columns and filter out all rows except roc_auc
+informed_model_metrics_AUC <- informed_model_metrics %>% 
+  dplyr::select("wflow_id", ".metric", "mean", "std_err") %>% 
+  dplyr::filter(.metric == "roc_auc")
+
+bioclim30s_model_metrics_AUC <- bioclim30s_model_metrics %>% 
+  dplyr::select("wflow_id", ".metric", "mean", "std_err") %>% 
+  dplyr::filter(.metric == "roc_auc")
+
+# write to new csv to import into word
+write.csv(informed_model_metrics_AUC, file = "outputs/skwenkwinem_informed_model_metrics_AUC.csv")
+write.csv(bioclim30s_model_metrics_AUC, file = "outputs/skwenkwinem_bioclim30s_model_metrics_AUC.csv")
+
+
+# repeat above steps for ensemble metrics:
+informed_ensemble_metrics <- read.csv("outputs/skwenkwinem_informed_ensemble_metrics.csv", header = TRUE)
+bioclim30s_ensemble_metrics <- read.csv("outputs/skwenkwinem_bioclim30s_ensemble_metrics.csv", header = TRUE)
+
+# select only relevant columns and filter out all rows except roc_auc
+informed_ensemble_metrics_AUC <- informed_ensemble_metrics %>% 
+  dplyr::select("wflow_id", ".metric", "mean", "std_err") %>% 
+  dplyr::filter(.metric == "roc_auc")
+
+bioclim30s_ensemble_metrics_AUC <- bioclim30s_ensemble_metrics %>% 
+  dplyr::select("wflow_id", ".metric", "mean", "std_err") %>% 
+  dplyr::filter(.metric == "roc_auc")
+
+# write to new csv to import into word
+write.csv(informed_ensemble_metrics_AUC, file = "outputs/skwenkwinem_informed_ensemble_metrics_AUC.csv")
+write.csv(bioclim30s_ensemble_metrics_AUC, file = "outputs/skwenkwinem_bioclim30s_ensemble_metrics_AUC.csv")
