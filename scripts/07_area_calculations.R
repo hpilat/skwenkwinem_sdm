@@ -512,12 +512,36 @@ bioclim30s_ensemble_metrics_AUC <- bioclim30s_ensemble_metrics %>%
 # now bind the rows together into 1 object:
 ensemble_AUC <- rbind(informed_ensemble_metrics_AUC, bioclim30s_ensemble_metrics_AUC)
 
-ggplot(ensemble_AUC, aes(x = "algorithm", y = "mean")) +
-  geom_pointrange(aes(ymin = lower, ymax = upper))
-
 # write to new csv to import into word
-write.csv(informed_ensemble_metrics_AUC, file = "outputs/skwenkwinem_informed_ensemble_metrics_AUC.csv")
-write.csv(bioclim30s_ensemble_metrics_AUC, file = "outputs/skwenkwinem_bioclim30s_ensemble_metrics_AUC.csv")
+write.csv(ensemble_AUC, file = "outputs/skwenkwinem_ensemble_metrics.csv")
+
+# plot ensemble metrics together
+ensemble_metrics <- ggplot(ensemble_AUC, aes(x = algorithm, y = mean, colour = model)) +
+                      geom_point() +
+                      geom_errorbar(aes(ymin = mean - std_err, ymax = mean + std_err)) +
+                      ggtitle("Ensemble Model Performance") +
+                      labs(x = "Algorithm", y = "Mean AUC")
+
+# save to file
+ggsave("outputs/ensemble_metrics.png")
+
+
+
+
+# Plot continuous rasters together:
+# create multilayer raster:
+predictions_continuous <- c(informed_present_continuous, 
+                            bioclim30s_present_continuous,
+                            bioclim30s_future_continuous)
+
+predictions_continuous_plot <- ggplot() +
+  geom_spatraster(informed_present_continuous, aes(fill = mean)) +
+  geom_spatraster(bioclim30s_present_continuous) +
+  geom_spatraster(bioclim30s_future_continuous)
+  facet_wrap(~lyr, nrow = 1, ncol = 3)
+
+ggsave("outputs/predictions_continuous.png")
+
 
 
 
@@ -531,8 +555,10 @@ hillshade <- terra::shade(slopes, aspect)
 
 # Plot hillshading as a basemap:
 # Use Skeetchestn Territory as x and y limits:
-terra::plot(hillshade, col = gray(0:100 / 100), legend = FALSE, axes = FALSE, add = TRUE)
-# overlay with elevation:
-terra::contour(elevation, col = terrain.colors(25), alpha = 0.5, legend = FALSE, axes = FALSE, add = TRUE)
-# add contour lines:
-terra::plot(hillshade, col = "gray40", add = TRUE)
+terra::plot(hillshade, col = gray(0:100 / 100), legend = FALSE, axes = FALSE,
+            xlim = st_bbox(skeetch_vectWGS84)[c(1,3)], ylim = st_bbox(skeetch_vectWGS84)[c(2,4)])
+# overlay with elevation
+terra::plot(elevation, col = terrain.colors(25), alpha = 0.4, legend = FALSE,
+            axes = FALSE, add = TRUE)
+# add contour lines
+terra::contour(elevation, col = "grey40", add = TRUE, nlevels = 15)
