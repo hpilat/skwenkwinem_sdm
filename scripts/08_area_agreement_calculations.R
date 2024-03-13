@@ -242,6 +242,9 @@ model_agreement_fut_skeetch_area <- st_area(model_agreement_fut_skeetch_sf) # 6.
 model_agreement_fut_skeetch_area <- units::set_units(st_area(model_agreement_fut_skeetch_sf), km^2) 
 # 1147 km^2 of suitable habitat in agreement
 
+# calculate percent overlap:
+percent_overlap_bioclim30s_pres_fut <- (model_agreement_fut_skeetch_area/(3169 + 1422)) * 100 
+# denominator = area predicted to be suitable by present and future predictions
 
 # plot area of agreement not masked to Skeetch with Skeetch polygon overlaid:
 
@@ -266,18 +269,43 @@ plot(model_agreement_fut_skeetch)
 # 3 = bioclim future prediction
 # 4 = agreement between both bioclim present and future predictions
 
-
 skeetch_agreement_future <- ggplot() +
   geom_spatraster(data = model_agreement_fut_skeetch, aes(fill = binary_mean)) +
   geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
   scale_fill_manual(name = NULL, 
                     labels = c("pseudoabsence", "present", "future", "both"), 
-                    values = c("grey", "#2A7B8EFF", "#20A387FF", "#FDE725FF"))+
-  scale_x_continuous(name = "Longitude (°W)", labels = c("120.2", "120.4", "120.6","120.8", "121.0", "121.2", "121.4", "121.6")) +
-  theme(axis.text.x = element_text(angle = 90)) +
-  scale_y_continuous(name = "Latitude (°N)", labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4", "51.6")) +
+                    values = c("grey", "#2A7B8EFF", "#FDE725FF", "#7AD151FF"))+
+  scale_x_continuous(name = "Longitude (°W)",
+                     #limits = c(120.0, 121.6),
+                     #breaks = c(120.2, 120.6, 121.0, 121.4),
+                     #labels = c("120.2", "120.6", "121.0", "121.4")) + 
+                     expand = c(0, 0))  +
+  scale_y_continuous(name = "Latitude (°N)",
+                     #limits = c(50.3, 51.6),
+                    # breaks = c(50.4, 50.6, 50.8, 51.0, 51.2, 51.4),
+                    # labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4")) + 
+                     expand = c(0, 0)) +
   labs(title = "Area of Agreement", 
        subtitle = "Bioclim30s Present and Future Models")
+
+
+
+
+ggplot() +
+  geom_spatraster(data = model_agreement_fut_skeetch, aes(fill = binary_mean)) +
+  geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
+  scale_fill_manual(name = NULL, 
+                    labels = c("pseudoabsence", "present", "future", "both"), 
+                    values = c("grey", "#2A7B8EFF", "#FDE725FF", "#20A387FF"))+
+  scale_x_continuous(name = "Longitude (°W)", 
+                     labels = c("120.2", "120.4", "120.6","120.8", "121.0", "121.2", "121.4")) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(name = "Latitude (°N)", 
+                     labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4")) +
+  labs(title = "Area of Agreement", 
+       subtitle = "Bioclim30s Present and Future Models")
+
+
 
 
 ggsave("outputs/skeetch_agreement_future.png")
