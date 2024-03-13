@@ -101,17 +101,3 @@ st_write(skwenkwinem_sf, dsn = "data/processed/skwenkwinem_sf.shp", append = FAL
 skeetch_sf <- st_read("data/raw/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
 plot(skeetch_sf)
 
-# maps from tidysdm were cutting off part of the Territory boundary
-# need to expand extent by a small amount
-# expand extent by 0.5 degrees in each direction
-xlims_skeetch <- c(ext(skeetch_sf)$xmin - 0.5, ext(skeetch_sf)$xmax + 0.5)
-ylims_skeetch <- c(ext(skeetch_sf)$ymin - 0.5, ext(skeetch_sf)$ymax + 0.5)
-extent_skeetch <- terra::ext(xlims_skeetch, ylims_skeetch)
-
-# crop original sf object to new extent
-skeetch_vect_extended <- st_crop(skeetch_sf, extent_skeetch)
-skeetch_vect_extended
-
-# write to file for reuse
-st_write(skeetch_vect_extended, dsn = "data/extents/skeetch_vect_cropped_albers.shp", append = FALSE)
-
