@@ -44,7 +44,7 @@ skeetch_vectWGS84 <- project(skeetch_vect, "EPSG:4326")
 
 # create an extent object slightly larger than skeetch_vectWGS84
 skeetch_vectWGS84 # round up extent values:
-skeetch_extent <- ext(-121.5, -120.3, 50.4, 51.5)
+skeetch_extent <- ext(-121.6, -120.2, 50.3, 51.6)
 
 
 # Cropping Predictions to Skeetchestn Territory:
@@ -55,6 +55,8 @@ skeetch_extent <- ext(-121.5, -120.3, 50.4, 51.5)
 
 informed_prediction_present_skeetch <- crop(informed_present_continuous, skeetch_extent)
 plot(informed_prediction_present_skeetch)
+lines(skeetch_vectWGS84)
+
 writeRaster(informed_prediction_present_skeetch, filename = "outputs/skwenkwinem_informed_predict_present_cont_skeetch.tif", overwrite = TRUE)
 
 # plot with skeetch_vectWGS84 overlaid
@@ -64,10 +66,33 @@ skeetch_lines <- as.lines(skeetch_vectWGS84)
 informed_present_skeetch <- ggplot() +
   geom_spatraster(data = informed_prediction_present_skeetch, aes(fill = mean)) +
   geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
-  scale_fill_continuous() +
-  labs(title = "Informed Prediction", subtitle = "Skeetchestn Territory", xlab = "Longitude", ylab = "Latitude")
+  scale_fill_viridis_c() +
+  scale_x_continuous(name = "Longitude (°W)", 
+                    # labels = c("120.2", "120.4", "120.6", "120.8", "121.0", "121.2", "121.4", "121.6"), 
+                     expand = c(0,0)) +
+  #theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(name = "Latitude (°N)", 
+                    # labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4", "51.6"), 
+                     expand = c(0,0)) +
+  labs(title = "Informed Prediction", 
+       subtitle = "Skeetchestn Territory")
 
 ggsave("outputs/informed_present_skeetch.png")
+
+
+
+  scale_x_continuous(name = "Longitude (°W)", labels = c("120.2", "120.4", "120.6","120.8", "121.0", "121.2", "121.4", "121.6")) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(name = "Latitude (°N)", labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4", "51.6")) +
+  labs(title = "Area of Agreement", 
+       subtitle = "Bioclim30s Present and Future Models")
+
+
+ggsave("outputs/skeetch_agreement_future.png")
+
+
+
+
 
 
 # Bioclim30s Present Prediction:
