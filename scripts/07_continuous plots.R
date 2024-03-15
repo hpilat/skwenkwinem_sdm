@@ -1,13 +1,12 @@
 # This is script 07/08
-# This script calculates suitable habitat in km^2 for our total study area
-# and Skeetchestn Territory
+# This script plots our continuous habitat suitability predictions
 # please first run the following scripts in the following order:
 # 01_data_download.R
 # 02_continental_divide.Rmd
 # 03_cropped_extent.R
 # 04_data_processing
 # 05_tidysdm_ranunculus_informed.R
-# 06_tidysdm_ranunculus_bioclim_30s.R
+# 06_tidysdm_ranunculus_bioclim30s.R
 
 
 library(tidyverse)
