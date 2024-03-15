@@ -1,14 +1,14 @@
 # This is script 08/08
 # This script isolates area of agreement between our predictions for our total
-# study area and Skeetchestn Territory
+# study area and Skeetchestn Territory and plots them
 # please first run the following scripts in the following order:
 # 01_data_download.R
 # 02_continental_divide.Rmd
 # 03_cropped_extent.R
 # 04_data_processing
 # 05_tidysdm_ranunculus_informed.R
-# 06_tidysdm_ranunculus_bioclim_30s.R
-# 07_area_calculations.R
+# 06_tidysdm_ranunculus_bioclim30s.R
+# 07_continuous_plots.R
 
 
 library(tidyverse)
@@ -21,14 +21,39 @@ informed_present_binary <- rast("outputs/skwenkwinem_informed_predict_present_bi
 bioclim30s_present_binary <- rast("outputs/skwenkwinem_bioclim30s_predict_present_binary.tif")
 bioclim30s_future_binary <- rast("outputs/skwenkwinem_bioclim30s_predict_future_binary.tif")
 
+# total study area boundary:
+# vector object to use for masking and area calculations
+na_bound_vect <- vect("data/extents/na_bound_vect.shp")
+# sf object masked to study extent, for area calculations
+na_bound_sf <- read_sf("data/extents/na_bound_sf.shp")
+
 # Skeetchestn territory boundary vector for masking:
 skeetch_vect <- vect("data/extents/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
 # transform to WGS84:
 skeetch_vectWGS84 <- project(skeetch_vect, "EPSG:4326")
 
+
 # create an extent object slightly larger than skeetch_vectWGS84
 skeetch_vectWGS84 # round up extent values:
 skeetch_extent <- ext(-121.6, -120.1, 50.3, 51.6) # xmin, xmax, ymin, ymax
+
+
+
+# Area of overall study extent:
+# reproject CRS to BC Albers (equal area projection, EPSG:3005) for calculating area
+na_bound_albers <- st_transform(na_bound_sf, "EPSG:3005")
+# calculate study area, in m^2 (default)
+na_bound_area <- st_area(na_bound_albers) # 4.18e+12 m^2
+na_bound_area <- units::set_units(st_area(na_bound_albers), km^2) # 4 183 596  km^2
+
+
+# Area of Skeetchestn Territory:
+skeetch_sf <- read_sf("data/raw/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
+plot(skeetch_sf)
+crs(skeetch_sf) # BC Albers, NAD83
+skeetch_area <- st_area(skeetch_sf) # 7e+09 m^2
+# convert from m^2 to km^2
+skeetch_area <- units::set_units(st_area(skeetch_sf), km^2) # 6996 km^2
 
 
 
@@ -56,8 +81,11 @@ plot(informed_classified)
 
 
 # calculate area predicted to be suitable by informed model:
+# mask to our study area boundary polygon
+informed_classified_masked <- mask(informed_classified, na_bound_vect)
+
 # project raster to Albers equal area projection:
-informed_classified_albers <- project(informed_classified, "EPSG:3005")
+informed_classified_albers <- project(informed_classified_masked, "EPSG:3005")
 
 # filter out cells classified as informed (1), removes pseudoabsences (0)
 informed_classified_filt <- informed_classified_albers %>% 
@@ -72,10 +100,10 @@ informed_classified_sf <- st_as_sf(informed_classified_polygons)
 informed_classified_sf
 
 # calculate area:
-informed_classified_area <- st_area(informed_classified_sf) # 8.55e+11
+informed_classified_area <- st_area(informed_classified_sf) # 8.53e+11
 # convert from m^2 to km^2
 informed_classified_area <- units::set_units(st_area(informed_classified_sf), km^2) 
-# 855 348 km^2 of suitable habitat
+# 853 409 km^2 of suitable habitat
 
 
 # Calculate area predicted to be suitable by the Bioclim (present) model:
@@ -95,8 +123,10 @@ plot(bioclim_classified)
 
 
 # calculate area predicted to be suitable by bioclim model:
+# mask to our study extent:
+bioclim_classified_masked <- mask(bioclim_classified, na_bound_vect)
 # project raster to Albers equal area projection:
-bioclim_classified_albers <- project(bioclim_classified, "EPSG:3005")
+bioclim_classified_albers <- project(bioclim_classified_masked, "EPSG:3005")
 
 # filter out cells classified as bioclim (2), removes pseudoabsences (0)
 bioclim_classified_filt <- bioclim_classified_albers %>% 
@@ -119,7 +149,7 @@ bioclim_classified_area <- units::set_units(st_area(bioclim_classified_sf), km^2
 
 # difference in area predicted:
 difference_present_predictions <- bioclim_classified_area - informed_classified_area
-# 63 916 km^2 more predicted by bioclim model
+# 65 855 km^2 more predicted by bioclim model
 
 
 # add informed_classified and bioclim_classified together to get model_agreement:
@@ -135,8 +165,10 @@ writeRaster(model_agreement, filename = "outputs/model_agreement.tif", overwrite
 
 
 # calculate area predicted to be suitable by both informed and bioclim30s (present) models:
+# mask to our study extent:
+model_agreement_masked <- mask(model_agreement, na_bound_vect)
 # project raster to Albers equal area projection:
-model_agreement_albers <- project(model_agreement, "EPSG:3005")
+model_agreement_albers <- project(model_agreement_masked, "EPSG:3005")
 
 # filter out cells classified as suitable by both models (3)
 model_agreement_filt <- model_agreement_albers %>% 
@@ -154,11 +186,19 @@ model_agreement_sf
 model_agreement_area <- st_area(model_agreement_sf) # 6.46e+11
 # convert from m^2 to km^2
 model_agreement_area <- units::set_units(st_area(model_agreement_sf), km^2) 
-# 919 264 km^2 of suitable habitat
+# 645752 km^2 of suitable habitat
+
+# calculate proportion of total area classified as present for informed model:
+proportion_informed <- informed_classified_area/na_bound_area
+# 20.4 %
+
+# calculate proportion of total area classified as present for bioclim model:
+proportion_bioclim_pres <- bioclim_classified_area/na_bound_area
+# 22 %
 
 # calculate percent overlap:
-percent_overlap <- (model_agreement_area / (informed_classified_area + bioclim_classified_area + model_agreement_area)) *100
-# 26.7% overlap
+percent_overlap <- (model_agreement_area / (informed_classified_area + bioclim_classified_area)) *100
+# 36.4 % overlap
 
 
 
@@ -268,7 +308,6 @@ difference_present_skeetch <- informed_skeetch_area - bioclim_skeetch_area
 
 
 # calculate area predicted to be suitable by both informed and bioclim30s (present) models:
-# project raster to Albers equal area projection:
 
 # crop model_agreement to Skeetchestn Territory:
   # for use in plotting:
@@ -298,9 +337,16 @@ model_agreement_skeetch_area <- units::set_units(st_area(model_agreement_skeetch
 # 2372 km^2 of suitable habitat
 
 # calculate percent overlap:
-percent_overlap_skeetch <- (model_agreement_skeetch_area / (informed_skeetch_area + bioclim_skeetch_area + model_agreement_skeetch_area)) *100
-# 26.4% overlap
+percent_overlap_skeetch <- (model_agreement_skeetch_area / (informed_skeetch_area + bioclim_skeetch_area)) *100
+# 35.9 % overlap
 
+# proportion of SKeetchestn Territory classified as present by informed model:
+proportion_informed_skeetch <- informed_skeetch_area/skeetch_area
+# 55.6 %
+
+# proportion of Skeetchestn Territory classified as present by bioclim model:
+proportion_bioclim_pres_skeetch <- bioclim_skeetch_area/skeetch_area
+# 38.9 %
 
 
 # Plot area of agreement in Skeetchestn Territory:
@@ -345,7 +391,6 @@ ggsave("outputs/skeetch_agreement_present.png", plot = skeetch_agreement_present
 
 
 
-
 # Area of Agreement between Bioclim present and future predictions
 
 
@@ -365,6 +410,8 @@ matrix_bioclim_fut
 bioclim_classified_fut <- classify(bioclim30s_future_binary, matrix_bioclim_fut)
 plot(bioclim_classified_fut)
 
+# mask to study extent:
+bioclim_classified_fut_masked <- mask(bioclim_classified_fut, na_bound_vect)
 # project raster to Albers equal area projection:
 bioclim_classified_fut_albers <- project(bioclim_classified_fut, "EPSG:3005")
 
@@ -403,8 +450,10 @@ plot(model_agreement_fut)
 writeRaster(model_agreement_fut, filename = "outputs/model_agreement_future.tif", overwrite = TRUE)
 
 # calculate area of agreement:
-# first need to project to Albers equal area projection
-model_agreement_fut_albers <- project(model_agreement_fut, "EPSG:3005")
+# mask to study extent:
+model_agreement_fut_masked <- mask(model_agreement_fut, na_bound_vect)
+# Project to Albers equal area projection
+model_agreement_fut_albers <- project(model_agreement_fut_masked, "EPSG:3005")
 
 # filter out cells in agreement between models (value = 3)
 model_agreement_fut_filt <- model_agreement_fut_albers %>% 
@@ -424,13 +473,18 @@ model_agreement_fut_area <- st_area(model_agreement_fut_sf) # 6.44e+11
 model_agreement_fut_area <- units::set_units(st_area(model_agreement_fut_sf), km^2) 
 # 644 494 km^2 of suitable habitat
 
-
 # calculate percent overlap:
-percent_overlap_fut <- (model_agreement_fut_area/(bioclim_classified_area + bioclim_classified_fut_area + model_agreement_fut_area)) * 100
-# 27.2%
+percent_overlap_fut <- (model_agreement_fut_area/(bioclim_classified_area + bioclim_classified_fut_area)) * 100
+# 37.3 %
+
+# proportion of total study area classified as suitable by bioclim30s future model:
+proportion_bioclim_fut <- bioclim_classified_fut_area/na_bound_area
+# 19.3 %
+
 
 
 # Plotting:
+
 
 
 # need to convert binary_mean from numeric to factor
@@ -469,6 +523,7 @@ ggsave("outputs/agreement_future.png", plot = agreement_future)
 
 
 # Skeetchestn Territory Calculations:
+
 
 
 # Reuse Bioclim present calculations from above:
@@ -510,6 +565,7 @@ difference_bioclim_fut_pres_skeetch <- bioclim_skeetch_area - bioclim_fut_skeetc
 
 # calculate area predicted to be suitable by both bioclim30s present and future models:
 
+
 # crop model_agreement to Skeetchestn Territory:
 # for use in plotting:
 model_agreement_fut_skeetch <- crop(model_agreement_fut, skeetch_extent)
@@ -540,8 +596,8 @@ model_agreement_fut_skeetch_area <- units::set_units(st_area(model_agreement_fut
 # 1141 km^2 of suitable habitat
 
 # calculate percent overlap:
-percent_overlap_fut_skeetch <- (model_agreement_fut_skeetch_area / (bioclim_skeetch_area + bioclim_fut_skeetch_area + model_agreement_fut_skeetch_area)) *100
-# 22.8% overlap
+percent_overlap_fut_skeetch <- (model_agreement_fut_skeetch_area / (bioclim_skeetch_area + bioclim_fut_skeetch_area)) *100
+# 29.5% overlap
 
 
 
