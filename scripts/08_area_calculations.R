@@ -599,6 +599,9 @@ model_agreement_fut_skeetch_area <- units::set_units(st_area(model_agreement_fut
 percent_overlap_fut_skeetch <- (model_agreement_fut_skeetch_area / (bioclim_skeetch_area + bioclim_fut_skeetch_area)) *100
 # 29.5% overlap
 
+# proportion of Skeetchestn Territory classified as present by bioclim future model:
+proportion_bioclim_fut_skeetch <- bioclim_fut_skeetch_area/skeetch_area
+# 16.3 %
 
 
 # plot area of agreement not masked to Skeetch with Skeetch polygon overlaid:
