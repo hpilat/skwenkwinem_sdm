@@ -1,5 +1,6 @@
 # This is script 07/08
-# This script plots our continuous habitat suitability predictions
+# This script plots our ensemble metrics from both models together
+  # and our continuous habitat suitability predictions
 # please first run the following scripts in the following order:
 # 01_data_download.R
 # 02_continental_divide.Rmd
@@ -23,12 +24,8 @@ informed_present_continuous <- rast("outputs/skwenkwinem_informed_predict_presen
 bioclim30s_present_continuous <- rast("outputs/skwenkwinem_bioclim30s_predict_present_cont.tif")
 bioclim30s_future_continuous <- rast("outputs/skwenkwinem_bioclim30s_predict_future_cont.tif")
 
-# Binary:
-informed_present_binary <- rast("outputs/skwenkwinem_informed_predict_present_binary.tif")
-bioclim30s_present_binary <- rast("outputs/skwenkwinem_bioclim30s_predict_present_binary.tif")
-bioclim30s_future_binary <- rast("outputs/skwenkwinem_bioclim30s_predict_future_binary.tif")
-
-
+# Read in elevation raster (for hillshading)
+elevation <- rast("data/processed/elevation.tif")
 
 # Extent objects:
 
@@ -43,337 +40,8 @@ skeetch_vectWGS84 <- project(skeetch_vect, "EPSG:4326")
 
 # create an extent object slightly larger than skeetch_vectWGS84
 skeetch_vectWGS84 # round up extent values:
-skeetch_extent <- ext(-121.6, -120.2, 50.3, 51.6)
+skeetch_extent <- ext(-121.6, -120.1, 50.3, 51.6)
 
-
-# Cropping Predictions to Skeetchestn Territory:
-
-
-
-# Informed Prediction:
-
-informed_prediction_present_skeetch <- crop(informed_present_continuous, skeetch_extent)
-plot(informed_prediction_present_skeetch)
-lines(skeetch_vectWGS84)
-
-writeRaster(informed_prediction_present_skeetch, filename = "outputs/skwenkwinem_informed_predict_present_cont_skeetch.tif", overwrite = TRUE)
-
-# plot with skeetch_vectWGS84 overlaid
-# turn Skeetchestn boundary polygon into lines geometry:
-skeetch_lines <- as.lines(skeetch_vectWGS84)
-
-informed_present_skeetch <- ggplot() +
-  geom_spatraster(data = informed_prediction_present_skeetch, aes(fill = mean)) +
-  geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
-  scale_fill_viridis_c() +
-  scale_x_continuous(name = "Longitude (°W)", 
-                    # labels = c("120.2", "120.4", "120.6", "120.8", "121.0", "121.2", "121.4", "121.6"), 
-                     expand = c(0,0)) +
-  #theme(axis.text.x = element_text(angle = 90)) +
-  scale_y_continuous(name = "Latitude (°N)", 
-                    # labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4", "51.6"), 
-                     expand = c(0,0)) +
-  labs(title = "Informed Prediction", 
-       subtitle = "Skeetchestn Territory")
-
-ggsave("outputs/informed_present_skeetch.png")
-
-
-
-  scale_x_continuous(name = "Longitude (°W)", labels = c("120.2", "120.4", "120.6","120.8", "121.0", "121.2", "121.4", "121.6")) +
-  theme(axis.text.x = element_text(angle = 90)) +
-  scale_y_continuous(name = "Latitude (°N)", labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4", "51.6")) +
-  labs(title = "Area of Agreement", 
-       subtitle = "Bioclim30s Present and Future Models")
-
-
-ggsave("outputs/skeetch_agreement_future.png")
-
-
-
-
-
-
-# Bioclim30s Present Prediction:
-
-bioclim30s_present_skeetch <- crop(bioclim30s_present_continuous, skeetch_vectWGS84)
-plot(bioclim30s_present_skeetch)
-writeRaster(bioclim30s_present_skeetch, filename = "outputs/skwenkwinem_bioclim30s_present_skeetch.tif", overwrite = TRUE)
-
-# plot with skeetch_vectWGS84 overlaid
-bioclim30s_present_skeetch <- ggplot() +
-  geom_spatraster(data = bioclim30s_present_skeetch, aes(fill = mean)) +
-  geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
-  scale_fill_continuous() +
-  labs(title = "Bioclim30s Present Prediction", subtitle = "Skeetchestn Territory", xlab = "Longitude", ylab = "Latitude")
-
-ggsave("outputs/bioclim30s_present_skeetch.png")
-
-
-# Bioclim30s Future Prediction:
-
-bioclim30s_future_skeetch <- crop(bioclim30s_future_continuous, skeetch_vectWGS84)
-plot(bioclim30s_future_skeetch)
-writeRaster(bioclim30s_future_skeetch, filename = "outputs/skwenkwinem_bioclim30s_predict_future_cont_skeetch.tif", overwrite = TRUE)
-
-# plot with skeetch_vectWGS84 overlaid
-bioclim30s_future_skeetch <- ggplot() +
-  geom_spatraster(data = bioclim30s_future_skeetch, aes(fill = mean)) +
-  geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
-  scale_fill_continuous() +
-  labs(title = "Bioclim30s Future Prediction", subtitle = "Skeetchestn Territory", xlab = "Longitude", ylab = "Latitude")
-
-ggsave("outputs/bioclim30s_future_skeetch.png")
-
-
-
-
-# Area Calculations
-
-
-
-# Overall study extent:
-# reproject CRS to BC Albers (equal area projection, EPSG:3005) for calculating area
-na_bound_albers <- st_transform(na_bound_sf, "EPSG:3005")
-# calculate study area, in m^2 (default)
-na_bound_area <- st_area(na_bound_albers)
-na_bound_area <- units::set_units(st_area(na_bound_albers), km^2) # 4 183 596  km^2
-
-
-# Skeetchestn Territory:
-skeetch_sf <- read_sf("data/raw/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
-plot(skeetch_sf)
-crs(skeetch_sf) # BC Albers, NAD83
-skeetch_area <- st_area(skeetch_sf) # 7e+09 m^2
-# convert from m^2 to km^2
-skeetch_area <- units::set_units(st_area(skeetch_sf), km^2) # 6996 km^2
-
-
-
-# Present Suitable Area from Informed Model:
-
-
-
-# turn presence into polygon so we can calculate suitable area
-# first need to transform CRS to Albers equal area projection
-informed_present_binary_Albers <- project(informed_present_binary, "EPSG:3005")
-# then need to filter out presence cells from raster
-informed_present_presence <- informed_present_binary %>% 
-  dplyr::filter(binary_mean == "presence")
-
-# vectorize raster to get a polygon around presences
-# need to turn raster into data.frame first
-informed_present_presence <- as.polygons(informed_present_presence)
-
-# now turn polygons into sf object
-informed_present_sf <- st_as_sf(informed_present_presence)
-
-crs(informed_present_sf) # WGS84
-
-# reproject CRS to BC Albers (equal area projection, EPSG:3005) for calculating area
-informed_present_area <- st_transform(informed_present_sf, "EPSG:3005")
-informed_present_area <- st_area(informed_present_sf) # 1.48e+12 m^2
-# convert from m^2 to km^2
-informed_present_area <- units::set_units(st_area(informed_present_sf), km^2) 
-# 956 602 km^2 of suitable habitat
-
-# divide predicted present area by total study area to get proportion
-proportion_suitable_informed_present <- informed_present_area/na_bound_area # 22.9%
-
-
-
-# Present Suitable area for Skeetchestn Territory from Informed Model:
-
-
-
-# crop results to Skeetchestn territory
-informed_binary_skeetch <- crop(informed_present_binary, skeetch_vectWGS84)
-informed_binary_skeetch <- mask(informed_binary_skeetch, skeetch_vectWGS84)
-plot(informed_binary_skeetch)
-
-# turn presence into polygon so we can calculate suitable area
-# first need to filter out presence cells from raster
-informed_present_presence_skeetch <- informed_binary_skeetch %>% 
-  dplyr::filter(binary_mean == "presence")
-
-# vectorize raster to get a polygon around presences
-# need to turn raster into data.frame first
-informed_present_presence_skeetch <- as.polygons(informed_present_presence_skeetch)
-
-# now turn prediction_present_pres polygons into sf object
-informed_present_skeetch_sf <- st_as_sf(informed_present_presence_skeetch)
-crs(informed_present_skeetch_sf) # WGS84
-
-# reproject CRS to BC Albers (equal area projection, EPSG:3005) for calculating area
-informed_present_skeetch_area <- st_transform(informed_present_skeetch_sf, "EPSG:3005")
-informed_present_skeetch_area <- st_area(informed_present_skeetch_sf) # 1.98e+9 m^2
-# convert from m^2 to km^2
-informed_present_skeetch_area <- units::set_units(st_area(informed_present_skeetch_sf), km^2) 
-# 4128 km^2 of suitable habitat
-
-
-# proportion of suitable area relative to Skeetchestn Territory:
-proportion_suitable_informed_present_skeetch <- informed_present_skeetch_area/skeetch_area
-# 59%
-
-
-
-# Present Suitable Area from Bioclim30s Model:
-
-
-
-# turn presence into polygon so we can calculate suitable area
-# first need to transform CRS to Albers equal area projection
-bioclim30s_present_binary_Albers <- project(bioclim30s_present_binary, "EPSG:3005")
-# then need to filter out presence cells from raster
-bioclim30s_present_presence <- bioclim30s_present_binary %>% 
-  dplyr::filter(binary_mean == "presence")
-
-# vectorize raster to get a polygon around presences
-# need to turn raster into data.frame first
-bioclim30s_present_presence <- as.polygons(bioclim30s_present_presence)
-
-# now turn polygons into sf object
-bioclim30s_present_sf <- st_as_sf(bioclim30s_present_presence)
-
-crs(bioclim30s_present_sf) # WGS84
-
-# reproject CRS to BC Albers (equal area projection, EPSG:3005) for calculating area
-bioclim30s_present_area <- st_transform(bioclim30s_present_sf, "EPSG:3005")
-bioclim30s_present_area <- st_area(bioclim30s_present_sf) # 1.48e+12 m^2
-# convert from m^2 to km^2
-bioclim30s_present_area <- units::set_units(st_area(bioclim30s_present_sf), km^2) 
-# 1 014 711 km^2 of suitable habitat
-
-# divide predicted present area by total study area to get proportion
-proportion_suitable_bioclim30s_present <- bioclim30s_present_area/na_bound_area
-# 24.3%
-
-
-
-# Present Suitable Area for Skeetchestn Territory from Bioclim30s Model:
-
-
-
-# crop results to Skeetchestn territory - convert CRS to Albers first?
-bioclim30s_binary_skeetch <- crop(bioclim30s_present_binary, skeetch_vectWGS84)
-bioclim30s_binary_skeetch <- mask(bioclim30s_binary_skeetch, skeetch_vectWGS84)
-plot(bioclim30s_binary_skeetch)
-
-# turn presence into polygon so we can calculate suitable area
-# first need to filter out presence cells from raster
-bioclim30s_present_presence_skeetch <- bioclim30s_binary_skeetch %>% 
-  dplyr::filter(binary_mean == "presence")
-
-# vectorize raster to get a polygon around presences
-# need to turn raster into data.frame first
-bioclim30s_present_presence_skeetch <- as.polygons(bioclim30s_present_presence_skeetch)
-
-# now turn prediction_present_pres polygons into sf object
-bioclim30s_present_skeetch_sf <- st_as_sf(bioclim30s_present_presence_skeetch)
-crs(bioclim30s_present_skeetch_sf) # WGS84
-
-# reproject CRS to BC Albers (equal area projection, EPSG:3005) for calculating area
-bioclim30s_present_skeetch_area <- st_transform(bioclim30s_present_skeetch_sf, "EPSG:3005")
-bioclim30s_present_skeetch_area <- st_area(bioclim30s_present_skeetch_sf) # 1.98e+9 m^2
-# convert from m^2 to km^2
-bioclim30s_present_skeetch_area <- units::set_units(st_area(bioclim30s_present_skeetch_sf), km^2) 
-# 3169 km^2 of suitable habitat
-
-# proportion of suitable area relative to Skeetchestn Territory:
-proportion_suitable_bioclim30s_present_skeetch <- bioclim30s_present_skeetch_area/skeetch_area
-# 45.3%
-
-
-
-# Future Suitable Area from Bioclim30s Model:
-
-
-
-# turn presence into polygon so we can calculate suitable area
-# first need to filter out presence cells from raster
-bioclim30s_future_presence <- bioclim30s_future_binary %>% 
-  dplyr::filter(binary_mean == "presence")
-
-# vectorize raster to get a polygon around presences
-# need to turn raster into data.frame first
-bioclim30s_future_presence <- as.polygons(bioclim30s_future_presence)
-
-# now turn prediction_present_pres polygons into sf object
-bioclim30s_future_sf <- st_as_sf(bioclim30s_future_presence)
-
-crs(bioclim30s_future_sf) # WGS84
-
-# reproject CRS to BC Albers (equal area projection, EPSG:3005) for calculating area
-bioclim30s_future_area <- st_transform(bioclim30s_future_sf, "EPSG:3005")
-bioclim30s_future_area <- st_area(bioclim30s_future_sf) # 1.15e+12 m^2
-# convert from m^2 to km^2
-bioclim30s_future_area <- units::set_units(st_area(bioclim30s_future_sf), km^2) 
-# 891 433 km^2 of suitable habitat
-
-# divide predicted present area by total study area to get proportion
-proportion_suitable_future <- bioclim30s_future_area/na_bound_area
-# 21.3%
-
-# now calculate difference between suitable habitat in the present and 2081-2100
-# first need to convert area from class "units" to numeric
-bioclim30s_present_area_num <- as.numeric(bioclim30s_present_area)
-bioclim30s_future_area_num <- as.numeric(bioclim30s_future_area)
-change_area_present_to_2100 <- bioclim30s_future_area_num - bioclim30s_present_area_num
-# -123 277.849540642 km^2 change in suitable habitat
-
-# percent change:
-percent_change_total_area <- proportion_suitable_future - proportion_suitable_bioclim30s_present
-# -4.1281... % decrease in suitable habitat?? That can't be right
-
-
-
-# Future Suitable Area in Skeetchestn Territory from Bioclim30s Model:
-
-
-
-# crop and mask total projection to Skeetchestn Territory
-bioclim30s_future_binary_eqArea <- project(bioclim30s_future_binary, "EPSG:3005")
-bioclim30s_future_binary_skeetch <- crop(bioclim30s_future_binary_eqArea, skeetch_vect)
-bioclim30s_future_binary_skeetch <- mask(bioclim30s_future_binary_skeetch, skeetch_vect)
-
-ggplot() +
-  geom_spatraster(data = bioclim30s_future_binary_skeetch, aes(fill = binary_mean))
-
-# turn presence into polygon so we can calculate suitable area
-# first need to filter out presence cells from raster
-bioclim30s_future_presence_skeetch <- bioclim30s_future_binary_skeetch %>% 
-  dplyr::filter(binary_mean == "presence")
-
-# vectorize raster to get a polygon around presences
-# need to turn raster into data.frame first
-bioclim30s_future_presence_skeetch <- as.polygons(bioclim30s_future_presence_skeetch)
-
-# now turn prediction_future polygons into sf object
-bioclim30s_future_skeetch_sf <- st_as_sf(bioclim30s_future_presence_skeetch)
-crs(bioclim30s_future_skeetch_sf) # BC Albers
-
-# calculate area
-bioclim30s_future_skeetch_area <- st_area(bioclim30s_future_skeetch_sf) # 1.98e+9 m^2
-# convert from m^2 to km^2
-bioclim30s_future_skeetch_area <- units::set_units(st_area(bioclim30s_future_skeetch_sf), km^2) 
-# 1422 km^2 of suitable habitat
-
-# proportion of suitable area relative to Skeetchestn Territory:
-proportion_suitable_future_skeetch <- bioclim30s_future_skeetch_area/skeetch_area
-# 20.3%
-
-# area changed from present to future:
-# now calculate difference between suitable habitat in the present and 2081-2100
-# first need to convert area from class "units" to numeric
-bioclim30s_present_skeetch_num <- as.numeric(bioclim30s_present_skeetch_area)
-bioclim30s_future_skeetch_num <- as.numeric(bioclim30s_future_skeetch_area)
-change_skeetch_present_to_2100 <- bioclim30s_future_skeetch_num - bioclim30s_present_skeetch_num
-#  km^2 change in suitable habitat
-
-# percent change in suitable habitat from present to future:
-percent_change_skeetch <- proportion_suitable_future_skeetch - proportion_suitable_bioclim30s_present_skeetch
-# -25%
 
 
 
@@ -432,22 +100,200 @@ write.csv(ensemble_AUC, file = "outputs/skwenkwinem_ensemble_metrics.csv")
 
 # plot ensemble metrics together
 ensemble_metrics <- ggplot(ensemble_AUC, aes(x = algorithm, y = mean, colour = model)) +
-                      geom_point() +
-                      geom_errorbar(aes(ymin = mean - std_err, ymax = mean + std_err)) +
-                      ggtitle("Ensemble Model Performance") +
-                      labs(x = "Algorithm", y = "Mean AUC")
+  geom_point() +
+  geom_errorbar(aes(ymin = mean - std_err, ymax = mean + std_err)) +
+  ggtitle("Ensemble Model Performance") +
+  labs(x = "Algorithm", y = "Mean AUC")
 
 # save to file
-ggsave("outputs/ensemble_metrics.png")
+ggsave("outputs/ensemble_metrics.png", plot = ensemble_metrics)
+
+
+
+# Plotting for entire study area:
+
+# Informed Model:
+informed_full_extent_cont <- ggplot() +
+  geom_spatraster(data = informed_present_continuous, aes(fill = mean)) +
+  scale_fill_viridis_c(name = "Probability of Presence", na.value = "transparent") +
+  scale_x_continuous(name = "Longitude (°W)", 
+                     # breaks = c(105, 110, 115, 120, 125, 130, 135),
+                     labels = c("135", "130", "125", "120", "115", "110", "105"), 
+                     # limits = c(-103.04, -137.07),
+                     expand = c(0,0)) +
+  # theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(name = "Latitude (°N)",
+                     #limits = c(50.3, 51.6),
+                     breaks = c(35, 40, 45, 50, 55),
+                     labels = c("35", "40", "45", "50", "55"), 
+                     expand = c(0, 0)) +
+  labs(title = "Present Habitat Suitability", 
+       subtitle = "Informed Model")
+
+informed_full_extent_cont
+ggsave("outputs/informed_full_extent_cont.png", plot = informed_full_extent_cont)
+
+
+# Bioclim30s Present Model:
+bioclim_pres_full_extent_cont <- ggplot() +
+  geom_spatraster(data = bioclim30s_present_continuous, aes(fill = mean)) +
+  scale_fill_viridis_c(name = "Probability of Presence", na.value = "transparent") +
+  scale_x_continuous(name = "Longitude (°W)", 
+                     # breaks = c(105, 110, 115, 120, 125, 130, 135),
+                     labels = c("135", "130", "125", "120", "115", "110", "105"), 
+                     # limits = c(-103.04, -137.07),
+                     expand = c(0,0)) +
+  # theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(name = "Latitude (°N)",
+                     #limits = c(50.3, 51.6),
+                     breaks = c(35, 40, 45, 50, 55),
+                     labels = c("35", "40", "45", "50", "55"), 
+                     expand = c(0, 0)) +
+  labs(title = "Present Habitat Suitability", 
+       subtitle = "Bioclim Model")
+
+bioclim_pres_full_extent_cont
+
+ggsave("outputs/bioclim_pres_full_extent_cont.png", plot = bioclim_pres_full_extent_cont)
+
+
+# Bioclim30s Future Model:
+bioclim_fut_full_extent_cont <- ggplot() +
+  geom_spatraster(data = bioclim30s_future_continuous, aes(fill = mean)) +
+  scale_fill_viridis_c(name = "Probability of Presence", na.value = "transparent") +
+  scale_x_continuous(name = "Longitude (°W)", 
+                     # breaks = c(105, 110, 115, 120, 125, 130, 135),
+                     labels = c("135", "130", "125", "120", "115", "110", "105"), 
+                     # limits = c(-103.04, -137.07),
+                     expand = c(0,0)) +
+  # theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(name = "Latitude (°N)",
+                     #limits = c(50.3, 51.6),
+                     breaks = c(35, 40, 45, 50, 55),
+                     labels = c("35", "40", "45", "50", "55"), 
+                     expand = c(0, 0)) +
+  labs(title = "Future Habitat Suitability", 
+       subtitle = "Bioclim Model")
+
+bioclim_fut_full_extent_cont
+
+ggsave("outputs/bioclim_fut_full_extent_cont.png", plot = bioclim_fut_full_extent_cont)
+
+
+
+# Plot continuous rasters together:
+# create multilayer ggplot object?
+full_extent_plots <- c(informed_full_extent_cont, 
+                       bioclim_pres_full_extent_cont, 
+                       bioclim_fut_full_extent_cont)
+library(patchwork)
+informed_full_extent_cont | bioclim_pres_full_extent_cont | bioclim_fut_full_extent_cont
+
+
+
+# Calculate hillshade
+slopes <- terra::terrain(elevation, "slope", unit = "radians")
+aspect <- terra::terrain(elevation, "aspect", unit = "radians")
+hillshade <- terra::shade(slopes, aspect)
+
+# Plot hillshading as a basemap:
+# Use Skeetchestn Territory as x and y limits:
+terra::plot(hillshade, col = gray(0:100 / 100), legend = FALSE, axes = FALSE,
+            xlim = st_bbox(skeetch_vectWGS84)[c(1,3)], ylim = st_bbox(skeetch_vectWGS84)[c(2,4)])
+
+# create a grayscale colour palette
+gray_palette <- hcl.colors(100, "Grays")
+# overlay with elevation
+
+terra::plot(elevation, col = gray_palette, alpha = 0.4, legend = FALSE,
+            axes = FALSE, add = TRUE)
+# add contour lines
+terra::contour(elevation, col = "grey40", add = TRUE, nlevels = 15)
+
+
+# Crop predictions to Skeetchestn Territory:
+informed_present_skeetch <- crop(informed_present_continuous, skeetch_extent)
+bioclim30s_present_skeetch <- crop(bioclim30s_present_continuous, skeetch_extent)
+bioclim30s_future_skeetch <- crop(bioclim30s_future_continuous, skeetch_extent)
+
+# turn Skeetchestn boundary vector from polygon into lines
+skeetch_lines <- as.lines(skeetch_vectWGS84)
+
+# Plot continuous prediction from informed model for Skeetchestn Territory:
+
+skeetch_informed_cont <- ggplot() +
+  geom_spatraster(data = informed_present_skeetch, aes(fill = mean)) +
+  geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
+  scale_fill_viridis_c(name = "Probability of Presence") +
+  scale_x_continuous(name = "Longitude (°W)", 
+                     # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
+                     labels = c("121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"), 
+                     expand = c(0,0)) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(name = "Latitude (°N)",
+                     breaks = c(50.4, 50.6, 50.8, 51.0, 51.2, 51.4),
+                     labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4"), 
+                     expand = c(0, 0)) +
+  labs(title = "Present Habitat Suitability", 
+       subtitle = "Informed Model")
+
+skeetch_informed_cont
+
+ggsave("outputs/skeetch_informed_cont.png", plot = skeetch_informed_cont)
+
+
+
+# plot continuous prediction from bioclim30s present model for Skeetchestn:
+
+skeetch_bioclim_present_cont <- ggplot() +
+  geom_spatraster(data = bioclim30s_present_skeetch, aes(fill = mean)) +
+  geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
+  scale_fill_viridis_c(name = "Probability of Presence") +
+  scale_x_continuous(name = "Longitude (°W)", 
+                     # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
+                     labels = c("121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"), 
+                     expand = c(0,0)) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(name = "Latitude (°N)",
+                     breaks = c(50.4, 50.6, 50.8, 51.0, 51.2, 51.4),
+                     labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4"), 
+                     expand = c(0, 0)) +
+  labs(title = "Present Habitat Suitability", 
+       subtitle = "Bioclim30s Model")
+
+skeetch_bioclim_present_cont
+
+ggsave("outputs/skeetch_bioclim_present_cont.png", plot = skeetch_bioclim_present_cont)
+
+
+# plot continuous prediction from bioclim30s future model for Skeetchestn:
+
+skeetch_bioclim_future_cont <- ggplot() +
+  geom_spatraster(data = bioclim30s_future_skeetch, aes(fill = mean)) +
+  geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
+  scale_fill_viridis_c(name = "Probability of Presence") +
+  scale_x_continuous(name = "Longitude (°W)", 
+                     # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
+                     labels = c("121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"), 
+                     expand = c(0,0)) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(name = "Latitude (°N)",
+                     breaks = c(50.4, 50.6, 50.8, 51.0, 51.2, 51.4),
+                     labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4"), 
+                     expand = c(0, 0)) +
+  labs(title = "Future Habitat Suitability", 
+       subtitle = "Bioclim30s Model")
+
+skeetch_bioclim_future_cont
+
+ggsave("outputs/skeetch_bioclim_future_cont.png", plot = skeetch_bioclim_future_cont)
 
 
 
 
 # Plot continuous rasters together:
-# create multilayer raster:
-predictions_continuous <- c(informed_present_continuous, 
-                            bioclim30s_present_continuous,
-                            bioclim30s_future_continuous)
+
+
 
 predictions_continuous_plot <- ggplot() +
   geom_spatraster(informed_present_continuous, aes(fill = mean)) +
@@ -459,21 +305,3 @@ ggsave("outputs/predictions_continuous.png")
 
 
 
-
-# plot Skeetchestn prediction with 3D elevation
-elevation <- rast("data/processed/elevation.tif")
-
-# Calculate hillshade
-slopes <- terra::terrain(elevation, "slope", unit = "radians")
-aspect <- terra::terrain(elevation, "aspect", unit = "radians")
-hillshade <- terra::shade(slopes, aspect)
-
-# Plot hillshading as a basemap:
-# Use Skeetchestn Territory as x and y limits:
-terra::plot(hillshade, col = gray(0:100 / 100), legend = FALSE, axes = FALSE,
-            xlim = st_bbox(skeetch_vectWGS84)[c(1,3)], ylim = st_bbox(skeetch_vectWGS84)[c(2,4)])
-# overlay with elevation
-terra::plot(elevation, col = terrain.colors(25), alpha = 0.4, legend = FALSE,
-            axes = FALSE, add = TRUE)
-# add contour lines
-terra::contour(elevation, col = "grey40", add = TRUE, nlevels = 15)

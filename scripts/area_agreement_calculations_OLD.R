@@ -22,6 +22,13 @@ informed_present_binary <- rast("outputs/skwenkwinem_informed_predict_present_bi
 bioclim30s_present_binary <- rast("outputs/skwenkwinem_bioclim30s_predict_present_binary.tif")
 bioclim30s_future_binary <- rast("outputs/skwenkwinem_bioclim30s_predict_future_binary.tif")
 
+
+# total study area boundary:
+# vector object to use for masking and area calculations
+na_bound_vect <- vect("data/extents/na_bound_vect.shp")
+# sf object masked to study extent, for area calculations
+na_bound_sf <- read_sf("data/extents/na_bound_sf.shp")
+
 # Skeetchestn territory boundary vector for masking:
 skeetch_vect <- vect("data/extents/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
 # transform to WGS84:
@@ -30,6 +37,26 @@ skeetch_vectWGS84 <- project(skeetch_vect, "EPSG:4326")
 # create an extent object slightly larger than skeetch_vectWGS84
 skeetch_vectWGS84 # round up extent values:
 skeetch_extent <- ext(-121.6, -120.1, 50.3, 51.6) # xmin xmax ymin ymax
+
+
+# Area Calculations
+
+
+# Overall study extent:
+# reproject CRS to BC Albers (equal area projection, EPSG:3005) for calculating area
+na_bound_albers <- st_transform(na_bound_sf, "EPSG:3005")
+# calculate study area, in m^2 (default)
+na_bound_area <- st_area(na_bound_albers) # 4.18e+12 m^2
+na_bound_area <- units::set_units(st_area(na_bound_albers), km^2) # 4 183 596  km^2
+
+
+# Skeetchestn Territory:
+skeetch_sf <- read_sf("data/raw/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
+plot(skeetch_sf)
+crs(skeetch_sf) # BC Albers, NAD83
+skeetch_area <- st_area(skeetch_sf) # 7e+09 m^2
+# convert from m^2 to km^2
+skeetch_area <- units::set_units(st_area(skeetch_sf), km^2) # 6996 km^2
 
 
 # Get area of agreement between Informed and Bioclim30s (present) models:
