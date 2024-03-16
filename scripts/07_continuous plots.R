@@ -294,14 +294,68 @@ ggsave("outputs/skeetch_bioclim_future_cont.png", plot = skeetch_bioclim_future_
 # Plot continuous rasters together:
 
 
+# Full Study Extent:
+
+
+# need to change layer names
+names(informed_present_continuous) <- "informed_present"
+names(bioclim30s_present_continuous) <- "bioclim_present"
+names(bioclim30s_future_continuous) <- "bioclim_future"
+continuous_predictions <- c(informed_present_continuous, 
+                            bioclim30s_present_continuous,
+                            bioclim30s_future_continuous)
+continuous_predictions
+
 
 predictions_continuous_plot <- ggplot() +
-  geom_spatraster(informed_present_continuous, aes(fill = mean)) +
-  geom_spatraster(bioclim30s_present_continuous) +
-  geom_spatraster(bioclim30s_future_continuous)
-  facet_wrap(~lyr, nrow = 1, ncol = 3)
+  geom_spatraster(data = binary_predictions) +
+  facet_wrap(~lyr, nrow = 1, ncol = 3) +
+  theme(strip.background = element_blank(),
+        panel.border = element_rect(colour = NA, fill = NA)) +
+  scale_fill_viridis_c(name = "Probability of \n Presence", na.value = "white") +
+  scale_x_continuous(name = "Longitude (°W)", 
+                     # breaks = c(105, 110, 115, 120, 125, 130, 135),
+                     labels = c("135", "130", "125", "120", "115", "110", "105"), 
+                     # limits = c(-103.04, -137.07),
+                     expand = c(0,0)) +
+  # theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(name = "Latitude (°N)",
+                     #limits = c(50.3, 51.6),
+                     breaks = c(35, 40, 45, 50, 55),
+                     labels = c("35", "40", "45", "50", "55"), 
+                     expand = c(0, 0)) +
+  theme_classic()
 
-ggsave("outputs/predictions_continuous.png")
+
+
+# Skeetchestn Territory:
 
 
 
+# change names of our raster layers:
+names(informed_present_skeetch) <- "informed_present"
+names(bioclim30s_present_skeetch) <- "bioclim_present"
+names(bioclim30s_future_skeetch) <- "bioclim_future"
+
+# create a multilayer raster:
+predictions_cont_skeetch <- c(informed_present_skeetch, 
+                              bioclim30s_present_skeetch, 
+                              bioclim30s_future_skeetch)
+
+predictions_cont_skeetch_plot <- ggplot() +
+  geom_spatraster(data = predictions_cont_skeetch) +
+  geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
+  facet_wrap(~lyr, nrow = 1, ncol = 3) +
+  theme(strip.background = element_blank(),
+        panel.border = element_rect(colour = NA, fill = NA)) +
+  scale_fill_viridis_c(name = "Probability of \n Presence", na.value = "white") +
+  scale_x_continuous(name = "Longitude (°W)", 
+                     # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
+                     labels = c("121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"), 
+                     expand = c(0,0)) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(name = "Latitude (°N)",
+                     breaks = c(50.4, 50.6, 50.8, 51.0, 51.2, 51.4),
+                     labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4"), 
+                     expand = c(0, 0)) +
+  theme_classic()

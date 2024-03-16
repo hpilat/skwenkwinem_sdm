@@ -201,6 +201,59 @@ percent_overlap <- (model_agreement_area / (informed_classified_area + bioclim_c
 # 36.4 % overlap
 
 
+# check that all areas add to total area: need to isolate pseudoabsences
+# calculate area predicted to be unsuitable in bioclim model:
+
+# filter out cells classified as pseudoabsences (0)
+pseudo_bioclim_filt <- bioclim_classified_albers %>% 
+  dplyr::filter(binary_mean == 0)
+plot(pseudo_bioclim_filt)
+
+# convert raster cells to polygons so we can convert to an sf object:
+pseudo_bioclim_polygons <- as.polygons(pseudo_bioclim_filt)
+
+# convert to sf object so we can calculate area:
+pseudo_bioclim_sf <- st_as_sf(pseudo_bioclim_polygons)
+pseudo_bioclim_sf
+
+# calculate area:
+pseudo_bioclim_area <- st_area(pseudo_bioclim_sf) # 2.9e+12
+# convert from m^2 to km^2
+pseudo_bioclim_area <- units::set_units(st_area(pseudo_bioclim_sf), km^2) 
+# 2 904 549 km^2 of UNsuitable habitat
+
+# repeat for informed_classified_area
+
+
+# filter out cells classified as pseudoabsences (0)
+pseudo_informed_filt <- informed_classified_albers %>% 
+  dplyr::filter(binary_mean == 0)
+plot(pseudo_informed_filt)
+
+# convert raster cells to polygons so we can convert to an sf object:
+pseudo_informed_polygons <- as.polygons(pseudo_informed_filt)
+
+# convert to sf object so we can calculate area:
+pseudo_informed_sf <- st_as_sf(pseudo_informed_polygons)
+pseudo_informed_sf
+
+# calculate area:
+pseudo_informed_area <- st_area(pseudo_informed_sf) # 2.9e+12
+# convert from m^2 to km^2
+pseudo_informed_area <- units::set_units(st_area(pseudo_informed_sf), km^2) 
+# 2 831 759 km^2 of UNsuitable habitat
+
+# difference in pseudoabsence habitat between informed and bioclim:
+pseudo_difference <- pseudo_bioclim_area - pseudo_informed_area
+# 72 790
+
+
+
+total_area_bioclim <- ((pseudo_bioclim_area + pseudo_informed_area) - pseudo_difference) + ((informed_classified_area + bioclim_classified_area) - model_agreement_area)
+# 6 796 242 mk^7
+
+
+
 
 # Plotting:
 
