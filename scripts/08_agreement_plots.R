@@ -389,5 +389,5 @@ agreement_skeetch_facet_plot <- ggplot() +
 
 agreement_skeetch_facet_plot
 
-ggsave("outputs/agreement_skeetch_faceted.png", agreement_facet_plot, 
+ggsave("outputs/agreement_skeetch_faceted.png", agreement_skeetch_facet_plot, 
        width = 12, height = 4, units = "in")
