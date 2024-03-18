@@ -4,82 +4,74 @@
 
 library(sf)
 library(terra)
-
-
-# From Dave:
-model_agreement_fut <- rast("outputs/model_agreement_future.tif")
-model_agreement_fut
-# so total dimensions / area == 
-3143 * 4084
-# 12,836,012 cells
-cell_counts <- freq(model_agreement_fut)
-cell_counts
-#how many cells in count column
-sum(cell_counts$count)
-#[1] 6656291 # !half the total dimensions
-# how many cells are NA?
-global(model_agreement_fut, fun="isNA")
-#binary_mean 6179721 # again, about half, 
-# add cells with values to calls that are NAs to check counts.
-sum(cell_counts$count) + global(model_agreement_fut, fun="isNA") # good this matches the total cells from the dimensions.
-#                 isNA
-# binary_mean 12836012
-# Proportion of total area in each category
-cell_counts$prop <- cell_counts$count/sum(cell_counts$count)
-cell_counts$prop
-# predicted total is sum of present, future, and both
-sum(cell_counts$count[2:4])
-# 2037928
-# present predicted suitable habitat, as a percent of total predicted suitable habitat:
-(cell_counts$count[2]/sum(cell_counts$count[2:4]))*100
-#[1] 26.77548
-# future predicted suitable habitat, as a percent of total predicted suitable habitat:
-(cell_counts$count[3]/sum(cell_counts$count[2:4]))*100
-# [1] 13.81997
-# area of agreement between present and future predicted suitable habitat
-  # as a percent of total predicted suitable habitat
-(cell_counts$count[4]/sum(cell_counts$count[2:4]))*100
-# [1] 59.40455
-
-# now get range of cell sizes over our Study extent:
-rast_agg <- aggregate(rast(model_agreement_fut), 100)
-rast_agg
-cell_size <- cellSize(rast_agg, unit="km") / 10000
-resampled_rast <- resample(cell_size, model_agreement_fut)
-minmax(cell_size)
-# cell size ranges from 0.4613605 m^2 to 0.7288025 m^2
-
-
-area_zones <- zonal(resampled_rast, model_agreement_fut, sum, na.rm=TRUE)
-area_zones
-
-
-
-## Total Study Area:
-
-# read in binary prediction rasters:
-informed_present_binary <- rast("outputs/skwenkwinem_informed_predict_present_binary.tif")
-bioclim30s_present_binary <- rast("outputs/skwenkwinem_bioclim30s_predict_present_binary.tif")
-bioclim30s_future_binary <- rast("outputs/skwenkwinem_bioclim30s_predict_future_binary.tif")
+library(tidyverse)
+library(tidyterra)
 
 
 # total study area boundary:
 # vector object to use for masking and area calculations
-na_bound_vect <- vect("data/extents/na_bound_vect.shp")
+na_bound_vect <- vect("data/extents/na_bound_vect.shp") # WGS84
+# reproject to Albers equal area:
+na_bound_albers <- project(na_bound_vect, "EPSG:3005")
+
 # sf object masked to study extent, for area calculations
-na_bound_sf <- read_sf("data/extents/na_bound_sf.shp")
+na_bound_sf <- read_sf("data/extents/na_bound_sf.shp") #WGS84
+na_bound_sf_albers <- st_transform(na_bound_sf, "EPSG:3005")
+
+# Skeetchestn territory boundary vector for masking:
+skeetch_vect_albers <- vect("data/extents/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
+# tranform to sf object:
+skeetch_sf_albers <- st_as_sf(skeetch_vect_albers)
+# transform to WGS84:
+skeetch_vectWGS84 <- project(skeetch_vect_albers, "EPSG:4326")
+
+
+# create an extent object slightly larger than skeetch_vectWGS84
+skeetch_vectWGS84 # round up extent values:
+skeetch_extentWGS84 <- ext(-121.6, -120.1, 50.3, 51.6) # xmin, xmax, ymin, ymax
+# reproject to Albers equal area:
+skeetch_extent_albers <- project(skeetch_extentWGS84, from = "EPSG:4326", to = "EPSG:3005")
+
+
+
+
+# Read in Binary Predictions:
+informed_present_binary <- rast("outputs/skwenkwinem_informed_predict_present_binary.tif")
+bioclim30s_present_binary <- rast("outputs/skwenkwinem_bioclim30s_predict_present_binary.tif")
+bioclim30s_future_binary <- rast("outputs/skwenkwinem_bioclim30s_predict_future_binary.tif")
+# reproject to Albers equal area:
+informed_present_binary <- project(informed_present_binary, "EPSG:3005")
+bioclim30s_present_binary <- project(bioclim30s_present_binary, "EPSG:3005")
+bioclim30s_future_binary <- project(bioclim30s_future_binary, "EPSG:3005")
+
+summary(informed_present_binary) # 62469 NA values
+summary(bioclim30s_present_binary) # 61 236 NA values
+summary(bioclim30s_future_binary) # 61 236 NA values
+
+# Area of overall study extent:
+# calculate study area, in m^2 (default)
+na_bound_vect <- project(na_bound_vect, "EPSG:3005")
+na_bound_poly <- as.polygons(na_bound_vect)
+na_bound_sf_albers <- st_as_sf(na_bound_poly)
+na_bound_area <- st_area(na_bound_sf_albers) # 4.18e+12 m^2
+na_bound_area <- units::set_units(st_area(na_bound_sf_albers), km^2) # 4 183 596  km^2
+
+
+# Area of Skeetchestn Territory:
+plot(skeetch_sf_albers)
+skeetch_sf_albers # BC Albers, NAD83
+skeetch_area <- st_area(skeetch_sf_albers) # 7e+09 m^2
+# convert from m^2 to km^2
+skeetch_area <- units::set_units(st_area(skeetch_sf_albers), km^2) # 6996 km^2
 
 
 
 # Informed Prediction:
 informed_present_binary
-
-# reproject raster to Albers equal area projection:
-informed_present_albers <- project(informed_present_binary, "EPSG:4326")
-plot(informed_present_albers)
+plot(informed_present_binary)
 
 # filter out cells classified as "presence"
-informed_presence_filt <- informed_present_albers %>% 
+informed_presence_filt <- informed_present_binary %>% 
   dplyr::filter(binary_mean == "presence")
 plot(informed_presence_filt)
 
@@ -90,25 +82,38 @@ informed_presence_polygons <- as.polygons(informed_presence_filt)
 informed_presence_sf <- st_as_sf(informed_presence_polygons)
 informed_presence_sf
 
-# project to Albers equal area:
-informed_presence_sf <- st_transform(informed_presence_sf, "EPSG:3005")
-
 # calculate area:
 informed_presence_area <- st_area(informed_presence_sf) # 9.59e+11
 # convert from m^2 to km^2
 informed_presence_area <- units::set_units(st_area(informed_presence_sf), km^2) 
-# 958 837 km^2 of suitable habitat
+# 958 665 km^2 of suitable habitat
+
+informed_present_binary
+# filter out cells classified as "pseudoabs"
+informed_pseudo_filt <- informed_present_binary %>% 
+  dplyr::filter(binary_mean == "pseudoabs")
+plot(informed_pseudo_filt)
+
+# convert raster cells to polygons so we can convert to an sf object:
+informed_pseudo_polygons <- as.polygons(informed_pseudo_filt)
+
+# convert to sf object so we can calculate area:
+informed_pseudo_sf <- st_as_sf(informed_pseudo_polygons)
+informed_pseudo_sf
+
+# calculate area:
+informed_pseudo_area <- st_area(informed_pseudo_sf) # 2.94e+12
+# convert from m^2 to km^2
+informed_pseudo_area <- units::set_units(st_area(informed_pseudo_sf), km^2) 
+# 2 935 413 km^2 of suitable habitat
 
 
 # Bioclim30s present prediction:
 bioclim30s_present_binary
-
-# reproject raster to Albers equal area projection:
-bioclim_present_albers <- project(bioclim30s_present_binary, "EPSG:4326")
-plot(bioclim_present_albers)
+plot(bioclim30s_present_binary)
 
 # filter out cells classified as "presence"
-bioclim_present_filt <- bioclim_present_albers %>% 
+bioclim_present_filt <- bioclim30s_present_binary %>% 
   dplyr::filter(binary_mean == "presence")
 plot(bioclim_present_filt)
 
@@ -119,26 +124,19 @@ bioclim_present_polygons <- as.polygons(bioclim_present_filt)
 bioclim_present_sf <- st_as_sf(bioclim_present_polygons)
 bioclim_present_sf
 
-# project to Albers equal area:
-bioclim_present_sf <- st_transform(bioclim_present_sf, "EPSG:3005")
-bioclim_present_sf
-
 # calculate area:
 bioclim_present_area <- st_area(bioclim_present_sf) # 1.02e+12
 # convert from m^2 to km^2
 bioclim_present_area <- units::set_units(st_area(bioclim_present_sf), km^2) 
-# 1 017 427 km^2 of suitable habitat
+# 1 017 274 km^2 of suitable habitat
 
 # get the intersection of the informed and bioclim predicted suitable habitat:
 model_agreement_present <- terra::intersect(informed_presence_filt, bioclim_present_filt)
 model_agreement_present
 plot(model_agreement_present)
 
-# reproject to Albers equal area projection:
-agreement_present_albers <- project(model_agreement_present, "EPSG:4326")
-
 # filter out cells classified as "TRUE" (where the models intersect)
-agreement_present_filt <- agreement_present_albers %>% 
+agreement_present_filt <- model_agreement_present %>% 
   dplyr::filter(binary_mean == TRUE)
 plot(agreement_present_filt)
 
@@ -149,26 +147,25 @@ agreement_present_polygons <- as.polygons(agreement_present_filt)
 agreement_present_sf <- st_as_sf(agreement_present_polygons)
 agreement_present_sf
 
-# project to Albers equal area:
-agreement_present_sf <- st_transform(agreement_present_sf, "EPSG:3005")
-
 # calculate area:
 agreement_present_area <- st_area(agreement_present_sf) # 7.32e+11
 # convert from m^2 to km^2
 agreement_present_area <- units::set_units(st_area(agreement_present_sf), km^2) 
-# 731 779 km^2 of suitable habitat
+# 731 673 km^2 of suitable habitat
+
+
+# calculate difference in suitable area from present to future:
+difference_area_pres <- bioclim_present_area - informed_presence_area
+# 58 609 km^2 more predicted by bioclim model than informed model
+
 
 
 # Bioclim30s Future Prediction:
 
 bioclim30s_future_binary
 
-# reproject raster to Albers equal area projection:
-bioclim_future_albers <- project(bioclim30s_future_binary, "EPSG:4326")
-plot(bioclim_future_albers)
-
 # filter out cells classified as "presence"
-bioclim_future_filt <- bioclim_future_albers %>% 
+bioclim_future_filt <- bioclim30s_future_binary %>% 
   dplyr::filter(binary_mean == "presence")
 plot(bioclim_future_filt)
 
@@ -178,9 +175,6 @@ bioclim_future_polygons <- as.polygons(bioclim_future_filt)
 # convert to sf object so we can calculate area:
 bioclim_future_sf <- st_as_sf(bioclim_future_polygons)
 bioclim_future_sf
-
-# project to Albers equal area:
-bioclim_future_sf <- st_transform(bioclim_future_sf, "EPSG:3005") 
 
 # calculate area:
 bioclim_future_area <- st_area(bioclim_future_sf) # 8.94e+11
@@ -194,11 +188,8 @@ model_agreement_future <- terra::intersect(bioclim_present_filt, bioclim_future_
 model_agreement_future
 plot(model_agreement_future)
 
-# reproject to Albers equal area projection:
-agreement_future_albers <- project(model_agreement_future, "EPSG:4326")
-
 # filter out cells classified as "TRUE" (where the models intersect)
-agreement_future_filt <- agreement_future_albers %>% 
+agreement_future_filt <- model_agreement_future %>% 
   dplyr::filter(binary_mean == TRUE)
 plot(agreement_future_filt)
 
@@ -209,24 +200,17 @@ agreement_future_polygons <- as.polygons(agreement_future_filt)
 agreement_future_sf <- st_as_sf(agreement_future_polygons)
 agreement_future_sf
 
-# project to Albers equal area:
-agreement_future_sf <- st_transform(agreement_future_sf, "EPSG:3005")
-agreement_future_sf
-
 # calculate area:
 agreement_future_area <- st_area(agreement_future_sf) # 7.21e+11
 # convert from m^2 to km^2
 agreement_future_area <- units::set_units(st_area(agreement_future_sf), km^2) 
-# 720 657 km^2 of suitable habitat
+# 720 600 km^2 of suitable habitat
 
 
 # calculate difference in suitable area from present to future:
-difference_area <- bioclim_future_area - bioclim_present_area
-# -123 923 km^2
+difference_area_fut <- bioclim_future_area - bioclim_present_area
+# -123 770 km^2
 
-# calculate proportion of suitable habitat changed from present to future:
-proportion_diff_area <- difference_area / bioclim_present_area
-# -0.122
 
 
 # Total study area:
