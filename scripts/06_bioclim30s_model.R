@@ -23,8 +23,6 @@ library(xgboost)
 na_bound_rast <- rast("data/extents/na_bound_rast.tif")
 # vector object to use for masking and area calculations
 na_bound_vect <- vect("data/extents/na_bound_vect.shp")
-# sf object masked to study extent, for area calculations
-na_bound_sf <- read_sf("data/extents/na_bound_sf.shp")
 
 # read in skwenkwinem occurrences:
 # cropped to proper study extent in 04_data_processing.R
