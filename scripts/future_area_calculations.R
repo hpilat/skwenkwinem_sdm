@@ -1,3 +1,9 @@
+
+library(terra)
+library(tidyverse)
+library(tidyterra)
+library(sf)
+
 # Skeetchestn Territory:
 skeetch_sf <- st_read("data/extents/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
 skeetch_sf
@@ -17,6 +23,7 @@ skeetch_area <- units::set_units(st_area(skeetch_sf), km^2)
 
 # read in binary prediction raster:
 model_agreement_fut <- rast("outputs/model_agreement_future.tif")
+model_agreement_fut
 
 # crop and mask to Skeetchestn Territory:
 model_agreement_fut_skeetch <- crop(model_agreement_fut_albers, skeetch_extent)
@@ -42,19 +49,31 @@ sum(cell_counts$count) + global(model_agreement_fut, fun="isNA") # good this mat
 # Proportion of total area in each category
 cell_counts$prop <- cell_counts$count/sum(cell_counts$count)
 cell_counts$prop
-# predicted total is sum of present, future, and both
-sum(cell_counts$count[2:4])
+
+# total area of study extent:
+na_bound_area <- sum(cell_counts$count[1:4])
+# 6 656 291
+# predicted total suitable habitat is the sum of present, future, and both
+total_suitable <- sum(cell_counts$count[2:4])
 # 2037928
 # present predicted suitable habitat, as a percent of total predicted suitable habitat:
-(cell_counts$count[2]/sum(cell_counts$count[2:4]))*100
+percent_suitable_present <- (cell_counts$count[2]/sum(cell_counts$count[2:4]))*100
 #[1] 26.77548
+# present predicted suitable habitat, as a percent of total study extent:
+percent_suitable_present_total <- (cell_counts$count[2]/sum(cell_counts$count[1:4]))*100
+# 8.19773354259902
 # future predicted suitable habitat, as a percent of total predicted suitable habitat:
-(cell_counts$count[3]/sum(cell_counts$count[2:4]))*100
+percent_suitable_future <- (cell_counts$count[3]/sum(cell_counts$count[2:4]))*100
 # [1] 13.81997
+# future predicted suitable habitat, as a percent of total study extent:
+percent_suitable_future_total <- (cell_counts$count[3]/sum(cell_counts$count[1:4]))*100
+# 4.23120022847559
 # area of agreement between present and future predicted suitable habitat
 # as a percent of total predicted suitable habitat
-(cell_counts$count[4]/sum(cell_counts$count[2:4]))*100
-# [1] 59.40455
+area_agreement_suitable <- (cell_counts$count[4]/sum(cell_counts$count[2:4]))*100
+# [1] 59.40455 overlap in predictions
+area_agreement_total <- (cell_counts$count[4]/sum(cell_counts$count[1:4]))*100
+# 18.1876363277988
 
 # now get range of cell sizes over our Study extent:
 rast_agg <- aggregate(rast(model_agreement_fut), 100)
@@ -67,3 +86,7 @@ minmax(cell_size)
 
 area_zones <- zonal(resampled_rast, model_agreement_fut, sum, na.rm=TRUE)
 area_zones
+# pseudoabsence = 2833398.3
+# bioclim present = 296816.6
+# bioclim future = 172840.7
+# agreement = 720630.8
