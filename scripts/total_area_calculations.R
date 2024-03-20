@@ -44,15 +44,17 @@ informed_present_binary <- project(informed_present_binary, "EPSG:3005")
 bioclim30s_present_binary <- project(bioclim30s_present_binary, "EPSG:3005")
 bioclim30s_future_binary <- project(bioclim30s_future_binary, "EPSG:3005")
 
-summary(informed_present_binary) # 62469 NA values
+summary(informed_present_binary) # 62 469 NA values
 summary(bioclim30s_present_binary) # 61 236 NA values
 summary(bioclim30s_future_binary) # 61 236 NA values
 
 # Area of overall study extent:
+
+
 # calculate study area, in m^2 (default)
-na_bound_vect <- project(na_bound_vect, "EPSG:3005")
-na_bound_poly <- as.polygons(na_bound_vect)
-na_bound_sf_albers <- st_as_sf(na_bound_poly)
+na_bound_albers
+na_bound_poly <- as.polygons(na_bound_albers)
+na_bound_sf <- st_as_sf(na_bound_poly)
 na_bound_area <- st_area(na_bound_sf_albers) # 4.18e+12 m^2
 na_bound_area <- units::set_units(st_area(na_bound_sf_albers), km^2) # 4 183 596  km^2
 
@@ -129,6 +131,27 @@ bioclim_present_area <- st_area(bioclim_present_sf) # 1.02e+12
 # convert from m^2 to km^2
 bioclim_present_area <- units::set_units(st_area(bioclim_present_sf), km^2) 
 # 1 017 274 km^2 of suitable habitat
+
+
+# filter out cells classified as "pseudoabs":
+bioclim_pseudo_filt <- bioclim30s_present_binary %>% 
+  dplyr::filter(binary_mean == "pseudoabs")
+plot(bioclim_pseudo_filt)
+
+# convert raster cells to polygons so we can convert to an sf object:
+bioclim_pseudo_polygons <- as.polygons(bioclim_pseudo_filt)
+
+# convert to sf object so we can calculate area:
+bioclim_pseudo_sf <- st_as_sf(bioclim_pseudo_polygons)
+bioclim_pseudo_sf
+
+# calculate area:
+bioclim_pseudo_area <- st_area(bioclim_pseudo_sf) # 3.01e+12
+# convert from m^2 to km^2
+bioclim_pseudo_area <- units::set_units(st_area(bioclim_pseudo_sf), km^2) 
+# 3 006 339 km^2 of suitable habitat
+
+
 
 # get the intersection of the informed and bioclim predicted suitable habitat:
 model_agreement_present <- terra::intersect(informed_presence_filt, bioclim_present_filt)
