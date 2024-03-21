@@ -1,3 +1,15 @@
+# This is script 08/10
+# This script calculates area predicted to be suitable for skwenkwinem
+  # over our full study extent
+# please first run the following scripts in the following order:
+# 01_data_download.R
+# 02_continental_divide.Rmd
+# 03_cropped_extent.R
+# 04_data_processing
+# 05_tidysdm_ranunculus_informed.R
+# 06_tidysdm_ranunculus_bioclim30s.R
+
+
 library(terra)
 library(dplyr)
 

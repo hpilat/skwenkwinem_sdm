@@ -25,40 +25,76 @@ skeetch_area <- units::set_units(st_area(skeetch_sf), km^2)
 model_agreement_fut <- rast("outputs/model_agreement_future.tif")
 model_agreement_fut
 
+# project to Albers equal area:
+model_agreement_fut <- project(model_agreement_fut, "EPSG:3005", method = "near")
+plot(model_agreement_fut)
+
 # crop and mask to Skeetchestn Territory:
-model_agreement_fut_skeetch <- crop(model_agreement_fut_albers, skeetch_extent)
+model_agreement_fut_skeetch <- crop(model_agreement_fut, skeetch_extent)
 model_agreement_fut_skeetch <- mask(model_agreement_fut_skeetch, skeetch_vect)
 
 # get dimensions of raster:
 model_agreement_fut
 # so total dimensions / area == 
-3143 * 4084
-# 12836012 cells
+4123 * 4461
+# 18 392 703 cells
+
+# cell resolution in m^2:
+cell_resolution_m <- 749.1733 * 749.1733
+cell_resolution_km <- cell_resolution_m / 1000000
+
+# number of cells in each category?
 cell_counts <- freq(model_agreement_fut)
 cell_counts
-#how many cells in count column
+# 0 = pseudoabsence
+# 2 = bioclim present 
+# 4 = bioclim future 
+# 6 = agreement between both bioclim30s present and future predicted presence
+
+# how many cells in count column?
 sum(cell_counts$count)
-#[1] 6656291 # !half the total dimensions
+#[1] 7 168 884 # ! almost half the total dimensions
 # how many cells are NA?
 global(model_agreement_fut, fun="isNA")
-#binary_mean 6179721 # again, about half, 
+# 11 223 819 
 # add cells with values to calls that are NAs to check counts.
-sum(cell_counts$count) + global(model_agreement_fut, fun="isNA") # good this matches the total cells from the dimensions.
-#                 isNA
-# binary_mean 12836012
+sum(cell_counts$count) + global(model_agreement_fut, fun="isNA") 
+# 18392703 
+
 # Proportion of total area in each category
 cell_counts$prop <- cell_counts$count/sum(cell_counts$count)
 cell_counts$prop
 
 # total area of study extent:
 na_bound_area <- sum(cell_counts$count[1:4])
-# 6 656 291
+na_bound_area
+# 7 168 884 cells
+na_bound_area <- na_bound_area * cell_resolution_km
+na_bound_area 
+# 4 023 612 km^2
+
+cell_counts$count
 # predicted total suitable habitat is the sum of present, future, and both
-total_suitable <- sum(cell_counts$count[2:4])
-# 2037928
+area_total_suitable <- sum(cell_counts$count[c(2, 4),])
+area_total_suitable
+# 2 120 544 cells
+area_total_suitable <- total_suitable * cell_resolution_km
+area_total_suitable
+# 1 190 178 km^2
+
+# predicted suitable habitat from bioclim_present model:
+  # bioclim present only (row 1)
+area_bioclim_present <- cell_counts$count[1]
+area_bioclim_present
+#  5 576 925 cells
+area_bioclim_present <- area_bioclim_present * cell_resolution_km
+area_bioclim_present
+#  296 674 km^2
+
 # present predicted suitable habitat, as a percent of total predicted suitable habitat:
 percent_suitable_present <- (cell_counts$count[2]/sum(cell_counts$count[2:4]))*100
-#[1] 26.77548
+percent_suitable_present
+# 24.92686
 # present predicted suitable habitat, as a percent of total study extent:
 percent_suitable_present_total <- (cell_counts$count[2]/sum(cell_counts$count[1:4]))*100
 # 8.19773354259902

@@ -1,3 +1,16 @@
+# This is script 09/10
+# This script calculates area predicted to be suitable for skwenkwinem
+  # over Skeetchestn Territory
+# please first run the following scripts in the following order:
+# 01_data_download.R
+# 02_continental_divide.Rmd
+# 03_cropped_extent.R
+# 04_data_processing
+# 05_tidysdm_ranunculus_informed.R
+# 06_tidysdm_ranunculus_bioclim30s.R
+# 08_area_calculations_full_extent.R
+
+
 library(terra)
 library(dplyr)
 
