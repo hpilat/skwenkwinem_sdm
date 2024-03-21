@@ -49,7 +49,7 @@ skeetch_extent <- ext(-121.6, -120.1, 50.3, 51.6)
 # Informed Model:
 informed_full_extent_cont <- ggplot() +
   geom_spatraster(data = informed_present_continuous, aes(fill = mean)) +
-  scale_fill_viridis_c(name = "Probability of Presence", na.value = "transparent") +
+  scale_fill_viridis_c(name = "Relative Habitat \n Suitability", na.value = "transparent") +
   scale_x_continuous(name = "Longitude (°W)", 
                      # breaks = c(105, 110, 115, 120, 125, 130, 135),
                      labels = c("135", "130", "125", "120", "115", "110", "105"), 
@@ -71,7 +71,7 @@ ggsave("outputs/informed_full_extent_cont.png", plot = informed_full_extent_cont
 # Bioclim30s Present Model:
 bioclim_pres_full_extent_cont <- ggplot() +
   geom_spatraster(data = bioclim30s_present_continuous, aes(fill = mean)) +
-  scale_fill_viridis_c(name = "Probability of Presence", na.value = "transparent") +
+  scale_fill_viridis_c(name = "Relative Habitat \n Suitability", na.value = "transparent") +
   scale_x_continuous(name = "Longitude (°W)", 
                      # breaks = c(105, 110, 115, 120, 125, 130, 135),
                      labels = c("135", "130", "125", "120", "115", "110", "105"), 
@@ -94,7 +94,7 @@ ggsave("outputs/bioclim_pres_full_extent_cont.png", plot = bioclim_pres_full_ext
 # Bioclim30s Future Model:
 bioclim_fut_full_extent_cont <- ggplot() +
   geom_spatraster(data = bioclim30s_future_continuous, aes(fill = mean)) +
-  scale_fill_viridis_c(name = "Probability of Presence", na.value = "transparent") +
+  scale_fill_viridis_c(name = "Relative Habitat \n Suitability", na.value = "transparent") +
   scale_x_continuous(name = "Longitude (°W)", 
                      # breaks = c(105, 110, 115, 120, 125, 130, 135),
                      labels = c("135", "130", "125", "120", "115", "110", "105"), 
@@ -116,6 +116,7 @@ ggsave("outputs/bioclim_fut_full_extent_cont.png", plot = bioclim_fut_full_exten
 
 
 # Plot continuous rasters together for full study extent:
+
 
 
 # create new rasters so we don't overwrite the originals
@@ -141,7 +142,8 @@ predictions_continuous_plot <- ggplot() +
   theme(axis.line = element_line(colour = "black"),
         strip.background = element_blank(),
         panel.border = element_blank()) +
-  scale_fill_viridis_c(name = "Probability of \n Presence", na.value = "white") +
+  scale_fill_viridis_c(name = "Relative \nHabitat \nSuitability", na.value = "white") +
+  theme(legend.title = element_text(size = 10)) +
   scale_x_continuous(name = "Longitude (°W)", 
                      # breaks = c(105, 110, 115, 120, 125, 130, 135),
                      labels = c("135", "130", "125", "120", "115", "110", "105"), 
@@ -153,6 +155,8 @@ predictions_continuous_plot <- ggplot() +
                      breaks = c(35, 40, 45, 50, 55),
                      labels = c("35", "40", "45", "50", "55"), 
                      expand = c(0, 0))
+
+predictions_continuous_plot
 
 ggsave("outputs/full_extent_cont_plots.png", predictions_continuous_plot, 
        width = 12, height = 4, units = "in")
@@ -173,7 +177,7 @@ skeetch_lines <- as.lines(skeetch_vectWGS84)
 skeetch_informed_cont <- ggplot() +
   geom_spatraster(data = informed_present_skeetch, aes(fill = mean)) +
   geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
-  scale_fill_viridis_c(name = "Probability of Presence") +
+  scale_fill_viridis_c(name = "Relative \nHabitat \nSuitability", na.value = "white") +
   scale_x_continuous(name = "Longitude (°W)", 
                      # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
                      labels = c("121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"), 
@@ -220,7 +224,8 @@ ggsave("outputs/skeetch_bioclim_present_cont.png", plot = skeetch_bioclim_presen
 skeetch_bioclim_future_cont <- ggplot() +
   geom_spatraster(data = bioclim30s_future_skeetch, aes(fill = mean)) +
   geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
-  scale_fill_viridis_c(name = "Probability of Presence") +
+  scale_fill_viridis_c(name = "Relative \nHabitat \nSuitability", na.value = "white") +
+  theme(legend.title = element_text(size = 10)) +
   scale_x_continuous(name = "Longitude (°W)", 
                      # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
                      labels = c("121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"), 
@@ -265,7 +270,8 @@ predictions_cont_skeetch_plot <- ggplot() +
   theme(axis.line = element_line(colour = "black"),
         strip.background = element_blank(),
         panel.border = element_blank()) +
-  scale_fill_viridis_c(name = "Probability of \n Presence", na.value = "white") +
+  scale_fill_viridis_c(name = "Relative \nHabitat \nSuitability", na.value = "white") +
+  theme(legend.title = element_text(size = 10)) +
   scale_x_continuous(name = "Longitude (°W)", 
                      # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
                      labels = c("121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"), 
