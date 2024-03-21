@@ -73,7 +73,7 @@ plot(model_agreement_presNA)
 agreement_present <- ggplot() +
   geom_spatraster(data = model_agreement_presNA, aes(fill = lyr.1)) +
   scale_fill_manual(name = NULL, na.translate = FALSE,
-                    labels = c("bioclim", "overlap", "informed", "pseudoabsence"), 
+                    labels = c("bioclim present", "overlap", "informed present", "pseudoabsence"), 
                     values = c("#FDE725", "#95D054", "#2A7B8EFF", "grey")) +
   scale_x_continuous(name = "Longitude (°W)", 
                      # breaks = c(105, 110, 115, 120, 125, 130, 135),
@@ -117,10 +117,10 @@ agreement_pres_skeetch
 
 skeetch_agreement_present <- ggplot() +
   geom_spatraster(data = agreement_pres_skeetch, aes(fill = lyr.1)) +
-  geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
+  geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white", show.legend = FALSE) +
   theme_classic() +
   scale_fill_manual(name = NULL, na.translate = FALSE,
-                    labels = c("bioclim", "overlap", "informed", "pseudoabsence"), 
+                    labels = c("bioclim present", "overlap", "informed present", "pseudoabsence"), 
                     values = c("#FDE725", "#95D054", "#2A7B8EFF", "grey")) +
   scale_x_continuous(name = "Longitude (°W)", 
                      # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
@@ -149,8 +149,8 @@ ggsave("outputs/skeetch_agreement_present.png", plot = skeetch_agreement_present
 summary(model_agreement_fut)
 # want to set 0 from lyr.1 to NA so they can be ignored in ggplot:
 model_agreement_futNA <- terra::subst(model_agreement_fut, from = 0, to = NA)
-summary(model_agreement_presNA)
-plot(model_agreement_presNA)
+summary(model_agreement_futNA)
+plot(model_agreement_futNA)
 
 # 1 = bioclim present prediction
 # 2 = pseudoabsence
@@ -198,7 +198,7 @@ plot(agreement_fut_skeetch)
 
 skeetch_agreement_future <- ggplot() +
   geom_spatraster(data = agreement_fut_skeetch, aes(fill = lyr.1)) +
-  geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
+  geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white", show.legend = FALSE) +
   theme_classic() +
   scale_fill_manual(name = NULL, na.translate = FALSE,
                     labels = c("bioclim present", "pseudoabsence", "overlap", "bioclim future"), 
@@ -249,8 +249,8 @@ agreement_facet_plot <- ggplot() +
   theme(axis.line = element_line(colour = "black"),
         strip.background = element_blank(),
         panel.border = element_blank()) +
-  scale_fill_manual(name = NULL, na.translate = FALSE, 
-                    labels = c("bioclim present", "informed & bioclim present", "informed", "pseudoabsence", "bioclim present & future", "bioclim future"), 
+  scale_fill_manual(name = NULL, na.translate = FALSE,
+                    labels = c("bioclim present", "informed & bioclim present", "informed present", "pseudoabsence", "bioclim present & future", "bioclim future"), 
                     values = c("#FDE725", "#95D054","#2A7B8EFF", "grey", "#F8870E", "#C73E4C")) +
   scale_x_continuous(name = "Longitude (°W)", 
                      # breaks = c(105, 110, 115, 120, 125, 130, 135),
@@ -272,8 +272,6 @@ ggsave("outputs/agreement_full_extent_faceted.png", agreement_facet_plot,
 
 # Skeetchestn Territory:
 
-# Full study extent:
-
 agreement_pres_skeetch
 agreement_fut_skeetch
 
@@ -290,7 +288,7 @@ agreement_skeetch <- c(agreement_skeetch_temp, agreement_fut_skeetch_temp)
 
 agreement_skeetch_facet_plot <- ggplot() +
   geom_spatraster(data = agreement_skeetch) +
-  geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
+  geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white", show.legend = FALSE) +
   facet_wrap(~lyr, nrow = 1, ncol = 2) +
   theme_classic() +
   theme(axis.line = element_line(colour = "black"),
