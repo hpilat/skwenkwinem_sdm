@@ -161,8 +161,8 @@ plot(model_agreement_futNA)
 agreement_future <- ggplot() +
   geom_spatraster(data = model_agreement_futNA, aes(fill = lyr.1)) +
   scale_fill_manual(name = NULL, na.translate = FALSE,
-                    labels = c("bioclim present", "pseudoabsence", "overlap", "bioclim future"), 
-                    values = c("#FDE725", "grey", "#F8870E", "#C73E4C")) +
+                    labels = c("bioclim present", "overlap", "bioclim future", "pseudoabsence"), 
+                    values = c("#FDE725", "#F8870E", "#C73E4C", "grey")) +
   scale_x_continuous(name = "Longitude (°W)", 
                      # breaks = c(105, 110, 115, 120, 125, 130, 135),
                      labels = c("135", "130", "125", "120", "115", "110", "105"), 
@@ -201,8 +201,8 @@ skeetch_agreement_future <- ggplot() +
   geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white", show.legend = FALSE) +
   theme_classic() +
   scale_fill_manual(name = NULL, na.translate = FALSE,
-                    labels = c("bioclim present", "pseudoabsence", "overlap", "bioclim future"), 
-                    values = c("#FDE725", "grey", "#F8870E", "#C73E4C")) +
+                    labels = c("bioclim present", "overlap", "bioclim future", "pseudoabsence"), 
+                    values = c("#FDE725", "#F8870E", "#C73E4C", "grey")) +
   scale_x_continuous(name = "Longitude (°W)", 
                      # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
                      labels = c("121.6", "121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"), 
@@ -227,7 +227,9 @@ ggsave("outputs/skeetch_agreement_future.png", plot = skeetch_agreement_future)
 # Full study extent:
 
 model_agreement_presNA
+levels(model_agreement_presNA)
 model_agreement_futNA
+levels(model_agreement_futNA)
 
 # create temp rasters so we don't overwrite the originals:
 model_agreement_pres_temp <- model_agreement_presNA

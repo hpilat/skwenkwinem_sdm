@@ -1,6 +1,6 @@
 # This is script 08/10
 # This script calculates area predicted to be suitable for skwenkwinem
-  # over our full study extent
+# over our full study extent
 # please first run the following scripts in the following order:
 # 01_data_download.R
 # 02_continental_divide.Rmd
@@ -102,7 +102,7 @@ sum(cell_counts_bioclim_pres$count) + global(bioclim_pres_albers, fun="isNA")
 # 19 515 607, matches total number of cells from dimensions
 
 
-# calculate difference in area predicted as presence by each model:
+# calculate difference in number of cells predicted as presence by each model:
 # row 1, column 4 is difference in presence area in km^2
 diff_informed_bioclim_pres <- area_informed - area_bioclim_pres
 diff_informed_bioclim_pres
@@ -111,22 +111,22 @@ diff_informed_bioclim_pres
 
 # Area of agreement between informed and bioclim_present models:
 
-# here make new raster where 2 = both predicted, 1 = bioclim present only, 3 = informed only, 7 =  both none
+# here make new raster where 2 = both predicted, 1 = bioclim present only, 3 = informed only, 6 =  both none
 
 agree_informed_bioclim <- rast(nrows = 4661, ncols = 4187, extent = ext(bioclim_pres_albers), crs = new_crs, vals = 0)
 
 agree_informed_bioclim[bioclim_pres_albers == 1 & informed_albers == 1] <- 2
 agree_informed_bioclim[bioclim_pres_albers == 1 & informed_albers == 2] <- 1
 agree_informed_bioclim[bioclim_pres_albers == 2 & informed_albers == 1] <- 3
-agree_informed_bioclim[bioclim_pres_albers == 2 & informed_albers == 2] <- 7
+agree_informed_bioclim[bioclim_pres_albers == 2 & informed_albers == 2] <- 6
 
 plot(agree_informed_bioclim)
 writeRaster(agree_informed_bioclim, filename = "outputs/agreement_informed_bioclim.tif", overwrite = TRUE)
 
 cell_counts_informed_bioclim_pres <- freq(agree_informed_bioclim)
+cell_counts_informed_bioclim_pres
 sum(cell_counts_informed_bioclim_pres$count)
 # 19 515 607
-cell_counts_informed_bioclim_pres
 
 # number of cells classified as presence for both models (row 3):
 agreement_present_cells <- cell_counts_informed_bioclim_pres$count[3]
@@ -183,14 +183,14 @@ diff_bioclim_pres_fut
 
 # Area of agreement between bioclim_present and bioclim_future models:
 
-# here make new raster where 5 = both predicted, 1 = bioclim present only, 6 = bioclim future only, 7 =  both none
+# here make new raster where 4 = both predicted, 1 = bioclim present only, 5 = bioclim future only, 6 =  both none
 
 agree_bioclim_fut_pres <- rast(nrows = 4661, ncols = 4187, extent = ext(bioclim_pres_albers), crs = new_crs, vals = 0)
 
-agree_bioclim_fut_pres[bioclim_pres_albers == 1 & bioclim_fut_albers == 1] <- 5
+agree_bioclim_fut_pres[bioclim_pres_albers == 1 & bioclim_fut_albers == 1] <- 4
 agree_bioclim_fut_pres[bioclim_pres_albers == 1 & bioclim_fut_albers == 2] <- 1
-agree_bioclim_fut_pres[bioclim_pres_albers == 2 & bioclim_fut_albers == 1] <- 6
-agree_bioclim_fut_pres[bioclim_pres_albers == 2 & bioclim_fut_albers == 2] <- 7 
+agree_bioclim_fut_pres[bioclim_pres_albers == 2 & bioclim_fut_albers == 1] <- 5
+agree_bioclim_fut_pres[bioclim_pres_albers == 2 & bioclim_fut_albers == 2] <- 6 
 
 agree_bioclim_fut_pres
 plot(agree_bioclim_fut_pres)
@@ -202,7 +202,7 @@ sum(cell_counts_bioclim_fut_pres$count)
 # 19 515 607
 
 # looks like different cell counts for bioclim_present because of different overlap 
-  # compared to informed vs bioclim_present
+# compared to informed vs bioclim_present
 
 
 # number of cells classified as presence for both models (row 3):
@@ -224,7 +224,8 @@ area_total_suitable_present <- total_suitable_present * cell_resolution_km
 area_total_suitable_present
 # 1 223 251 km^2
 
-# total suitable habitat by bioclim present and bioclim future models
+
+# total suitable habitat by bioclim present and future models:
 total_suitable_future <- sum(cell_counts_bioclim_fut_pres$count[2:4])
 total_suitable_future
 # 2 052 159 cells
@@ -235,7 +236,7 @@ area_total_suitable_future
 # total suitable habitat difference between future and present predictions:
 area_change_pres_fut_suitable <- area_total_suitable_future - area_total_suitable_present
 area_change_pres_fut_suitable
-# -32 959.59 km^2
+# -32959.59 km^2
 
 # total area of our study extent:
 area_full_extent <- sum(cell_counts_bioclim_fut_pres$count[2:5])
@@ -246,7 +247,7 @@ area_full_extent
 # 4 023 545 km^2
 
 # areas used below include area of overlap 
-  # total predicted suitable area by each respective model
+# total predicted suitable area by each respective model
 
 # percent of study extent predicted as suitable by informed model:
 percent_full_informed <- (area_informed / area_full_extent) * 100
@@ -259,7 +260,7 @@ percent_full_bioclim_pres
 # 25.28547
 
 # percent of study extent predicted as suitable by overlap between informed
-  # and bioclim present models:
+# and bioclim present models:
 percent_full_overlap_present <- (area_agreement_present / area_full_extent) * 100
 percent_full_overlap_present
 # 18.18381
@@ -270,7 +271,7 @@ percent_full_bioclim_fut
 # 22.20659
 
 # percent of study extent predicted as suitable by overlap between bioclim 
-  # present and future models:
+# present and future models:
 percent_full_overlap_future <- (area_agreement_future / area_full_extent) * 100
 percent_full_overlap_future
 # 17.9089
@@ -285,12 +286,12 @@ percent_change_suitable_pres_fut <- (area_change_pres_fut_suitable / area_total_
 percent_change_suitable_pres_fut
 # -2.769035
 
-# overlap as a percent of total area predicted to be suitable in the present:
-percent_overlap_suitable_pres <- (area_agreement_present/area_total_suitable_present) * 100
+# overlap as a percent of total suitable habitat predicted by informed and bioclim present:
+percent_overlap_suitable_pres <- (area_agreement_present / area_total_suitable_present) * 100
 percent_overlap_suitable_pres
 # 59.8106
 
-# overlap as a percent of total area predicted to be suitable in the future:
-percent_overlap_suitable_fut <- (area_agreement_future/area_total_suitable_future) * 100
+# overlap as a percent of total suitable habitat predicted by bioclim present and future:
+percent_overlap_suitable_fut <- (area_agreement_future / area_total_suitable_future) * 100
 percent_overlap_suitable_fut
 # 60.53751
