@@ -12,10 +12,8 @@
 library(tidyverse)
 library(geodata) # won't work when on AAFC VPN
 library(terra)
-# library(raster)
 library(sf)
 library(rgbif)
-# library(CoordinateCleaner) unsure if I'll be using this
 # note: cannot load rgdal and terra at the same time 
 # if using project function from terra (call terra::project)
 
