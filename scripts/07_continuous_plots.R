@@ -36,7 +36,7 @@ na_bound_sf <- read_sf("data/extents/na_bound_sf.shp")
 # Skeetchestn territory boundary vector for masking:
 skeetch_vect <- vect("data/extents/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
 # transform to WGS84:
-skeetch_vectWGS84 <- project(skeetch_vect, "EPSG:4326")
+skeetch_vectWGS84 <- terra::project(skeetch_vect, "EPSG:4326")
 
 # create an extent object slightly larger than skeetch_vectWGS84
 skeetch_vectWGS84 # round up extent values:

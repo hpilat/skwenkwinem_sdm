@@ -27,9 +27,9 @@ crs(bioclim_fut) <- "epsg:4326"
 # define CRS
 new_crs <- "+proj=aea +lat_0=40 +lon_0=-96 +lat_1=20 +lat_2=60 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +type=crs"
 
-informed_albers <- project(informed, new_crs, method = "near")
-bioclim_pres_albers <- project(bioclim_pres, new_crs, method = "near")
-bioclim_fut_albers <- project(bioclim_fut, new_crs, method = "near")
+informed_albers <- terra::project(informed, new_crs, method = "near")
+bioclim_pres_albers <- terra::project(bioclim_pres, new_crs, method = "near")
+bioclim_fut_albers <- terra::project(bioclim_fut, new_crs, method = "near")
 
 
 # Informed vs Bioclim Present:

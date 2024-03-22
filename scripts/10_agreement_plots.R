@@ -25,7 +25,7 @@ na_bound_vect <- vect("data/extents/na_bound_vect.shp") # WGS84
 # Skeetchestn territory boundary vector for masking:
 skeetch_vect_albers <- vect("data/extents/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
 # reproject to WGS84:
-skeetch_vectWGS84 <- project(skeetch_vect_albers, "EPSG:4326")
+skeetch_vectWGS84 <- terra::project(skeetch_vect_albers, "EPSG:4326")
 
 
 # create an extent object slightly larger than skeetch_vectWGS84
@@ -42,8 +42,8 @@ model_agreement_pres <- as.factor(model_agreement_pres)
 model_agreement_fut <- as.factor(model_agreement_fut)
 
 # reproject to WGS84:
-model_agreement_pres <- project(model_agreement_pres, "EPSG:4326", method = "near")
-model_agreement_fut <- project(model_agreement_fut, "EPSG:4326", method = "near")
+model_agreement_pres <- terra::project(model_agreement_pres, "EPSG:4326", method = "near")
+model_agreement_fut <- terra::project(model_agreement_fut, "EPSG:4326", method = "near")
 
 # crop to study extent:
 model_agreement_pres <- crop(model_agreement_pres, na_bound_vect)

@@ -295,7 +295,7 @@ anth_biome_na
 # wrong CRS and resolution
 
 # reproject anthropogenic biomes data to WGS84
-anth_biomeWGS <- project(anth_biome_na, "EPSG:4326")
+anth_biomeWGS <- terra::project(anth_biome_na, "EPSG:4326")
 
 # resample anth_biome to change resolution
 anth_biome <- resample(anth_biomeWGS, na_bound_rast)
@@ -327,7 +327,7 @@ climate_zones_na$Climate_numeric <- as.numeric(as.factor(as.character(climate_zo
 climate_zones <- rasterize(climate_zones_na, temprast, field = "Climate_numeric")
 climate_zones
 # reproject to WGS84 lat/lon
-climate_zones <- project(climate_zones, "EPSG:4326")
+climate_zones <- terra::project(climate_zones, "EPSG:4326")
 climate_zones <- resample(climate_zones, na_bound_rast)
 climate_zones <- crop(climate_zones, na_bound_vect)
 # change the name to match the object
@@ -345,7 +345,7 @@ ecoregions_na$NameL3_En <- as.numeric(as.factor(as.character(ecoregions_na$NameL
 ecoregions <- rasterize(ecoregions_na, temprast, field = "NameL3_En")
 ecoregions
 # reproject to WGS84 lat/lon
-ecoregions <- project(ecoregions, "EPSG:4326")
+ecoregions <- terra::project(ecoregions, "EPSG:4326")
 ecoregions <- resample(ecoregions, na_bound_rast)
 ecoregions <- crop(ecoregions, na_bound_vect)
 # change the name to match the object
@@ -363,7 +363,7 @@ watersheds_na$NAW4_numeric <- as.numeric(as.factor(as.character(watersheds_na$NA
 watersheds <- rasterize(watersheds_na, temprast, field = "NAW4_numeric")
 watersheds
 # reproject to WGS84 lat/lon
-watersheds <- project(watersheds, "EPSG:4326")
+watersheds <- terra::project(watersheds, "EPSG:4326")
 watersheds <- resample(watersheds, na_bound_rast)
 watersheds <- crop(watersheds, na_bound_vect)
 # change the name to match the object
