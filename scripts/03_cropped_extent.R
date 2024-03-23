@@ -10,6 +10,7 @@ library(sf)
 library(terra)
 library(tidyterra)
 library(ggplot2)
+library(rgeoboundaries)
 
 ### Spatial Extents ###
 
@@ -92,12 +93,34 @@ st_write(skwenkwinem_sf, dsn = "data/processed/skwenkwinem_sf.shp", append = FAL
 
 
 
-### Skeetchestn territory: ###
+# Plot study extent over North America:
 
+# grab administrative boundaries for North America:
+north_america <- gb_adm1(country = c("Canada", "USA", "Mexico"), 
+                         type = "simplified")
+plot(north_america)
+# convert to vector so we can crop out islands
+north_america <- terra::vect(north_america)
+north_america
 
+# create an extent object for cropping:
+north_america_ext <- terra::ext(-180, 50, -10, 83.1443)
+north_america_cropped <- crop(north_america, north_america_ext)
+plot(north_america_cropped)
 
-# SNRC provided shapefile of Skeetchestn traditional territory
-# Read in Skeetchestn territory shapefile
-skeetch_sf <- st_read("data/raw/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
-plot(skeetch_sf)
+north_america_plot <- ggplot() +
+  geom_spatvector(data = north_america_cropped, aes(fill = NULL), show.legend = FALSE) +
+  geom_spatvector(data = na_bound_vect, aes(alpha = 0.5), fill = "lightgreen", show.legend = FALSE) +
+  scale_x_continuous(name = "Longitude (°W)", 
+                     labels = c("160", "140", "120", "100", "80", "60"), 
+                     expand = c(0,0)) +
+  # theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(name = "Latitude (°N)",
+                     labels = c("20", "30", "40", "50", "60", "70", "80"), 
+                     expand = c(0, 0)) +
+  theme_classic()
 
+north_america_plot
+
+ggsave(filename = "outputs/north_america_context_plot.png", north_america_plot)
+  
