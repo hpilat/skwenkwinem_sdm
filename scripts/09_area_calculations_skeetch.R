@@ -133,19 +133,20 @@ diff_informed_bioclim_pres
 
 # Area of agreement between informed and bioclim_present models:
 
-# here make new raster where 2 = both predicted, 1 = bioclim present only, 3 = informed only, 4 =  both none
+# here make new raster where 2 = both predicted, 1 = bioclim present only, 3 = informed only, 6 =  both none
 
 agree_informed_bioclim <- rast(nrows = 166, ncols = 108, extent = ext(bioclim_pres_skeetch), crs = new_crs, vals = 0)
 
 agree_informed_bioclim[bioclim_pres_skeetch == 1 & informed_skeetch == 1] <- 2
 agree_informed_bioclim[bioclim_pres_skeetch == 1 & informed_skeetch == 2] <- 1
 agree_informed_bioclim[bioclim_pres_skeetch == 2 & informed_skeetch == 1] <- 3
-agree_informed_bioclim[bioclim_pres_skeetch == 2 & informed_skeetch == 2] <- 4
+agree_informed_bioclim[bioclim_pres_skeetch == 2 & informed_skeetch == 2] <- 6
 
 plot(agree_informed_bioclim)
 writeRaster(agree_informed_bioclim, filename = "outputs/agreement_informed_bioclim_skeetch.tif", overwrite = TRUE)
 
 cell_counts_informed_bioclim_pres <- freq(agree_informed_bioclim)
+cell_counts_informed_bioclim_pres
 sum(cell_counts_informed_bioclim_pres$count)
 # 17 928
 
@@ -182,7 +183,7 @@ bioclim_fut_presence_cells
 # area of cells classified as presence:
 area_bioclim_fut <- bioclim_fut_presence_cells * cell_resolution_km
 area_bioclim_fut
-# 893 492.3 km^2
+# 1432.067 km^2
 
 # total number of cells (presence and pseudoabsence, not including NAs):
 sum(cell_counts_bioclim_fut$count)
@@ -202,18 +203,21 @@ diff_bioclim_pres_fut <- area_bioclim_fut - area_bioclim_pres
 diff_bioclim_pres_fut
 # -1755.718, bioclim future model predicts less suitable area than bioclim present model
 
+diff_bioclim_pres_fut <- diff_bioclim_pres_fut * cell_resolution_km
+diff_bioclim_pres_fut
+# -1018.35 km^2
 
 
 # Area of agreement between bioclim_present and bioclim_future models:
 
-# here make new raster where 5 = both predicted, 1 = bioclim present only, 6 = bioclim future only, 4 =  both none
+# here make new raster where 4 = both predicted, 1 = bioclim present only, 5 = bioclim future only, 6 =  both none
 
 agree_bioclim_fut_pres <- rast(nrows = 166, ncols = 108, extent = ext(bioclim_pres_skeetch), crs = new_crs, vals = 0)
 
-agree_bioclim_fut_pres[bioclim_pres_skeetch == 1 & bioclim_fut_skeetch == 1] <- 5
+agree_bioclim_fut_pres[bioclim_pres_skeetch == 1 & bioclim_fut_skeetch == 1] <- 4
 agree_bioclim_fut_pres[bioclim_pres_skeetch == 1 & bioclim_fut_skeetch == 2] <- 1
-agree_bioclim_fut_pres[bioclim_pres_skeetch == 2 & bioclim_fut_skeetch == 1] <- 6
-agree_bioclim_fut_pres[bioclim_pres_skeetch == 2 & bioclim_fut_skeetch == 2] <- 4 
+agree_bioclim_fut_pres[bioclim_pres_skeetch == 2 & bioclim_fut_skeetch == 1] <- 5
+agree_bioclim_fut_pres[bioclim_pres_skeetch == 2 & bioclim_fut_skeetch == 2] <- 6 
 
 agree_bioclim_fut_pres
 plot(agree_bioclim_fut_pres)
@@ -310,3 +314,14 @@ percent_change_pres_fut
 percent_change_suitable_pres_fut <- (area_change_pres_fut_suitable / area_total_suitable_future) * 100
 percent_change_suitable_pres_fut
 # -43.90688
+
+
+# overlap as a percent of total suitable habitat predicted by informed and bioclim present:
+percent_overlap_suitable_pres <- (area_agreement_present / area_total_suitable_present) * 100
+percent_overlap_suitable_pres
+# 60.01011
+
+# overlap as a percent of total suitable habitat predicted by bioclim present and future:
+percent_overlap_suitable_fut <- (area_agreement_future / area_total_suitable_future) * 100
+percent_overlap_suitable_fut
+# 44.87086
