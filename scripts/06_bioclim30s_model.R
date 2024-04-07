@@ -369,7 +369,11 @@ bio02_data <- bio02_data %>%
   )
 
 ggplot(bio02_data, aes(x = bio02, y = pred)) +
-  geom_point(alpha = .5, cex = 1)
+  geom_point(alpha = .5, cex = 1.5) +
+  scale_x_continuous(name = "Mean diurnal range") +
+  scale_y_continuous(name = "Relative habitat suitability")
+
+ggsave("outputs/bio02_response.png")
 
 
 # investigate the contribution of bio07:
@@ -385,7 +389,11 @@ bio03_data <- bio03_data %>%
   )
 
 ggplot(bio03_data, aes(x = bio03, y = pred)) +
-  geom_point(alpha = .5, cex = 1)
+  geom_point(alpha = .5, cex = 1.5) +
+  scale_x_continuous(name = "Isothermality") +
+  scale_y_continuous(name = "Relative habitat suitability")
+
+ggsave("outputs/bio03_response.png")
 
 
 # investigate the contribution of bio05:
@@ -401,7 +409,11 @@ bio07_data <- bio07_data %>%
   )
 
 ggplot(bio07_data, aes(x = bio07, y = pred)) +
-  geom_point(alpha = .5, cex = 1)
+  geom_point(alpha = .5, cex = 1.5) +
+  scale_x_continuous(name = "Temperature annual range (°C)") +
+  scale_y_continuous(name = "Relative habitat suitability")
+
+ggsave("outputs/bio07_response.png")
 
 
 # investigate the contribution of bio08:
@@ -417,7 +429,11 @@ bio08_data <- bio08_data %>%
   )
 
 ggplot(bio08_data, aes(x = bio08, y = pred)) +
-  geom_point(alpha = .5, cex = 1)
+  geom_point(alpha = .5, cex = 1.5) +
+  scale_x_continuous(name = "Mean temperature wettest quarter (°C)") +
+  scale_y_continuous(name = "Relative habitat suitability")
+
+ggsave("outputs/bio08_response.png")
 
 
 # investigate the contribution of bio09:
@@ -433,10 +449,14 @@ bio09_data <- bio09_data %>%
   )
 
 ggplot(bio09_data, aes(x = bio09, y = pred)) +
-  geom_point(alpha = .5, cex = 1)
+  geom_point(alpha = .5, cex = 1.5) +
+  scale_x_continuous(name = "Mean temperature driest quarter (°C)") +
+  scale_y_continuous(name = "Relative habitat suitability")
+
+ggsave("outputs/bio09_response.png")
 
 
-# investigate the contribution of bio14:
+# investigate the contribution of bio13:
 bio13_prof <- skwenkwinem_recipe %>%  # recipe from above
   step_profile(-bio13, profile = vars(bio13)) %>% 
   prep(training = pres_abs_pred)
@@ -448,8 +468,15 @@ bio13_data <- bio13_data %>%
     pred = predict(skwenkwinem_ensemble, bio13_data)$mean
   )
 
+# convert values to cm
+bio13_data$bio13 <- bio13_data$bio13/10
+
 ggplot(bio13_data, aes(x = bio13, y = pred)) +
-  geom_point(alpha = .5, cex = 1)
+  geom_point(alpha = .5, cex = 1.5) +
+  scale_x_continuous(name = "Precipitation wettest month (cm)") +
+  scale_y_continuous(name = "Relative habitat suitability")
+
+ggsave("outputs/bio13_response.png")
 
 
 # investigate the contribution of bio15:
@@ -465,7 +492,11 @@ bio15_data <- bio15_data %>%
   )
 
 ggplot(bio15_data, aes(x = bio15, y = pred)) +
-  geom_point(alpha = .5, cex = 1)
+  geom_point(alpha = .5, cex = 1.5) +
+  scale_x_continuous(name = "Precipitation seasonality") +
+  scale_y_continuous(name = "Relative habitat suitability")
+
+ggsave("outputs/bio15_response.png")
 
 
 # investigate the contribution of bio18:
