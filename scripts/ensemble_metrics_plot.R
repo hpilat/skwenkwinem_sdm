@@ -48,7 +48,7 @@ bioclim30s_ensemble_metrics_AUC <- bioclim30s_ensemble_metrics %>%
   # rename columns to be more informative
   dplyr::rename(algorithm = wflow_id) %>% 
   # add model column and input "informed" in the rows
-  add_column(model = "bioclim30s", .before = "algorithm")
+  add_column(model = "bioclim", .before = "algorithm")
 
 # now bind the rows together into 1 object:
 ensemble_AUC <- rbind(informed_ensemble_metrics_AUC, bioclim30s_ensemble_metrics_AUC)
@@ -56,11 +56,16 @@ ensemble_AUC <- rbind(informed_ensemble_metrics_AUC, bioclim30s_ensemble_metrics
 # write to new csv to import into word
 write.csv(ensemble_AUC, file = "outputs/skwenkwinem_ensemble_metrics.csv")
 
+ensemble_AUC <- read.csv("outputs/skwenkwinem_ensemble_metrics.csv", header = TRUE)
+ensemble_AUC
+
 # plot ensemble metrics together
 ensemble_metrics <- ggplot(ensemble_AUC, aes(x = algorithm, y = mean, colour = model)) +
   geom_point() +
   geom_errorbar(aes(ymin = mean - std_err, ymax = mean + std_err)) +
-  ggtitle("Ensemble Model Performance") +
+  theme(legend.title = element_blank()) +
+  scale_x_discrete(labels = c("GBM", "GLM", "MaxEnt", "rf")) +
+  ggtitle("Ensemble model performance") +
   labs(x = "Algorithm", y = "Mean AUC")
 
 # save to file
