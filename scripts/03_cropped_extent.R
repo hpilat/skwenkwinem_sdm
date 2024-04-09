@@ -98,7 +98,7 @@ st_write(skwenkwinem_sf, dsn = "data/processed/skwenkwinem_sf.shp", append = FAL
 # grab administrative boundaries for North America:
 north_america <- gb_adm1(country = c("Canada", "USA", "Mexico"), 
                          type = "simplified")
-plot(north_america)
+
 # convert to vector so we can crop out islands
 north_america <- terra::vect(north_america)
 north_america
@@ -106,21 +106,59 @@ north_america
 # create an extent object for cropping:
 north_america_ext <- terra::ext(-180, 50, -10, 83.1443)
 north_america_cropped <- crop(north_america, north_america_ext)
+
+# reproject to North America Albers equal-area conic
+# https://spatialreference.org/ref/esri/102008/
+# define CRS
+new_crs <- "+proj=aea +lat_0=40 +lon_0=-96 +lat_1=20 +lat_2=60 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +type=crs"
+north_america_cropped <- terra::project(north_america_cropped, new_crs)
 plot(north_america_cropped)
 
 north_america_plot <- ggplot() +
   geom_spatvector(data = north_america_cropped, aes(fill = NULL), show.legend = FALSE) +
   geom_spatvector(data = na_bound_vect, aes(alpha = 0.5), fill = "lightgreen", show.legend = FALSE) +
-  scale_x_continuous(name = "Longitude (°W)", 
-                     labels = c("160", "140", "120", "100", "80", "60"), 
+  theme_classic() +
+  scale_x_continuous(name = "Longitude (°W)",
                      expand = c(0,0)) +
+  theme(axis.text.x = element_blank(), 
+        axis.ticks.x = element_blank()) +
   # theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
-                     labels = c("20", "30", "40", "50", "60", "70", "80"), 
+                    # labels = c("20", "30", "40", "50", "60", "70", "80"), 
                      expand = c(0, 0)) +
-  theme_classic()
+    theme(axis.text.y = element_blank(), 
+          axis.ticks.y = element_blank(), 
+          axis.line = element_blank(), 
+          axis.title = element_blank())
 
 north_america_plot
 
 ggsave(filename = "outputs/north_america_context_plot.png", north_america_plot)
-  
+
+
+# plot occurrences on study area for reference/context
+
+# first, reproject objects to conic equal area projection:
+na_bound_rast <- terra::project(na_bound_rast, new_crs)
+skwenkwinem_vect <- terra::project(skwenkwinem_vect, new_crs)
+skwenkwinem_vect <- crop(skwenkwinem_vect, na_bound_rast)
+plot(skwenkwinem_vect)
+
+occurrences_context <- ggplot()+
+  geom_spatvector(data = na_bound_vect, show.legend = FALSE) +
+  geom_spatvector(data = skwenkwinem_vect) +
+  scale_x_continuous(name = "Longitude (°W)", 
+                     # limits = c(-4747087, -407900),
+                     # breaks = c(135, 130, 125, 120, 115, 110, 105),
+                     labels = c("135", "130", "125", "120", "115", "110", "105"),
+                     #labels = c("105", "110", "115", "120", "125", "130", "135"), 
+                     expand = c(0,0)) +
+  # theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(name = "Latitude (°N)",
+                     # limits = c(50.3, 51.6),
+                     # breaks = c(35, 40, 45, 50, 55),
+                     labels = c("35", "40", "45", "50", "55"), 
+                     expand = c(0, 0)) +
+  theme_classic()
+
+ggsave("outputs/occurrences_context_plot.png", occurrences_context)
