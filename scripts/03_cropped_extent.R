@@ -95,27 +95,39 @@ st_write(skwenkwinem_sf, dsn = "data/processed/skwenkwinem_sf.shp", append = FAL
 
 # Plot study extent over North America:
 
-# grab administrative boundaries for North America:
-north_america <- gb_adm1(country = c("Canada", "USA", "Mexico"), 
-                         type = "simplified")
 
-# convert to vector so we can crop out islands
-north_america <- terra::vect(north_america)
-north_america
 
-# create an extent object for cropping:
-north_america_ext <- terra::ext(-180, 50, -10, 83.1443)
-north_america_cropped <- crop(north_america, north_america_ext)
+canada_bound <- rgeoboundaries::gb_adm1(country = "Canada", type = "simplified")
+canada_bound <- vect(canada_bound)
+usa_bound <- rgeoboundaries::gb_adm1(country = "USA", type = "simplified")
+usa_bound <- vect(usa_bound)
+mexico_bound <- rgeoboundaries::gb_adm1(country = "Mexico", type = "simplified")
+mexico_bound <- vect(mexico_bound)
+
+plot(usa_bound) 
+
+# crop out anything south of 24 degrees North in the USA:
+usa_cont_extent <- ext(-170, -65, 24, 75)
+usa_contiguous <- crop(usa_bound, usa_cont_extent)
+
+plot(usa_contiguous)
+
+# merge individual country polygons:
+north_america <- c(canada_bound, usa_contiguous, mexico_bound)
+north_america <- vect(north_america)
+
+plot(north_america)
 
 # reproject to North America Albers equal-area conic
 # https://spatialreference.org/ref/esri/102008/
 # define CRS
 new_crs <- "+proj=aea +lat_0=40 +lon_0=-96 +lat_1=20 +lat_2=60 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +type=crs"
-north_america_cropped <- terra::project(north_america_cropped, new_crs)
-plot(north_america_cropped)
+north_america <- terra::project(north_america, new_crs)
+plot(north_america)
+
 
 north_america_plot <- ggplot() +
-  geom_spatvector(data = north_america_cropped, aes(fill = NULL), show.legend = FALSE) +
+  geom_spatvector(data = north_america, aes(fill = NULL), show.legend = FALSE) +
   geom_spatvector(data = na_bound_vect, aes(alpha = 0.5), fill = "lightgreen", show.legend = FALSE) +
   theme_classic() +
   scale_x_continuous(name = "Longitude (°W)",
@@ -145,8 +157,8 @@ skwenkwinem_vect <- crop(skwenkwinem_vect, na_bound_rast)
 plot(skwenkwinem_vect)
 
 occurrences_context <- ggplot()+
-  geom_spatvector(data = na_bound_vect, show.legend = FALSE) +
-  geom_spatvector(data = skwenkwinem_vect) +
+  geom_spatvector(data = na_bound_vect, aes(alpha = 0.5), fill = "lightgreen", show.legend = FALSE) +
+  geom_spatvector(data = skwenkwinem_vect, alpha = 0.25) +
   scale_x_continuous(name = "Longitude (°W)", 
                      # limits = c(-4747087, -407900),
                      # breaks = c(135, 130, 125, 120, 115, 110, 105),
@@ -160,5 +172,7 @@ occurrences_context <- ggplot()+
                      labels = c("35", "40", "45", "50", "55"), 
                      expand = c(0, 0)) +
   theme_classic()
+
+occurrences_context
 
 ggsave("outputs/occurrences_context_plot.png", occurrences_context)
