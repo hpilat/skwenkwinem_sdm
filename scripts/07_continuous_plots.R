@@ -24,6 +24,15 @@ informed_present_continuous <- rast("outputs/skwenkwinem_informed_predict_presen
 bioclim30s_present_continuous <- rast("outputs/skwenkwinem_bioclim30s_predict_present_cont.tif")
 bioclim30s_future_continuous <- rast("outputs/skwenkwinem_bioclim30s_predict_future_cont.tif")
 
+# reproject to North America Albers equal-area conic
+# https://spatialreference.org/ref/esri/102008/
+# define CRS
+new_crs <- "+proj=aea +lat_0=40 +lon_0=-96 +lat_1=20 +lat_2=60 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +type=crs"
+
+informed_present_continuous <- terra::project(informed_present_continuous, new_crs)
+bioclim30s_present_continuous <- terra::project(bioclim30s_present_continuous, new_crs)
+bioclim30s_future_continuous <- terra::project(bioclim30s_future_continuous, new_crs)
+
 # Read in elevation raster (for hillshading)
 elevation <- rast("data/processed/elevation.tif")
 
@@ -31,16 +40,18 @@ elevation <- rast("data/processed/elevation.tif")
 
 # vector object to use for masking and area calculations
 na_bound_vect <- vect("data/extents/na_bound_vect.shp")
+# reproject:
+na_bound_vect <- terra::project(na_bound_vect, new_crs)
 # sf object masked to study extent, for area calculations
 na_bound_sf <- read_sf("data/extents/na_bound_sf.shp")
 # Skeetchestn territory boundary vector for masking:
 skeetch_vect <- vect("data/extents/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
-# transform to WGS84:
-skeetch_vectWGS84 <- terra::project(skeetch_vect, "EPSG:4326")
+# reproject:
+skeetch_vect <- terra::project(skeetch_vect, new_crs)
 
-# create an extent object slightly larger than skeetch_vectWGS84
-skeetch_vectWGS84 # round up extent values:
-skeetch_extent <- ext(-121.6, -120.1, 50.3, 51.6)
+# create an extent object slightly larger than skeetch_vect
+skeetch_vect # round up extent values:
+skeetch_extent <- ext(-1678599, -1596279, 1442469, 1568609)
 
 
 
@@ -49,20 +60,21 @@ skeetch_extent <- ext(-121.6, -120.1, 50.3, 51.6)
 # Informed Model:
 informed_full_extent_cont <- ggplot() +
   geom_spatraster(data = informed_present_continuous, aes(fill = mean)) +
-  scale_fill_viridis_c(name = "Relative Habitat \n Suitability", na.value = "transparent") +
-  scale_x_continuous(name = "Longitude (°W)", 
-                     # breaks = c(105, 110, 115, 120, 125, 130, 135),
-                     labels = c("135", "130", "125", "120", "115", "110", "105"), 
-                     # limits = c(-103.04, -137.07),
+  scale_fill_viridis_c(name = "Relative \nhabitat\nsuitability", na.value = "transparent", limits = c(0, 1.0)) +
+  guides(fill = guide_colorbar(ticks.colour = NA)) +
+  theme(legend.title = element_text(vjust = + 2.5)) +
+  scale_x_continuous(name = "Longitude (°W)",
+                     # breaks = c(128, 120, 110, 102),
+                     labels = c("150", "140", "130", "120", "110"), 
                      expand = c(0,0)) +
   # theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
                      #limits = c(50.3, 51.6),
-                     breaks = c(35, 40, 45, 50, 55),
-                     labels = c("35", "40", "45", "50", "55"), 
+                     # breaks = c(35, 40, 45, 50, 55),
+                     labels = c("25", "30", "35", "40", "45", "50", "55"), 
                      expand = c(0, 0)) +
-  labs(title = "Present Habitat Suitability", 
-       subtitle = "Informed Model")
+  labs(title = "Present habitat suitability", 
+       subtitle = "Informed model")
 
 informed_full_extent_cont
 ggsave("outputs/informed_full_extent_cont.png", plot = informed_full_extent_cont)
@@ -71,20 +83,21 @@ ggsave("outputs/informed_full_extent_cont.png", plot = informed_full_extent_cont
 # Bioclim30s Present Model:
 bioclim_pres_full_extent_cont <- ggplot() +
   geom_spatraster(data = bioclim30s_present_continuous, aes(fill = mean)) +
-  scale_fill_viridis_c(name = "Relative Habitat \n Suitability", na.value = "transparent") +
-  scale_x_continuous(name = "Longitude (°W)", 
-                     # breaks = c(105, 110, 115, 120, 125, 130, 135),
-                     labels = c("135", "130", "125", "120", "115", "110", "105"), 
-                     # limits = c(-103.04, -137.07),
+  scale_fill_viridis_c(name = "Relative \nhabitat\nsuitability", na.value = "transparent", limits = c(0, 1.0)) +
+  guides(fill = guide_colorbar(ticks.colour = NA)) +
+  theme(legend.title = element_text(vjust = + 2.5)) +
+  scale_x_continuous(name = "Longitude (°W)",
+                     # breaks = c(128, 120, 110, 102),
+                     labels = c("150", "140", "130", "120", "110"), 
                      expand = c(0,0)) +
   # theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
                      #limits = c(50.3, 51.6),
-                     breaks = c(35, 40, 45, 50, 55),
-                     labels = c("35", "40", "45", "50", "55"), 
+                     # breaks = c(35, 40, 45, 50, 55),
+                     labels = c("25", "30", "35", "40", "45", "50", "55"), 
                      expand = c(0, 0)) +
-  labs(title = "Present Habitat Suitability", 
-       subtitle = "Bioclim Model")
+  labs(title = "Present habitat suitability", 
+       subtitle = "Bioclim model")
 
 bioclim_pres_full_extent_cont
 
@@ -94,20 +107,21 @@ ggsave("outputs/bioclim_pres_full_extent_cont.png", plot = bioclim_pres_full_ext
 # Bioclim30s Future Model:
 bioclim_fut_full_extent_cont <- ggplot() +
   geom_spatraster(data = bioclim30s_future_continuous, aes(fill = mean)) +
-  scale_fill_viridis_c(name = "Relative Habitat \n Suitability", na.value = "transparent") +
-  scale_x_continuous(name = "Longitude (°W)", 
-                     # breaks = c(105, 110, 115, 120, 125, 130, 135),
-                     labels = c("135", "130", "125", "120", "115", "110", "105"), 
-                     # limits = c(-103.04, -137.07),
+  scale_fill_viridis_c(name = "Relative \nhabitat\nsuitability", na.value = "transparent", limits = c(0, 1.0)) +
+  guides(fill = guide_colorbar(ticks.colour = NA)) +
+  theme(legend.title = element_text(vjust = + 2.5)) +
+  scale_x_continuous(name = "Longitude (°W)",
+                     # breaks = c(128, 120, 110, 102),
+                     labels = c("150", "140", "130", "120", "110"), 
                      expand = c(0,0)) +
   # theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
                      #limits = c(50.3, 51.6),
-                     breaks = c(35, 40, 45, 50, 55),
-                     labels = c("35", "40", "45", "50", "55"), 
+                     # breaks = c(35, 40, 45, 50, 55),
+                     labels = c("25", "30", "35", "40", "45", "50", "55"), 
                      expand = c(0, 0)) +
-  labs(title = "Future Habitat Suitability", 
-       subtitle = "Bioclim Model")
+  labs(title = "Future habitat suitability", 
+       subtitle = "Bioclim model")
 
 bioclim_fut_full_extent_cont
 
@@ -125,9 +139,9 @@ bioclim_present_continuous_temp <- bioclim30s_present_continuous
 bioclim_future_continuous_temp <- bioclim30s_future_continuous
 
 # need to change layer names
-names(informed_present_continuous_temp) <- "Informed Present"
-names(bioclim_present_continuous_temp) <- "Bioclim Present"
-names(bioclim_future_continuous_temp) <- "Bioclim Future"
+names(informed_present_continuous_temp) <- "Informed present"
+names(bioclim_present_continuous_temp) <- "Bioclim present"
+names(bioclim_future_continuous_temp) <- "Bioclim future"
 
 # create a multilayer raster:
 continuous_predictions <- c(informed_present_continuous_temp, 
@@ -138,23 +152,26 @@ continuous_predictions
 predictions_continuous_plot <- ggplot() +
   geom_spatraster(data = continuous_predictions) +
   facet_wrap(~lyr, nrow = 1, ncol = 3) +
-  theme_classic() +
   theme(axis.line = element_line(colour = "black"),
         strip.background = element_blank(),
-        panel.border = element_blank()) +
-  scale_fill_viridis_c(name = "Relative \nHabitat \nSuitability", na.value = "white") +
-  theme(legend.title = element_text(size = 10)) +
-  scale_x_continuous(name = "Longitude (°W)", 
-                     # breaks = c(105, 110, 115, 120, 125, 130, 135),
-                     labels = c("135", "130", "125", "120", "115", "110", "105"), 
-                     # limits = c(-103.04, -137.07),
+        panel.border = element_blank(), 
+        strip.text = element_text(size = 14, vjust = +0.5)) +
+  scale_fill_viridis_c(name = "Relative \nhabitat\nsuitability",
+                       na.value = "transparent",
+                       limits = c(0, 1.0)) +
+  guides(fill = guide_colorbar(ticks.colour = NA)) +
+  theme(legend.title = element_text(vjust = + 3.0, size = 10)) +
+  scale_x_continuous(name = "Longitude (°W)",
+                     # breaks = c(128, 120, 110, 102),
+                     labels = c("150", "140", "130", "120", "110"), 
                      expand = c(0,0)) +
-  # theme(axis.text.x = element_text(angle = 90)) +
+  theme(title = element_text(size = 10)) +
   scale_y_continuous(name = "Latitude (°N)",
                      #limits = c(50.3, 51.6),
-                     breaks = c(35, 40, 45, 50, 55),
-                     labels = c("35", "40", "45", "50", "55"), 
-                     expand = c(0, 0))
+                     # breaks = c(35, 40, 45, 50, 55),
+                     labels = c("25", "30", "35", "40", "45", "50", "55"), 
+                     expand = c(0, 0)) +
+  theme(title = element_text(size = 14))
 
 predictions_continuous_plot
 
@@ -170,25 +187,27 @@ bioclim30s_present_skeetch <- crop(bioclim30s_present_continuous, skeetch_extent
 bioclim30s_future_skeetch <- crop(bioclim30s_future_continuous, skeetch_extent)
 
 # turn Skeetchestn boundary vector from polygon into lines
-skeetch_lines <- as.lines(skeetch_vectWGS84)
+skeetch_lines <- as.lines(skeetch_vect)
 
 # Plot continuous prediction from informed model for Skeetchestn Territory:
 
 skeetch_informed_cont <- ggplot() +
   geom_spatraster(data = informed_present_skeetch, aes(fill = mean)) +
   geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
-  scale_fill_viridis_c(name = "Relative \nHabitat \nSuitability", na.value = "white") +
-  scale_x_continuous(name = "Longitude (°W)", 
-                     # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
-                     labels = c("121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"), 
+  scale_fill_viridis_c(name = "Relative \nhabitat\nsuitability", na.value = "transparent", limits = c(0, 1.0)) +
+  guides(fill = guide_colorbar(ticks.colour = NA)) +
+  theme(legend.title = element_text(vjust = + 2.5)) +
+  scale_x_continuous(name = "Longitude (°W)",
+                    # breaks = c(121.2, 120.8, 120.4, 120.0),
+                     labels = c("121.5", "121.0", "120.5", "120.0"),
                      expand = c(0,0)) +
-  theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
-                     breaks = c(50.4, 50.6, 50.8, 51.0, 51.2, 51.4),
+                    # limits = c(50.3, 51.6),
+                    # breaks = c(50.4, 50.6, 50.8, 51.0, 51.2),
                      labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4"), 
                      expand = c(0, 0)) +
-  labs(title = "Present Habitat Suitability", 
-       subtitle = "Informed Model")
+  labs(title = "Present habitat suitability", 
+       subtitle = "Informed model")
 
 skeetch_informed_cont
 
@@ -202,13 +221,13 @@ skeetch_bioclim_present_cont <- ggplot() +
   geom_spatraster(data = bioclim30s_present_skeetch, aes(fill = mean)) +
   geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
   scale_fill_viridis_c(name = "Probability of Presence") +
-  scale_x_continuous(name = "Longitude (°W)", 
-                     # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
-                     labels = c("121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"), 
+  scale_x_continuous(name = "Longitude (°W)",
+                     # breaks = c(121.2, 120.8, 120.4, 120.0),
+                     labels = c("121.5", "121.0", "120.5", "120.0"),
                      expand = c(0,0)) +
-  theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
-                     breaks = c(50.4, 50.6, 50.8, 51.0, 51.2, 51.4),
+                     # limits = c(50.3, 51.6),
+                     # breaks = c(50.4, 50.6, 50.8, 51.0, 51.2),
                      labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4"), 
                      expand = c(0, 0)) +
   labs(title = "Present Habitat Suitability", 
@@ -226,13 +245,13 @@ skeetch_bioclim_future_cont <- ggplot() +
   geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
   scale_fill_viridis_c(name = "Relative \nHabitat \nSuitability", na.value = "white") +
   theme(legend.title = element_text(size = 10)) +
-  scale_x_continuous(name = "Longitude (°W)", 
-                     # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
-                     labels = c("121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"), 
+  scale_x_continuous(name = "Longitude (°W)",
+                     # breaks = c(121.2, 120.8, 120.4, 120.0),
+                     labels = c("121.5", "121.0", "120.5", "120.0"),
                      expand = c(0,0)) +
-  theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
-                     breaks = c(50.4, 50.6, 50.8, 51.0, 51.2, 51.4),
+                     # limits = c(50.3, 51.6),
+                     # breaks = c(50.4, 50.6, 50.8, 51.0, 51.2),
                      labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4"), 
                      expand = c(0, 0)) +
   labs(title = "Future Habitat Suitability", 
@@ -266,29 +285,34 @@ predictions_cont_skeetch_plot <- ggplot() +
   geom_spatraster(data = predictions_cont_skeetch) +
   geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white") +
   facet_wrap(~lyr, nrow = 1, ncol = 3) +
-  theme_classic() +
   theme(axis.line = element_line(colour = "black"),
         strip.background = element_blank(),
-        panel.border = element_blank()) +
-  scale_fill_viridis_c(name = "Relative \nHabitat \nSuitability", na.value = "white") +
-  theme(legend.title = element_text(size = 10)) +
-  scale_x_continuous(name = "Longitude (°W)", 
-                     # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
-                     labels = c("121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"), 
+        panel.border = element_blank(), 
+        strip.text = element_text(size = 14, vjust = +0.5)) +
+  scale_fill_viridis_c(name = "Relative \nhabitat\nsuitability",
+                       na.value = "transparent",
+                       limits = c(0, 1.0)) +
+  guides(fill = guide_colorbar(ticks.colour = NA)) +
+  theme(legend.title = element_text(vjust = + 3.0, size = 10)) +
+  scale_x_continuous(name = "Longitude (°W)",
+                    # breaks = c(121.2, 120.8, 120.4),
+                    # labels = c("120.0", "120.2", "120.4", "120.6", "120.8", "121.0"),
+                     labels = c("121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"),
                      expand = c(0,0)) +
   theme(axis.text.x = element_text(angle = 90)) +
+  theme(title = element_text(size = 10)) +
   scale_y_continuous(name = "Latitude (°N)",
-                     breaks = c(50.4, 50.6, 50.8, 51.0, 51.2, 51.4),
+                     # limits = c(50.3, 51.6),
+                     # breaks = c(50.4, 50.6, 50.8, 51.0, 51.2),
                      labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4"), 
-                     expand = c(0, 0)) 
+                     expand = c(0, 0)) +
+  theme(title = element_text(size = 14))
+  
 
 predictions_cont_skeetch_plot
 
 ggsave("outputs/skeetch_cont_plots.png", predictions_cont_skeetch_plot, 
        width = 12, height = 4, units = "in")
-
-
-
 
 
 
