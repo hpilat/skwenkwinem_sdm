@@ -323,6 +323,13 @@ temprast <- rast(climate_zones_na, ncols = 3265, nrows = 4109)
 # Climate Zones
 # code categories as numeric
 climate_zones_na$Climate_numeric <- as.numeric(as.factor(as.character(climate_zones_na$Climate)))
+
+# create dataframe to view coded categories:
+climate_zones_df <- as.data.frame(climate_zones_na) %>% 
+  dplyr::select(Key_EN, Climate_numeric) %>% 
+  dplyr::arrange(climate_zones_df$Climate_numeric)
+climate_zones_df
+
 # create raster from SpatVector and structure of na_bound_rast
 climate_zones <- rasterize(climate_zones_na, temprast, field = "Climate_numeric")
 climate_zones
@@ -348,11 +355,12 @@ ecoregions
 ecoregions <- terra::project(ecoregions, "EPSG:4326")
 ecoregions <- resample(ecoregions, na_bound_rast)
 ecoregions <- crop(ecoregions, na_bound_vect)
+
 # change the name to match the object
 names(ecoregions) <- "ecoregions"
 
 # write to file for reuse
-writeRaster(climate_zones, filename = "data/processed/climate_zones.tif", overwrite = TRUE)
+writeRaster(ecoregions, filename = "data/processed/ecoregions.tif", overwrite = TRUE)
 
 
 # Watersheds
