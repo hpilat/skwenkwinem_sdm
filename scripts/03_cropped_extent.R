@@ -125,10 +125,20 @@ new_crs <- "+proj=aea +lat_0=40 +lon_0=-96 +lat_1=20 +lat_2=60 +x_0=0 +y_0=0 +da
 north_america <- terra::project(north_america, new_crs)
 plot(north_america)
 
+# convert skwenkwinem_sf to SpatVector object:
+skwenkwinem_vect <- vect(skwenkwinem_sf)
+
+# reproject objects to conic equal area projection:
+na_bound_vect <- terra::project(na_bound_vect, new_crs)
+skwenkwinem_vect <- terra::project(skwenkwinem_vect, new_crs)
+skwenkwinem_vect <- crop(skwenkwinem_vect, na_bound_vect)
+plot(skwenkwinem_vect)
+
 
 north_america_plot <- ggplot() +
   geom_spatvector(data = north_america, aes(fill = NULL), show.legend = FALSE) +
   geom_spatvector(data = na_bound_vect, aes(alpha = 0.5), fill = "lightgreen", show.legend = FALSE) +
+  geom_spatvector(data = skwenkwinem_vect, alpha = 0.25, cex = 0.75) +
   theme_classic() +
   scale_x_continuous(name = "Longitude (°W)",
                      expand = c(0,0)) +
@@ -144,30 +154,3 @@ north_america_plot <- ggplot() +
 north_america_plot
 
 ggsave(filename = "outputs/north_america_context_plot.png", north_america_plot)
-
-
-# plot occurrences on study area for reference/context
-
-# convert skwenkwinem_sf to SpatVector object:
-skwenkwinem_vect <- vect(skwenkwinem_sf)
-
-# reproject objects to conic equal area projection:
-na_bound_vect <- terra::project(na_bound_vect, new_crs)
-skwenkwinem_vect <- terra::project(skwenkwinem_vect, new_crs)
-skwenkwinem_vect <- crop(skwenkwinem_vect, na_bound_vect)
-plot(skwenkwinem_vect)
-
-occurrences_context <- ggplot() +
-  geom_spatvector(data = na_bound_vect, aes(alpha = 0.5), fill = "lightgreen", show.legend = FALSE) +
-  geom_spatvector(data = skwenkwinem_vect, alpha = 0.25) +
-  scale_x_continuous(name = "Longitude (°W)", 
-                     labels = c("135", "130", "125", "120", "115", "110", "105"), 
-                     expand = c(0,0)) +
-  scale_y_continuous(name = "Latitude (°N)",
-                     labels = c("30", "35", "40", "45", "50", "55", "60"), 
-                     expand = c(0, 0)) +
-  theme_classic()
-
-occurrences_context
-
-ggsave("outputs/occurrences_context_plot.png", occurrences_context)
