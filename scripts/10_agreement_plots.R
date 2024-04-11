@@ -167,13 +167,10 @@ agreement_future <- ggplot() +
                     labels = c("bioclim present", "overlap", "bioclim future", "pseudoabsence"), 
                     values = c("#FDE725", "#F8870E", "#C73E4C", "grey")) +
   scale_x_continuous(name = "Longitude (°W)", 
-                     # breaks = c(105, 110, 115, 120, 125, 130, 135),
                      labels = c("135", "130", "125", "120", "115", "110", "105"), 
-                     # limits = c(-103.04, -137.07),
                      expand = c(0,0)) +
   # theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
-                     #limits = c(50.3, 51.6),
                      breaks = c(35, 40, 45, 50, 55),
                      labels = c("35", "40", "45", "50", "55"), 
                      expand = c(0, 0)) +
