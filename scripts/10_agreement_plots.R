@@ -18,19 +18,26 @@ library(terra)
 library(sf)
 
 
+
 # total study area boundary:
 # vector object to use for masking and area calculations
 na_bound_vect <- vect("data/extents/na_bound_vect.shp") # WGS84
 
+# reproject to North America Albers equal-area conic
+# https://spatialreference.org/ref/esri/102008/
+# define CRS
+new_crs <- "+proj=aea +lat_0=40 +lon_0=-96 +lat_1=20 +lat_2=60 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +type=crs"
+na_bound_vect <- terra::project(na_bound_vect, new_crs)
+
 # Skeetchestn territory boundary vector for masking:
 skeetch_vect_albers <- vect("data/extents/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
-# reproject to WGS84:
-skeetch_vectWGS84 <- terra::project(skeetch_vect_albers, "EPSG:4326")
+# reproject:
+skeetch_vect <- terra::project(skeetch_vect_albers, new_crs)
 
 
-# create an extent object slightly larger than skeetch_vectWGS84
-skeetch_vectWGS84 # round up extent values:
-skeetch_extentWGS84 <- ext(-121.6, -120.1, 50.3, 51.6) # xmin, xmax, ymin, ymax
+# create an extent object slightly larger than skeetch_vect
+skeetch_vect # round up extent values:
+skeetch_extent <- ext(-1678594, -1596271, 1442461, 1568601)
 
 
 # Read in agreement maps for total study extent:
@@ -42,8 +49,8 @@ model_agreement_pres <- as.factor(model_agreement_pres)
 model_agreement_fut <- as.factor(model_agreement_fut)
 
 # reproject to WGS84:
-model_agreement_pres <- terra::project(model_agreement_pres, "EPSG:4326", method = "near")
-model_agreement_fut <- terra::project(model_agreement_fut, "EPSG:4326", method = "near")
+model_agreement_pres <- terra::project(model_agreement_pres, new_crs, method = "near")
+model_agreement_fut <- terra::project(model_agreement_fut, new_crs, method = "near")
 
 # crop to study extent:
 model_agreement_pres <- crop(model_agreement_pres, na_bound_vect)
@@ -76,15 +83,11 @@ agreement_present <- ggplot() +
                     labels = c("bioclim present", "overlap", "informed present", "pseudoabsence"), 
                     values = c("#FDE725", "#95D054", "#2A7B8EFF", "grey")) +
   scale_x_continuous(name = "Longitude (°W)", 
-                     # breaks = c(105, 110, 115, 120, 125, 130, 135),
-                     labels = c("135", "130", "125", "120", "115", "110", "105"), 
-                     # limits = c(-103.04, -137.07),
+                     labels = c("135", "130", "125", "120", "115", "110", "105"),
                      expand = c(0,0)) +
   # theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
-                     #limits = c(50.3, 51.6),
-                     breaks = c(35, 40, 45, 50, 55),
-                     labels = c("35", "40", "45", "50", "55"), 
+                     labels = c("30", "35", "40", "45", "50", "55", "60"), 
                      expand = c(0, 0)) +
   labs(title = "Area of Agreement", 
        subtitle = "Informed and Bioclim30s Models (Present)") +
@@ -100,13 +103,13 @@ ggsave("outputs/agreement_present.png", plot = agreement_present)
 
 
 # crop model_agreement to Skeetchestn extent:
-agreement_pres_skeetch <- crop(model_agreement_presNA, skeetch_extentWGS84)
+agreement_pres_skeetch <- crop(model_agreement_presNA, skeetch_vect)
 summary(agreement_pres_skeetch)
 plot(agreement_pres_skeetch)
 
 # plot area of agreement not masked to Skeetch with Skeetch polygon overlaid:
 # turn Skeetchestn boundary polygon into lines geometry:
-skeetch_lines <- as.lines(skeetch_vectWGS84)
+skeetch_lines <- as.lines(skeetch_vect)
 
 agreement_pres_skeetch
 # 0 = pseudoabsence
@@ -124,11 +127,11 @@ skeetch_agreement_present <- ggplot() +
                     values = c("#FDE725", "#95D054", "#2A7B8EFF", "grey")) +
   scale_x_continuous(name = "Longitude (°W)", 
                      # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
-                     labels = c("121.6", "121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"), 
+                    # labels = c("121.0", "120.5", "120.0"), 
                      expand = c(0,0)) +
   theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
-                     breaks = c(50.4, 50.6, 50.8, 51.0, 51.2, 51.4),
+                   #  breaks = c(50.4, 50.6, 50.8, 51.0, 51.2, 51.4),
                      labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4"), 
                      expand = c(0, 0)) +
   labs(title = "Area of Agreement", 
@@ -236,39 +239,38 @@ model_agreement_pres_temp <- model_agreement_presNA
 model_agreement_fut_temp <- model_agreement_futNA
 
 # change the names of our rasters:
-names(model_agreement_pres_temp) <- "Informed and Bioclim Present"
-names(model_agreement_fut_temp) <- "Bioclim Present and Future"
+names(model_agreement_pres_temp) <- "Informed and bioclim present"
+names(model_agreement_fut_temp) <- "Bioclim present and future"
 
 # create a multilayer raster object:
 agreement_full_extent <- c(model_agreement_pres_temp, model_agreement_fut_temp)
 levels(agreement_full_extent)
 
-
 agreement_facet_plot <- ggplot() +
   geom_spatraster(data = agreement_full_extent) +
-  facet_wrap(~lyr, nrow = 1, ncol = 2) +
+  facet_wrap(~lyr, nrow = 1, ncol = 2, labeller = label_wrap_gen(width = 18)) +
   theme_classic() +
   theme(axis.line = element_line(colour = "black"),
         strip.background = element_blank(),
-        panel.border = element_blank()) +
+        panel.border = element_blank(), 
+        strip.text = element_text(size = 10)) +
   scale_fill_manual(name = NULL, na.translate = FALSE,
                     labels = c("bioclim present", "informed & bioclim present", "informed present", "pseudoabsence", "bioclim present & future", "bioclim future"), 
                     values = c("#FDE725", "#95D054","#2A7B8EFF", "grey", "#F8870E", "#C73E4C")) +
   scale_x_continuous(name = "Longitude (°W)", 
-                     # breaks = c(105, 110, 115, 120, 125, 130, 135),
-                     labels = c("135", "130", "125", "120", "115", "110", "105"), 
-                     # limits = c(-103.04, -137.07),
+                     labels = c("135", "130", "125", "120", "115", "110", "105"),
                      expand = c(0,0)) +
-  # theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
-                     #limits = c(50.3, 51.6),
                      breaks = c(35, 40, 45, 50, 55),
                      labels = c("35", "40", "45", "50", "55"), 
-                     expand = c(0, 0))
+                     expand = c(0, 0)) +
+  theme(axis.title.x = element_text(vjust = -0.5)) +
+  theme(panel.spacing = unit(35, "pt"))
 
 agreement_facet_plot
+
 ggsave("outputs/agreement_full_extent_faceted.png", agreement_facet_plot, 
-       width = 12, height = 4, units = "in")
+       width = 8, height = 4, units = "in")
 
 
 
