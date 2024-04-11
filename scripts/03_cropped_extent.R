@@ -150,26 +150,28 @@ ggsave(filename = "outputs/north_america_context_plot.png", north_america_plot)
 
 # plot occurrences on study area for reference/context
 
-# first, reproject objects to conic equal area projection:
-na_bound_rast <- terra::project(na_bound_rast, new_crs)
+# convert skwenkwinem_sf to SpatVector object:
+skwenkwinem_vect <- vect(skwenkwinem_sf)
+
+# reproject objects to conic equal area projection:
+na_bound_vect <- terra::project(na_bound_vect, new_crs)
 skwenkwinem_vect <- terra::project(skwenkwinem_vect, new_crs)
-skwenkwinem_vect <- crop(skwenkwinem_vect, na_bound_rast)
+skwenkwinem_vect <- crop(skwenkwinem_vect, na_bound_vect)
 plot(skwenkwinem_vect)
 
-occurrences_context <- ggplot()+
+occurrences_context <- ggplot() +
   geom_spatvector(data = na_bound_vect, aes(alpha = 0.5), fill = "lightgreen", show.legend = FALSE) +
   geom_spatvector(data = skwenkwinem_vect, alpha = 0.25) +
   scale_x_continuous(name = "Longitude (°W)", 
                      # limits = c(-4747087, -407900),
                      # breaks = c(135, 130, 125, 120, 115, 110, 105),
-                     labels = c("135", "130", "125", "120", "115", "110", "105"),
-                     #labels = c("105", "110", "115", "120", "125", "130", "135"), 
+                     labels = c("135", "130", "125", "120", "115", "110", "105"), 
                      expand = c(0,0)) +
   # theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
                      # limits = c(50.3, 51.6),
                      # breaks = c(35, 40, 45, 50, 55),
-                     labels = c("35", "40", "45", "50", "55"), 
+                     labels = c("30", "35", "40", "45", "50", "55", "60"), 
                      expand = c(0, 0)) +
   theme_classic()
 
