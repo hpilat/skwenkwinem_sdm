@@ -1,4 +1,4 @@
-# This is script 10/10
+# This is script 10/11
 # This script plots area of agreement between our predictions for our total
 # study area and Skeetchestn Territory
 # please first run the following scripts in the following order:
@@ -85,7 +85,6 @@ agreement_present <- ggplot() +
   scale_x_continuous(name = "Longitude (°W)", 
                      labels = c("135", "130", "125", "120", "115", "110", "105"),
                      expand = c(0,0)) +
-  # theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
                      labels = c("30", "35", "40", "45", "50", "55", "60"), 
                      expand = c(0, 0)) +
@@ -169,7 +168,6 @@ agreement_future <- ggplot() +
   scale_x_continuous(name = "Longitude (°W)", 
                      labels = c("135", "130", "125", "120", "115", "110", "105"), 
                      expand = c(0,0)) +
-  # theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
                      breaks = c(35, 40, 45, 50, 55),
                      labels = c("35", "40", "45", "50", "55"), 
@@ -246,13 +244,12 @@ levels(agreement_full_extent)
 agreement_facet_plot <- ggplot() +
   geom_spatraster(data = agreement_full_extent) +
   facet_wrap(~lyr, nrow = 1, ncol = 2, labeller = label_wrap_gen(width = 18)) +
-  theme_classic() +
   theme(axis.line = element_line(colour = "black"),
         strip.background = element_blank(),
         panel.border = element_blank(), 
         strip.text = element_text(size = 10)) +
   scale_fill_manual(name = NULL, na.translate = FALSE,
-                    labels = c("bioclim present", "informed & bioclim present", "informed present", "pseudoabsence", "bioclim present & future", "bioclim future"), 
+                    labels = c("bioclim present", "informed & bioclim present", "informed present", "unsuitable", "bioclim present & future", "bioclim future"), 
                     values = c("#FDE725", "#95D054","#2A7B8EFF", "grey", "#F8870E", "#C73E4C")) +
   scale_x_continuous(name = "Longitude (°W)", 
                      labels = c("135", "130", "125", "120", "115", "110", "105"),
@@ -262,7 +259,7 @@ agreement_facet_plot <- ggplot() +
                      labels = c("35", "40", "45", "50", "55"), 
                      expand = c(0, 0)) +
   theme(axis.title.x = element_text(vjust = -0.5)) +
-  theme(panel.spacing = unit(35, "pt"))
+  theme(panel.spacing = unit(25, "pt"))
 
 agreement_facet_plot
 
