@@ -331,7 +331,17 @@ anth_biome_data <- anth_biome_data %>%
   )
 
 ggplot(anth_biome_data, aes(x = anth_biome, y = pred)) +
-  geom_point(alpha = .5, cex = 1)
+  geom_point(alpha = 0.25, cex = 4) +
+  scale_x_continuous(name = "Anthropogenic biomes") +
+  scale_y_continuous(name = "Relative habitat suitability") +
+  theme_classic()
+
+ggsave("outputs/anth_biome_response.png")
+
+# get most suitable anthropogenic biomes
+anth_biome_most_suitable <- anth_biome_data %>%
+  arrange(desc(anth_biome_data$pred))
+anth_biome_most_suitable
 
 
 # investigate the contribution of Climate (climate_zones):
@@ -347,7 +357,17 @@ climate_zones_data <- climate_zones_data %>%
   )
 
 ggplot(climate_zones_data, aes(x = climate_zones, y = pred)) +
-  geom_point(alpha = .5, cex = 1)
+  geom_point(alpha = 0.25, cex = 4) +
+  scale_x_continuous(name = "Climate zones") +
+  scale_y_continuous(name = "Relative habitat suitability") +
+  theme_classic()
+
+ggsave("outputs/climate_zones_response.png")
+
+# get most suitable climate zones
+climate_zones_most_suitable <- climate_zones_data %>%
+  arrange(desc(climate_zones_data$pred))
+climate_zones_most_suitable
 
 
 # investigate the contribution of ecoregions:
@@ -363,8 +383,17 @@ ecoregions_data <- ecoregions_data %>%
   )
 
 ggplot(ecoregions_data, aes(x = ecoregions, y = pred)) +
-  geom_point(alpha = .5, cex = 1)
+  geom_point(alpha = 0.25, cex = 4) +
+  scale_x_continuous(name = "Ecoregions (level III)") +
+  scale_y_continuous(name = "Relative habitat suitability") +
+  theme_classic()
 
+ggsave("outputs/ecoregions_response.png")
+
+# get most suitable ecoregions
+ecoregions_most_suitable <- ecoregions_data %>%
+  arrange(desc(ecoregions_data$pred))
+ecoregions_most_suitable
 
 # investigate the contribution of elevation:
 elevation_prof <- model_recipe %>%  # recipe from above
@@ -379,7 +408,17 @@ elevation_data <- elevation_data %>%
   )
 
 ggplot(elevation_data, aes(x = elevation, y = pred)) +
-  geom_point(alpha = .5, cex = 1)
+  geom_point(alpha = 0.25, cex = 4) +
+  scale_x_continuous(name = "Elevation (m)") +
+  scale_y_continuous(name = "Relative habitat suitability") +
+  theme_classic()
+
+ggsave("outputs/elevation_response.png")
+
+# get most suitable elevation
+elevation_most_suitable <- elevation_data %>%
+  arrange(desc(elevation_data$pred))
+elevation_most_suitable
 
 
 # investigate the contribution of lndcvr_na:
@@ -395,8 +434,17 @@ landcover_data <- landcover_data %>%
   )
 
 ggplot(landcover_data, aes(x = landcover, y = pred)) +
-  geom_point(alpha = .5, cex = 1)
+  geom_point(alpha = 0.25, cex = 4) +
+  scale_x_continuous(name = "Landcover") +
+  scale_y_continuous(name = "Relative habitat suitability") +
+  theme_classic()
 
+ggsave("outputs/landcover_response.png")
+
+# get most suitable landcover types
+landcover_most_suitable <- landcover_data %>%
+  arrange(desc(landcover_data$pred))
+landcover_most_suitable
 
 # investigate the contribution of soil_temp_5_15:
 soil_temp_5_15_prof <- model_recipe %>%  # recipe from above
@@ -410,8 +458,21 @@ soil_temp_5_15_data <- soil_temp_5_15_data %>%
     pred = predict(skwenkwinem_ensemble, soil_temp_5_15_data)$mean
   )
 
+# convert soil_temp_5_15 to °C:
+soil_temp_5_15_data$soil_temp_5_15 <- soil_temp_5_15_data$soil_temp_5_15/10
+
 ggplot(soil_temp_5_15_data, aes(x = soil_temp_5_15, y = pred)) +
-  geom_point(alpha = .5, cex = 1)
+  geom_point(alpha = 0.25, cex = 4) +
+  scale_x_continuous(name = "Soil Temperature (°C)") +
+  scale_y_continuous(name = "Relative habitat suitability") +
+  theme_classic()
+
+ggsave("outputs/soil_temp_5_15_response.png")
+
+# get most suitable soil temperature
+soil_temp_5_15_most_suitable <- soil_temp_5_15_data %>%
+  arrange(desc(soil_temp_5_15_data$pred))
+soil_temp_5_15_most_suitable
 
 
 # investigate the contribution of watersheds:
@@ -427,79 +488,14 @@ watersheds_data <- watersheds_data %>%
   )
 
 ggplot(watersheds_data, aes(x = watersheds, y = pred)) +
-  geom_point(alpha = .5, cex = 1)
+  geom_point(alpha = 0.25, cex = 4) +
+  scale_x_continuous(name = "Watersheds") +
+  scale_y_continuous(name = "Relative habitat suitability") +
+  theme_classic()
 
+ggsave("outputs/watersheds_response.png")
 
-
-## Repeated Ensembles ##
-
-
-
-# explore the effect of thinning and sampling pseudoabsences on model performance
-# create a list of simple_ensembles by looping through the SDM pipeline
-# create an empty object to store the simple ensembles we will create:
-ensemble_list <- list()
-set.seed(123) # make sure seed is set outside of the loop
-
-for (i_repeat in 1:3) {
-  # thin the data
-  thin_rep <- thin_by_cell(skwenkwinem_sf, raster = predictors_multi)
-  thin_rep <- thin_by_dist(thin_rep, dist_min = 15)
-  # sample pseudo-absences
-  thin_rep <- sample_pseudoabs(thin_rep,
-                                   n = 3 * nrow(thin_rep),
-                                   raster = predictors_multi,
-                                   method = c("dist_disc", 50, 90)
-  )
-  # get climate
-  thin_rep <- thin_rep %>%
-    bind_cols(terra::extract(predictors_multi, thin_rep, ID = FALSE))
-  # create folds
-  thin_rep_cv <- spatial_block_cv(thin_rep, v = 5) # 5 folds
-  # create a recipe
-  thin_rep_rec <- recipe(thin_rep, formula = class ~ .)
-  # create a workflow_set
-  thin_rep_models <-
-    # create the workflow_set
-    workflow_set(
-      preproc = list(default = thin_rep_rec),
-      models = list(
-        # the standard glm specs
-        glm = sdm_spec_glm(),
-        # maxent specs with tuning
-        maxent = sdm_spec_maxent()
-      ),
-      # make all combinations of preproc and models,
-      cross = TRUE
-    ) %>%
-    # tweak controls to store information needed later to create the ensemble
-    option_add(control = control_ensemble_grid())
-  
-  # train the model
-  thin_rep_models <-
-    thin_rep_models %>%
-    workflow_map("tune_grid",
-                 resamples = thin_rep_cv, grid = 10,
-                 metrics = sdm_metric_set(), verbose = TRUE
-    )
-  # make an simple ensemble and add it to the list
-  ensemble_list[[i_repeat]] <- simple_ensemble() %>%
-    add_member(thin_rep_models, metric = "roc_auc")
-}
-
-# now create repeat_ensemble from the list:
-thin_rep_ens <- repeat_ensemble() %>% add_repeat(ensemble_list)
-thin_rep_ens
-
-# predict by taking the mean and median of all models
-thin_rep_ens <- predict_raster(thin_rep_ens, 
-                               predictors_multi_input, 
-                               fun = c("mean", "median")
-)
-
-ggplot() +
-  geom_spatraster(data = thin_rep_ens, aes(fill = mean)) +
-  scale_fill_terrain_c()
-
-thin_rep_ens
-# convert to binary and calculate area?
+# get most suitable watersheds
+watersheds_most_suitable <- watersheds_data %>%
+  arrange(desc(watersheds_data$pred))
+watersheds_most_suitable
