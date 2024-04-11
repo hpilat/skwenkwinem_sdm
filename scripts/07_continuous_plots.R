@@ -15,7 +15,6 @@ library(tidyterra)
 library(terra)
 library(sf)
 library(devtools)
-# devtools::install_github("h-a-graham/rayvista", dependencies = TRUE)
 
 # Predictions:
 
@@ -64,13 +63,10 @@ informed_full_extent_cont <- ggplot() +
   guides(fill = guide_colorbar(ticks.colour = NA)) +
   theme(legend.title = element_text(vjust = + 2.5)) +
   scale_x_continuous(name = "Longitude (°W)",
-                     # breaks = c(128, 120, 110, 102),
                      labels = c("150", "140", "130", "120", "110"), 
                      expand = c(0,0)) +
   # theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
-                     #limits = c(50.3, 51.6),
-                     # breaks = c(35, 40, 45, 50, 55),
                      labels = c("25", "30", "35", "40", "45", "50", "55"), 
                      expand = c(0, 0)) +
   labs(title = "Present habitat suitability", 
@@ -87,13 +83,10 @@ bioclim_pres_full_extent_cont <- ggplot() +
   guides(fill = guide_colorbar(ticks.colour = NA)) +
   theme(legend.title = element_text(vjust = + 2.5)) +
   scale_x_continuous(name = "Longitude (°W)",
-                     # breaks = c(128, 120, 110, 102),
                      labels = c("150", "140", "130", "120", "110"), 
                      expand = c(0,0)) +
   # theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
-                     #limits = c(50.3, 51.6),
-                     # breaks = c(35, 40, 45, 50, 55),
                      labels = c("25", "30", "35", "40", "45", "50", "55"), 
                      expand = c(0, 0)) +
   labs(title = "Present habitat suitability", 
@@ -111,13 +104,10 @@ bioclim_fut_full_extent_cont <- ggplot() +
   guides(fill = guide_colorbar(ticks.colour = NA)) +
   theme(legend.title = element_text(vjust = + 2.5)) +
   scale_x_continuous(name = "Longitude (°W)",
-                     # breaks = c(128, 120, 110, 102),
                      labels = c("150", "140", "130", "120", "110"), 
                      expand = c(0,0)) +
   # theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
-                     #limits = c(50.3, 51.6),
-                     # breaks = c(35, 40, 45, 50, 55),
                      labels = c("25", "30", "35", "40", "45", "50", "55"), 
                      expand = c(0, 0)) +
   labs(title = "Future habitat suitability", 
@@ -152,6 +142,7 @@ continuous_predictions
 predictions_continuous_plot <- ggplot() +
   geom_spatraster(data = continuous_predictions) +
   facet_wrap(~lyr, nrow = 1, ncol = 3) +
+  theme_classic() +
   theme(axis.line = element_line(colour = "black"),
         strip.background = element_blank(),
         panel.border = element_blank(), 
@@ -162,13 +153,10 @@ predictions_continuous_plot <- ggplot() +
   guides(fill = guide_colorbar(ticks.colour = NA)) +
   theme(legend.title = element_text(vjust = + 3.0, size = 10)) +
   scale_x_continuous(name = "Longitude (°W)",
-                     # breaks = c(128, 120, 110, 102),
                      labels = c("150", "140", "130", "120", "110"), 
                      expand = c(0,0)) +
   theme(title = element_text(size = 10)) +
   scale_y_continuous(name = "Latitude (°N)",
-                     #limits = c(50.3, 51.6),
-                     # breaks = c(35, 40, 45, 50, 55),
                      labels = c("25", "30", "35", "40", "45", "50", "55"), 
                      expand = c(0, 0)) +
   theme(title = element_text(size = 14))
@@ -177,7 +165,6 @@ predictions_continuous_plot
 
 ggsave("outputs/full_extent_cont_plots.png", predictions_continuous_plot, 
        width = 12, height = 4, units = "in")
-
 
 
 
@@ -198,12 +185,9 @@ skeetch_informed_cont <- ggplot() +
   guides(fill = guide_colorbar(ticks.colour = NA)) +
   theme(legend.title = element_text(vjust = + 2.5)) +
   scale_x_continuous(name = "Longitude (°W)",
-                    # breaks = c(121.2, 120.8, 120.4, 120.0),
                      labels = c("121.5", "121.0", "120.5", "120.0"),
                      expand = c(0,0)) +
   scale_y_continuous(name = "Latitude (°N)",
-                    # limits = c(50.3, 51.6),
-                    # breaks = c(50.4, 50.6, 50.8, 51.0, 51.2),
                      labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4"), 
                      expand = c(0, 0)) +
   labs(title = "Present habitat suitability", 
@@ -313,24 +297,3 @@ predictions_cont_skeetch_plot
 
 ggsave("outputs/skeetch_cont_plots.png", predictions_cont_skeetch_plot, 
        width = 12, height = 4, units = "in")
-
-
-
-# Calculate hillshade
-slopes <- terra::terrain(elevation, "slope", unit = "radians")
-aspect <- terra::terrain(elevation, "aspect", unit = "radians")
-hillshade <- terra::shade(slopes, aspect)
-
-# Plot hillshading as a basemap:
-# Use Skeetchestn Territory as x and y limits:
-terra::plot(hillshade, col = gray(0:100 / 100), legend = FALSE, axes = FALSE,
-            xlim = st_bbox(skeetch_vectWGS84)[c(1,3)], ylim = st_bbox(skeetch_vectWGS84)[c(2,4)])
-
-# create a grayscale colour palette
-gray_palette <- hcl.colors(100, "Grays")
-# overlay with elevation
-
-terra::plot(elevation, col = gray_palette, alpha = 0.4, legend = FALSE,
-            axes = FALSE, add = TRUE)
-# add contour lines
-terra::contour(elevation, col = "grey40", add = TRUE, nlevels = 15)
