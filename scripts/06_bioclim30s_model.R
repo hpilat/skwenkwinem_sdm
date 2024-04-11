@@ -369,9 +369,10 @@ bio02_data <- bio02_data %>%
   )
 
 ggplot(bio02_data, aes(x = bio02, y = pred)) +
-  geom_point(alpha = .5, cex = 1.5) +
-  scale_x_continuous(name = "Mean diurnal range") +
-  scale_y_continuous(name = "Relative habitat suitability")
+  geom_point(alpha = 0.25, cex = 4) +
+  scale_x_continuous(name = "Mean diurnal range (°C)") +
+  scale_y_continuous(name = "Relative habitat suitability") +
+  theme_classic()
 
 ggsave("outputs/bio02_response.png")
 
@@ -389,9 +390,10 @@ bio03_data <- bio03_data %>%
   )
 
 ggplot(bio03_data, aes(x = bio03, y = pred)) +
-  geom_point(alpha = .5, cex = 1.5) +
-  scale_x_continuous(name = "Isothermality") +
-  scale_y_continuous(name = "Relative habitat suitability")
+  geom_point(alpha = 0.25, cex = 4) +
+  scale_x_continuous(name = "Isothermality (%)") +
+  scale_y_continuous(name = "Relative habitat suitability") +
+  theme_classic()
 
 ggsave("outputs/bio03_response.png")
 
@@ -409,9 +411,10 @@ bio07_data <- bio07_data %>%
   )
 
 ggplot(bio07_data, aes(x = bio07, y = pred)) +
-  geom_point(alpha = .5, cex = 1.5) +
+  geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Temperature annual range (°C)") +
-  scale_y_continuous(name = "Relative habitat suitability")
+  scale_y_continuous(name = "Relative habitat suitability") +
+  theme_classic()
 
 ggsave("outputs/bio07_response.png")
 
@@ -429,9 +432,10 @@ bio08_data <- bio08_data %>%
   )
 
 ggplot(bio08_data, aes(x = bio08, y = pred)) +
-  geom_point(alpha = .5, cex = 1.5) +
+  geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Mean temperature wettest quarter (°C)") +
-  scale_y_continuous(name = "Relative habitat suitability")
+  scale_y_continuous(name = "Relative habitat suitability") +
+  theme_classic()
 
 ggsave("outputs/bio08_response.png")
 
@@ -449,9 +453,10 @@ bio09_data <- bio09_data %>%
   )
 
 ggplot(bio09_data, aes(x = bio09, y = pred)) +
-  geom_point(alpha = .5, cex = 1.5) +
+  geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Mean temperature driest quarter (°C)") +
-  scale_y_continuous(name = "Relative habitat suitability")
+  scale_y_continuous(name = "Relative habitat suitability") +
+  theme_classic()
 
 ggsave("outputs/bio09_response.png")
 
@@ -468,13 +473,11 @@ bio13_data <- bio13_data %>%
     pred = predict(skwenkwinem_ensemble, bio13_data)$mean
   )
 
-# convert values to cm
-bio13_data$bio13 <- bio13_data$bio13/10
-
 ggplot(bio13_data, aes(x = bio13, y = pred)) +
-  geom_point(alpha = .5, cex = 1.5) +
-  scale_x_continuous(name = "Precipitation wettest month (cm)") +
-  scale_y_continuous(name = "Relative habitat suitability")
+  geom_point(alpha = 0.25, cex = 4) +
+  scale_x_continuous(name = "Precipitation wettest month (mm)") +
+  scale_y_continuous(name = "Relative habitat suitability") +
+  theme_classic()
 
 ggsave("outputs/bio13_response.png")
 
@@ -492,9 +495,10 @@ bio15_data <- bio15_data %>%
   )
 
 ggplot(bio15_data, aes(x = bio15, y = pred)) +
-  geom_point(alpha = .5, cex = 1.5) +
-  scale_x_continuous(name = "Precipitation seasonality") +
-  scale_y_continuous(name = "Relative habitat suitability")
+  geom_point(alpha = 0.25, cex = 4) +
+  scale_x_continuous(name = "Precipitation seasonality (%)") +
+  scale_y_continuous(name = "Relative habitat suitability") +
+  theme_classic()
 
 ggsave("outputs/bio15_response.png")
 
@@ -511,78 +515,11 @@ bio18_data <- bio18_data %>%
     pred = predict(skwenkwinem_ensemble, bio18_data)$mean
   )
 
+
 ggplot(bio18_data, aes(x = bio18, y = pred)) +
-  geom_point(alpha = .5, cex = 1)
+  geom_point(alpha = 0.25, cex = 4) +
+  scale_x_continuous(name = "Precipitation warmest quarter (mm)") +
+  scale_y_continuous(name = "Relative habitat suitability") +
+  theme_classic()
 
-
-
-## Repeated Ensembles ##
-
-
-
-# explore the effect of thinning and sampling pseudoabsences on model performance
-# create a list of simple_ensembles by looping through the SDM pipeline
-# create an empty object to store the simple ensembles we will create:
-ensemble_list <- list()
-set.seed(123) # make sure seed is set outside of the loop
-
-for (i_repeat in 1:3) {
-  # thin the data
-  thin_rep <- thin_by_cell(pres_abs_pred, raster = climate_present)
-  thin_rep <- thin_by_dist(thin_rep, dist_min = 5000)
-  # sample pseudo-absences
-  thin_rep <- sample_pseudoabs(thin_rep,
-                               n = 3 * nrow(thin_rep),
-                               raster = climate_present,
-                               method = c("dist_min", 50000)
-  )
-  # get climate
-  thin_rep <- thin_rep %>%
-    bind_cols(terra::extract(climate_present, thin_rep, ID = FALSE))
-  # create folds
-  thin_rep_cv <- spatial_block_cv(thin_rep, v = 5) # 5 folds
-  # create a recipe
-  thin_rep_rec <- recipe(thin_rep, formula = class ~ .)
-  # create a workflow_set
-  thin_rep_models <-
-    # create the workflow_set
-    workflow_set(
-      preproc = list(default = thin_rep_rec),
-      models = list(
-        # the standard glm specs
-        glm = sdm_spec_glm(),
-        # maxent specs with tuning
-        maxent = sdm_spec_maxent()
-      ),
-      # make all combinations of preproc and models,
-      cross = TRUE
-    ) %>%
-    # tweak controls to store information needed later to create the ensemble
-    option_add(control = control_ensemble_grid())
-  
-  # train the model
-  thin_rep_models <-
-    thin_rep_models %>%
-    workflow_map("tune_grid",
-                 resamples = thin_rep_cv, grid = 10,
-                 metrics = sdm_metric_set(), verbose = TRUE
-    )
-  # make an simple ensemble and add it to the list
-  ensemble_list[[i_repeat]] <- simple_ensemble() %>%
-    add_member(thin_rep_models, metric = "roc_auc")
-}
-
-# now create repeat_ensemble from the list:
-thin_rep_ens <- repeat_ensemble() %>% add_repeat(ensemble_list)
-thin_rep_ens
-
-# predict by taking the mean and median of all models
-thin_rep_ens <- predict_raster(thin_rep_ens, 
-                               climate_present, 
-                               fun = c("mean", "median"))
-
-ggplot() +
-  geom_spatraster(data = thin_rep_ens, aes(fill = median)) +
-  scale_fill_terrain_c() +
-  labs(title = "Skwenkwinem Prediction Sensitivity", subtitle = "Bioclim Model", xlab = "Longitude", ylab = "Latitude")
-# convert to binary and calculate area?
+ggsave("outputs/bio18_response.png")
