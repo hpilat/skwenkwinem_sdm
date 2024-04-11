@@ -134,9 +134,7 @@ north_america_plot <- ggplot() +
                      expand = c(0,0)) +
   theme(axis.text.x = element_blank(), 
         axis.ticks.x = element_blank()) +
-  # theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
-                    # labels = c("20", "30", "40", "50", "60", "70", "80"), 
                      expand = c(0, 0)) +
     theme(axis.text.y = element_blank(), 
           axis.ticks.y = element_blank(), 
@@ -163,14 +161,9 @@ occurrences_context <- ggplot() +
   geom_spatvector(data = na_bound_vect, aes(alpha = 0.5), fill = "lightgreen", show.legend = FALSE) +
   geom_spatvector(data = skwenkwinem_vect, alpha = 0.25) +
   scale_x_continuous(name = "Longitude (°W)", 
-                     # limits = c(-4747087, -407900),
-                     # breaks = c(135, 130, 125, 120, 115, 110, 105),
                      labels = c("135", "130", "125", "120", "115", "110", "105"), 
                      expand = c(0,0)) +
-  # theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
-                     # limits = c(50.3, 51.6),
-                     # breaks = c(35, 40, 45, 50, 55),
                      labels = c("30", "35", "40", "45", "50", "55", "60"), 
                      expand = c(0, 0)) +
   theme_classic()
