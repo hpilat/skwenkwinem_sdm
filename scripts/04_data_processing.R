@@ -1,3 +1,6 @@
+# Author: Hannah Pilat, Jason Pither, David Ensing
+# Date: April 12th, 2024
+
 # This is script 04/07
 # This script prepares spatial extent, occurrence records, and predictor data
 # for input into the tidysdm pipeline

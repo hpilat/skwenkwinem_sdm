@@ -1,4 +1,7 @@
-# This is script 03/07
+# Author: Hannah Pilat, Jason Pither, David Ensing
+# Date: April 12th, 2024
+
+# This is script 03/11
 # This script prepares our spatial extent for input into the tidysdm pipeline
 # Please first run these scripts in the following order:
 # 01_data_download_ranunculus.R

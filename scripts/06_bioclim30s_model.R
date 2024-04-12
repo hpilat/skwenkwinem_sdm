@@ -1,3 +1,6 @@
+# Author: Hannah Pilat, Jason Pither, David Ensing
+# Date: April 12th, 2024
+
 # This is script 06/07
 # Following tidysdm tutorial, we input Skwenkwinem (Claytonia lanceolata) occurrence records 
 # and WorldClim predictors at 30 arcsec resolution into the tidysdm pipeline

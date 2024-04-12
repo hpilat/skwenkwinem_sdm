@@ -1,4 +1,7 @@
-# This script is 01/07 
+# Author: Hannah Pilat, Jason Pither, David Ensing
+# Date: April 12th, 2024
+
+# This script is 01/11
 # Here, we download the occurrence and predictor data required to run tidysdm
 
 # dir.create("data/")

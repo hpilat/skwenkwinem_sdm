@@ -1,3 +1,6 @@
+# Author: Hannah Pilat, Jason Pither, David Ensing
+# Date: April 12th, 2024
+
 # This is script 10/11
 # This script plots area of agreement between our predictions for our total
 # study area and Skeetchestn Territory

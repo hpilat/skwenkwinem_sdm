@@ -1,3 +1,6 @@
+# Author: Hannah Pilat, Jason Pither, David Ensing
+# Date: April 12th, 2024
+
 # This is script 07/11
 # This script plots our ensemble metrics from both models together
   # and our continuous habitat suitability predictions

@@ -1,3 +1,17 @@
+# Author: Hannah Pilat, Jason Pither, David Ensing
+# Date: April 12th, 2024
+
+# This is script 11/11
+# Here, we plot the model results for both our Informed and Bioclim models
+# Please first run the following scripts in the following order:
+# 01_data_download.R
+# 02_continental_divide.Rmd
+# 03_cropped_extent.R
+# 04_data_processing.R
+# 05_informed_model.R
+# 06_bioclim30s_model.R
+
+
 library(tidyverse)
 library(tidyterra)
 

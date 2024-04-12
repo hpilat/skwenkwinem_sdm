@@ -1,4 +1,7 @@
-# This is script 08/10
+# Author: Hannah Pilat, Jason Pither, David Ensing
+# Date: April 12th, 2024
+
+# This is script 08/11
 # This script calculates area predicted to be suitable for skwenkwinem
 # over our full study extent
 # please first run the following scripts in the following order:
