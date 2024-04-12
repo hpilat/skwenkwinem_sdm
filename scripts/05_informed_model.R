@@ -1,3 +1,7 @@
+# Author: Hannah Pilat, Jason Pither, David Ensing
+# Date: April 12th, 2024
+
+# This is script 05/11
 # Following tidysdm tutorial, we input skwenkwinem (Claytonia lanceolata) 
   # occurrence records and informed predictors into the tidysdm pipeline
 # Please first run scripts in the following order: 
@@ -13,6 +17,7 @@ library(sf)
 library(ggplot2)
 library(overlapping)
 library(xgboost)
+library(plotrix)
 
 # North American extent (west coast to continental divide)
 # new geographic extent created in 02_continental_divide.Rmd
@@ -78,8 +83,7 @@ ggplot() +
 
 
 # sample pseudoabsences/background points
-# constrain pseudoabsences to be between 5 and 15km from any presences
-# choice of 5 and 15km is arbitrary
+# constrain pseudoabsences to be between 50 and 75km from any presences
 # select 10 times as many pseudoabsences as presences 
 # (recommended 10 000 pseudoabsences by lit review)
 # pres_abs will then have presences and pseudoabsences
@@ -307,8 +311,82 @@ library(DALEX)
 explainer_skwenkwinem_ensemble <- explain_tidysdm(skwenkwinem_ensemble)
 vip_ensemble <- model_parts(explainer = explainer_skwenkwinem_ensemble, 
                             type = "variable_importance")
-vip_ensemble
 plot(vip_ensemble)
+
+
+# get mean dropout loss and SEM for each of the variables:
+# informed_var_imp <- vip_ensemble %>% 
+ # group_by(vip_ensemble$variable) %>% 
+ # summarize(across(dropout_loss, list(mean = mean, se = ~sd(.)/sqrt(.)))) %>% 
+ # summarize(mean = mean(informed_var_imp$dropout_loss_se))
+ # summarize(across(mean(dropout_loss), std.error(dropout_loss)))
+
+
+informed_var_imp <- vip_ensemble %>% 
+  dplyr::filter(variable != "_baseline_" & variable != "_full_model_")
+
+
+informed_var_imp_boxplot <- ggplot(informed_var_imp, aes(x = reorder(variable, -dropout_loss), y = dropout_loss, 
+                         # ymin = dropout_loss_mean - dropout_loss_se, 
+                         # ymax = dropout_loss_mean + dropout_loss_se, 
+                          fill = variable), colour = "grey85") +
+  geom_boxplot(colour = "grey", size = 0.65) +
+  coord_flip() +
+  scale_fill_viridis_d() +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0, 0.175),
+                     breaks = c(0.00, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15)) +
+  scale_x_discrete(labels = c("anthropogenic biomes", "climate zones", 
+                              "ecoregions", "elevation", "landcover", 
+                              "soil temperature", "watersheds")) +
+  theme_classic() +
+  theme(legend.position = "none") +
+  labs(x = "Variable", y = "Mean dropout loss") +
+  theme(axis.title.y = element_blank())
+
+informed_var_imp_boxplot
+
+ggsave("outputs/informed_var_imp.png", informed_var_imp_boxplot)
+
+
+# try above code to get SD only, then do math on that column to get SE column, add it to informed_var_imp
+informed_var_sd <- vip_ensemble %>% 
+  group_by(variable) %>% 
+  summarize(across(dropout_loss, list(mean = mean, sd = sd))) %>% 
+  dplyr::filter(variable != "_baseline_" & variable != "_full_model_")
+
+# calculate SEM based on SD column:
+dropout_loss_se <- informed_var_sd$dropout_loss_sd/sqrt(length(informed_var_sd))
+
+# add SE vector to informed_var_imp:
+informed_vars <- informed_var_sd %>% 
+  dplyr::mutate(dropout_loss_se = dropout_loss_se) %>% 
+  dplyr::arrange(desc(dropout_loss_mean))
+
+
+informed_var_imp_bars <- ggplot(informed_vars, aes(x = variable, y = dropout_loss_mean, 
+                                                  ymin = dropout_loss_mean - dropout_loss_se, 
+                                                  ymax = dropout_loss_mean + dropout_loss_se, 
+                                                  fill = variable)) +
+  geom_bar(stat= "identity") +
+  geom_errorbar(width = 0.25, size = 0.75, colour = "grey") +
+  coord_flip() +
+  scale_fill_viridis_d() +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0, 0.175),
+                     breaks = c(0.00, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15)) +
+  scale_x_discrete(labels = c("anthropogenic biomes", "climate zones", 
+                              "ecoregions", "elevation", "landcover", 
+                              "soil temperature", "watersheds")) +
+  theme_classic() +
+  theme(legend.position = "none") +
+  labs(x = "Variable", y = "Mean dropout loss") +
+  theme(axis.title.y = element_blank())
+
+informed_var_imp_bars
+
+ggsave("outputs/informed_var_imp_bars.png", informed_var_imp_bars)
+
 
 
 # marginal response curves can show the effect of a variable while keeping
@@ -329,6 +407,7 @@ anth_biome_data <- anth_biome_data %>%
   mutate(
     pred = predict(skwenkwinem_ensemble, anth_biome_data)$mean
   )
+anth_biome_data
 
 ggplot(anth_biome_data, aes(x = anth_biome, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
