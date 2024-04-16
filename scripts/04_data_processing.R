@@ -162,7 +162,7 @@ worldclim_present_masked
 
 # write to file for reuse in 05_tidysdm_bioclim_30s.R
 writeRaster(worldclim_present_masked, filename = "data/processed/worldclim_present_masked.tif", overwrite = TRUE)
-
+worldclim_present_masked <- rast("data/processed/worldclim_present_masked.tif")
 
 # Future Data:
 
@@ -298,7 +298,7 @@ anth_biome_na
 # wrong CRS and resolution
 
 # reproject anthropogenic biomes data to WGS84
-anth_biomeWGS <- terra::project(anth_biome_na, "EPSG:4326")
+anth_biomeWGS <- terra::project(anth_biome_na, "EPSG:4326", method = "near")
 
 # resample anth_biome to change resolution
 anth_biome <- resample(anth_biomeWGS, na_bound_rast)
@@ -326,18 +326,13 @@ temprast <- rast(climate_zones_na, ncols = 3265, nrows = 4109)
 # Climate Zones
 # code categories as numeric
 climate_zones_na$Climate_numeric <- as.numeric(as.factor(as.character(climate_zones_na$Climate)))
-
-# create dataframe to view coded categories:
-climate_zones_df <- as.data.frame(climate_zones_na) %>% 
-  dplyr::select(Key_EN, Climate_numeric) %>% 
-  dplyr::arrange(climate_zones_df$Climate_numeric)
-climate_zones_df
+climate_zones_na$Climate_numeric
 
 # create raster from SpatVector and structure of na_bound_rast
 climate_zones <- rasterize(climate_zones_na, temprast, field = "Climate_numeric")
 climate_zones
 # reproject to WGS84 lat/lon
-climate_zones <- terra::project(climate_zones, "EPSG:4326")
+climate_zones <- terra::project(climate_zones, "EPSG:4326", method = "near")
 climate_zones <- resample(climate_zones, na_bound_rast)
 climate_zones <- crop(climate_zones, na_bound_vect)
 # change the name to match the object
@@ -355,7 +350,7 @@ ecoregions_na$NameL3_En <- as.numeric(as.factor(as.character(ecoregions_na$NameL
 ecoregions <- rasterize(ecoregions_na, temprast, field = "NameL3_En")
 ecoregions
 # reproject to WGS84 lat/lon
-ecoregions <- terra::project(ecoregions, "EPSG:4326")
+ecoregions <- terra::project(ecoregions, "EPSG:4326", method = "near")
 ecoregions <- resample(ecoregions, na_bound_rast)
 ecoregions <- crop(ecoregions, na_bound_vect)
 
@@ -374,7 +369,7 @@ watersheds_na$NAW4_numeric <- as.numeric(as.factor(as.character(watersheds_na$NA
 watersheds <- rasterize(watersheds_na, temprast, field = "NAW4_numeric")
 watersheds
 # reproject to WGS84 lat/lon
-watersheds <- terra::project(watersheds, "EPSG:4326")
+watersheds <- terra::project(watersheds, "EPSG:4326", method = "near")
 watersheds <- resample(watersheds, na_bound_rast)
 watersheds <- crop(watersheds, na_bound_vect)
 # change the name to match the object
