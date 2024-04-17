@@ -54,19 +54,20 @@ cell_counts_informed
 # number of cells classified as presence (row 1):
 informed_presence_cells <- cell_counts_informed$count[1]
 informed_presence_cells
+# 1595174
 
 # area of cells classified as presence:
 area_informed <- informed_presence_cells * cell_resolution_km
 area_informed
-# 958 757.8 km^2
+# 925 231.5 km^2
 
 # total number of cells (presence and pseudoabsence, not including NAs):
 sum(cell_counts_informed$count)
-# 6 713 607
+# 6 713 132
 
 # how many cells are NA?
 global(informed_albers, fun="isNA")
-# 12 802 000
+# 12 802 475
 
 # total number of cells:
 sum(cell_counts_informed$count) + global(informed_albers, fun="isNA") 
@@ -109,7 +110,7 @@ sum(cell_counts_bioclim_pres$count) + global(bioclim_pres_albers, fun="isNA")
 # row 1, column 4 is difference in presence area in km^2
 diff_informed_bioclim_pres <- area_informed - area_bioclim_pres
 diff_informed_bioclim_pres
-# -58 614.42, bioclim model predicts more suitable area than informed model
+# -92140.69, bioclim model predicts more suitable area than informed model
 
 
 # Area of agreement between informed and bioclim_present models:
@@ -134,12 +135,12 @@ sum(cell_counts_informed_bioclim_pres$count)
 # number of cells classified as presence for both models (row 3):
 agreement_present_cells <- cell_counts_informed_bioclim_pres$count[3]
 agreement_present_cells
-# 1 261 396
+# 1 233 422
 
 # area of cells classified as presence for both models:
 area_agreement_present <- agreement_present_cells * cell_resolution_km
 area_agreement_present
-# 731 633.9 km^2
+# 715 408.4 km^2
 
 
 
@@ -222,10 +223,10 @@ area_agreement_future
 # total suitable habitat by informed and bioclim_present models:
 total_suitable_present <- sum(cell_counts_informed_bioclim_pres$count[2:4]) 
 total_suitable_present
-# 2 108 984 cells
+# 2 079 140 cells
 area_total_suitable_present <- total_suitable_present * cell_resolution_km
 area_total_suitable_present
-# 1 223 251 km^2
+# 1 205 941 km^2
 
 
 # total suitable habitat by bioclim present and future models:
@@ -255,7 +256,7 @@ area_full_extent
 # percent of study extent predicted as suitable by informed model:
 percent_full_informed <- (area_informed / area_full_extent) * 100
 percent_full_informed
-# 23.82868
+# 22.99543
 
 # percent of study extent predicted as suitable by bioclim present model:
 percent_full_bioclim_pres <- (area_bioclim_pres / area_full_extent) * 100
@@ -266,7 +267,7 @@ percent_full_bioclim_pres
 # and bioclim present models:
 percent_full_overlap_present <- (area_agreement_present / area_full_extent) * 100
 percent_full_overlap_present
-# 18.18381
+# 17.78055
 
 # percent of study extent predicted as suitable by bioclim future model:
 percent_full_bioclim_fut <- (area_bioclim_fut / area_full_extent) * 100
@@ -292,7 +293,7 @@ percent_change_suitable_pres_fut
 # overlap as a percent of total suitable habitat predicted by informed and bioclim present:
 percent_overlap_suitable_pres <- (area_agreement_present / area_total_suitable_present) * 100
 percent_overlap_suitable_pres
-# 59.8106
+# 59.32366
 
 # overlap as a percent of total suitable habitat predicted by bioclim present and future:
 percent_overlap_suitable_fut <- (area_agreement_future / area_total_suitable_future) * 100
