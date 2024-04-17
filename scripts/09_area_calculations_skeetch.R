@@ -71,8 +71,8 @@ cell_resolution_km <- cell_resolution_m / 1000000 # 1 000 000 m^2 in 1 km^2
 # number of cells in each category:
 cell_counts_informed <- freq(informed_skeetch)
 cell_counts_informed
-# 7167 presence cells
-# 5143 pseudoabsence cells
+# 6808 presence cells
+# 5502 pseudoabsence cells
 
 # number of cells classified as presence (row 1):
 informed_presence_cells <- cell_counts_informed$count[1]
@@ -81,7 +81,7 @@ informed_presence_cells
 # area of cells classified as presence:
 area_informed <- informed_presence_cells * cell_resolution_km
 area_informed
-# 4156.997 km^2
+# 3948.771 km^2
 
 # total number of cells (presence and pseudoabsence, not including NAs):
 sum(cell_counts_informed$count)
@@ -131,7 +131,7 @@ sum(cell_counts_bioclim_pres$count) + global(bioclim_pres_skeetch, fun="isNA")
 # row 1, column 4 is difference in presence area in km^2
 diff_informed_bioclim_pres <- area_informed - area_bioclim_pres
 diff_informed_bioclim_pres
-#  969.212 km^2, informed model predicts more suitable area than bioclim model
+#  760.9852 km^2, informed model predicts more suitable area than bioclim model
 
 
 # Area of agreement between informed and bioclim_present models:
@@ -161,7 +161,7 @@ agreement_present_cells
 # area of cells classified as presence for both models:
 area_agreement_present <- agreement_present_cells * cell_resolution_km
 area_agreement_present
-# 2753.931 km^2
+# 2619.947 km^2
 
 
 
@@ -249,10 +249,10 @@ area_agreement_future
 # total suitable habitat by informed and bioclim_present models:
 total_suitable_present <- sum(cell_counts_informed_bioclim_pres$count[2:4]) 
 total_suitable_present
-# 7912 cells
+# 7784 cells
 area_total_suitable_present <- total_suitable_present * cell_resolution_km
 area_total_suitable_present
-# 4589.112 km^2
+# 4514.869 km^2
 
 
 # total suitable habitat by bioclim present and future models:
@@ -283,7 +283,7 @@ area_skeetch
 # percent of Skeetch predicted as suitable by informed model:
 percent_skeetch_informed <- (area_informed / area_skeetch) * 100
 percent_skeetch_informed
-# 57.81704
+# 54.92094
 
 # percent of Skeetch predicted as suitable by bioclim present model:
 percent_skeetch_bioclim_pres <- (area_bioclim_pres / area_skeetch) * 100
@@ -294,7 +294,7 @@ percent_skeetch_bioclim_pres
 # and bioclim present models:
 percent_skeetch_overlap_present <- (area_agreement_present / area_skeetch) * 100
 percent_skeetch_overlap_present
-# 38.30268
+# 36.43917
 
 # percent of Skeetch predicted as suitable by bioclim future model:
 percent_skeetch_bioclim_fut <- (area_bioclim_fut / area_skeetch) * 100
@@ -322,7 +322,7 @@ percent_change_suitable_pres_fut
 # overlap as a percent of total suitable habitat predicted by informed and bioclim present:
 percent_overlap_suitable_pres <- (area_agreement_present / area_total_suitable_present) * 100
 percent_overlap_suitable_pres
-# 60.01011
+# 58.02929
 
 # overlap as a percent of total suitable habitat predicted by bioclim present and future:
 percent_overlap_suitable_fut <- (area_agreement_future / area_total_suitable_future) * 100
