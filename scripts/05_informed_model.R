@@ -336,9 +336,8 @@ informed_var_imp_boxplot <- ggplot(informed_var_imp, aes(x = reorder(variable, -
   scale_y_continuous(expand = c(0,0),
                      limits = c(0, 0.175),
                      breaks = c(0.00, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15)) +
-  scale_x_discrete(labels = c("anthropogenic biomes", "climate zones", 
-                              "ecoregions", "elevation", "landcover", 
-                              "soil temperature", "watersheds")) +
+  scale_x_discrete(labels = c("elevation", "soil temperature",  "climate zones", "watersheds",
+                              "ecoregions", "anthropogenic biomes","landcover")) +
   theme_classic() +
   theme(legend.position = "none") +
   labs(x = "Variable", y = "Mean dropout loss") +
@@ -350,42 +349,42 @@ ggsave("outputs/informed_var_imp.png", informed_var_imp_boxplot)
 
 
 # try above code to get SD only, then do math on that column to get SE column, add it to informed_var_imp
-informed_var_sd <- vip_ensemble %>% 
-  group_by(variable) %>% 
-  summarize(across(dropout_loss, list(mean = mean, sd = sd))) %>% 
-  dplyr::filter(variable != "_baseline_" & variable != "_full_model_")
+# informed_var_sd <- vip_ensemble %>% 
+ # group_by(variable) %>% 
+ # summarize(across(dropout_loss, list(mean = mean, sd = sd))) %>% 
+ # dplyr::filter(variable != "_baseline_" & variable != "_full_model_")
 
 # calculate SEM based on SD column:
-dropout_loss_se <- informed_var_sd$dropout_loss_sd/sqrt(length(informed_var_sd))
+# dropout_loss_se <- informed_var_sd$dropout_loss_sd/sqrt(length(informed_var_sd))
 
 # add SE vector to informed_var_imp:
-informed_vars <- informed_var_sd %>% 
-  dplyr::mutate(dropout_loss_se = dropout_loss_se) %>% 
-  dplyr::arrange(desc(dropout_loss_mean))
+# informed_vars <- informed_var_sd %>% 
+ # dplyr::mutate(dropout_loss_se = dropout_loss_se) %>% 
+ # dplyr::arrange(desc(dropout_loss_mean))
 
 
-informed_var_imp_bars <- ggplot(informed_vars, aes(x = variable, y = dropout_loss_mean, 
-                                                  ymin = dropout_loss_mean - dropout_loss_se, 
-                                                  ymax = dropout_loss_mean + dropout_loss_se, 
-                                                  fill = variable)) +
-  geom_bar(stat= "identity") +
-  geom_errorbar(width = 0.25, size = 0.75, colour = "grey") +
-  coord_flip() +
-  scale_fill_viridis_d() +
-  scale_y_continuous(expand = c(0,0),
-                     limits = c(0, 0.175),
-                     breaks = c(0.00, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15)) +
-  scale_x_discrete(labels = c("anthropogenic biomes", "climate zones", 
-                              "ecoregions", "elevation", "landcover", 
-                              "soil temperature", "watersheds")) +
-  theme_classic() +
-  theme(legend.position = "none") +
-  labs(x = "Variable", y = "Mean dropout loss") +
-  theme(axis.title.y = element_blank())
+# informed_var_imp_bars <- ggplot(informed_vars, aes(x = variable, y = dropout_loss_mean, 
+                                                 # ymin = dropout_loss_mean - dropout_loss_se, 
+                                                 # ymax = dropout_loss_mean + dropout_loss_se, 
+                                                 # fill = variable)) +
+ # geom_bar(stat= "identity") +
+ # geom_errorbar(width = 0.25, size = 0.75, colour = "grey") +
+ # coord_flip() +
+ # scale_fill_viridis_d() +
+ # scale_y_continuous(expand = c(0,0),
+                   #  limits = c(0, 0.175),
+                   #  breaks = c(0.00, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15)) +
+ # scale_x_discrete(labels = c("anthropogenic biomes", "climate zones", 
+                             # "ecoregions", "elevation", "landcover", 
+                             # "soil temperature", "watersheds")) +
+ # theme_classic() +
+ # theme(legend.position = "none") +
+ # labs(x = "Variable", y = "Mean dropout loss") +
+ # theme(axis.title.y = element_blank())
 
-informed_var_imp_bars
+# informed_var_imp_bars
 
-ggsave("outputs/informed_var_imp_bars.png", informed_var_imp_bars)
+# ggsave("outputs/informed_var_imp_bars.png", informed_var_imp_bars)
 
 
 
@@ -393,8 +392,7 @@ ggsave("outputs/informed_var_imp_bars.png", informed_var_imp_bars)
 # all other variables at their mean
 # use step_profile() to create a new recipe for generating a dataset to make 
 # the marginal prediction
-# uncorrelated predictors:
-predictors_uncorr
+
 
 # investigate the contribution of anth_biome:
 anth_biome_prof <- model_recipe %>%  # recipe from above
