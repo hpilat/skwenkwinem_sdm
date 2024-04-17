@@ -33,14 +33,16 @@ new_crs <- "+proj=aea +lat_0=40 +lon_0=-96 +lat_1=20 +lat_2=60 +x_0=0 +y_0=0 +da
 na_bound_vect <- terra::project(na_bound_vect, new_crs)
 
 # Skeetchestn territory boundary vector for masking:
-skeetch_vect_albers <- vect("data/extents/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
+skeetch_vect <- vect("data/extents/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
 # reproject:
-skeetch_vect <- terra::project(skeetch_vect_albers, new_crs)
-
+skeetch_vect <- terra::project(skeetch_vect, "EPSG:4326")
+# turn Skeetchestn boundary polygon into lines geometry:
+skeetch_lines <- as.lines(skeetch_vect)
 
 # create an extent object slightly larger than skeetch_vect
 skeetch_vect # round up extent values:
-skeetch_extent <- ext(-1678594, -1596271, 1442461, 1568601)
+skeetch_extent <- ext(-121.6, -120.1, 50.3, 51.6)
+
 
 
 # Read in agreement maps for total study extent:
@@ -104,16 +106,19 @@ ggsave("outputs/agreement_present.png", plot = agreement_present)
 # Plot area of agreement in Skeetchestn Territory:
 
 
-# crop model_agreement to Skeetchestn extent:
-agreement_pres_skeetch <- crop(model_agreement_presNA, skeetch_vect)
-summary(agreement_pres_skeetch)
-plot(agreement_pres_skeetch)
+# use UTM projection:
+agreement_present_UTM <- terra::project(model_agreement_presNA, "EPSG:32610")
+skeetch_extent_UTM <- terra::project(skeetch_extent, from = "EPSG:4326", to = "EPSG:32610")
+skeetch_lines_UTM <- terra::project(skeetch_lines, "EPSG:32610")
 
-# plot area of agreement not masked to Skeetch with Skeetch polygon overlaid:
-# turn Skeetchestn boundary polygon into lines geometry:
-skeetch_lines <- as.lines(skeetch_vect)
+# Crop predictions to Skeetchestn Territory:
+agreement_present_skeetch <- crop(agreement_present_UTM, skeetch_extent_UTM)
 
-agreement_pres_skeetch
+summary(agreement_present_skeetch)
+plot(agreement_present_skeetch)
+
+
+agreement_present_skeetch
 # 0 = pseudoabsence
 # 1 = informed prediction of presence
 # 2 = bioclim30s prediction of presence
@@ -121,20 +126,18 @@ agreement_pres_skeetch
 
 
 skeetch_agreement_present <- ggplot() +
-  geom_spatraster(data = agreement_pres_skeetch, aes(fill = lyr.1)) +
+  geom_spatraster(data = agreement_present_skeetch, aes(fill = lyr.1)) +
   geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white", show.legend = FALSE) +
   theme_classic() +
   scale_fill_manual(name = NULL, na.translate = FALSE,
                     labels = c("bioclim present", "overlap", "informed present", "pseudoabsence"), 
                     values = c("#FDE725", "#95D054", "#2A7B8EFF", "grey")) +
-  scale_x_continuous(name = "Longitude (°W)", 
-                     # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
-                    # labels = c("121.0", "120.5", "120.0"), 
+  scale_x_continuous(name = "Longitude (°W)",
+                     labels = c("121.6", "121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"),
                      expand = c(0,0)) +
   theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
-                   #  breaks = c(50.4, 50.6, 50.8, 51.0, 51.2, 51.4),
-                     labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4"), 
+                     labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4", "51.6"), 
                      expand = c(0, 0)) +
   labs(title = "Area of Agreement", 
        subtitle = "Informed and Bioclim30s Models (Present)")
@@ -188,9 +191,14 @@ ggsave("outputs/agreement_future.png", plot = agreement_future)
 
 
 
-agreement_fut_skeetch <- crop(model_agreement_futNA, skeetch_extentWGS84)
-summary(agreement_fut_skeetch)
-plot(agreement_fut_skeetch)
+# use UTM projection:
+agreement_future_UTM <- terra::project(model_agreement_futNA, "EPSG:32610")
+
+# Crop predictions to Skeetchestn Territory:
+agreement_future_skeetch <- crop(agreement_future_UTM, skeetch_extent_UTM)
+
+summary(agreement_future_skeetch)
+plot(agreement_future_skeetch)
 
 # 0 = pseudoabsence
 # 2 = bioclim30s present prediction of presence
@@ -198,27 +206,25 @@ plot(agreement_fut_skeetch)
 # 6 = agreement between both bioclim30s present and future predicted presence
 
 skeetch_agreement_future <- ggplot() +
-  geom_spatraster(data = agreement_fut_skeetch, aes(fill = lyr.1)) +
+  geom_spatraster(data = agreement_future_skeetch, aes(fill = lyr.1)) +
   geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white", show.legend = FALSE) +
   theme_classic() +
   scale_fill_manual(name = NULL, na.translate = FALSE,
                     labels = c("bioclim present", "overlap", "bioclim future", "pseudoabsence"), 
                     values = c("#FDE725", "#F8870E", "#C73E4C", "grey")) +
-  scale_x_continuous(name = "Longitude (°W)", 
-                     # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
-                     labels = c("121.6", "121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"), 
-                     # limits = c(120.2, 121.6),
+  scale_x_continuous(name = "Longitude (°W)",
+                     labels = c("121.6", "121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"),
                      expand = c(0,0)) +
   theme(axis.text.x = element_text(angle = 90)) +
   scale_y_continuous(name = "Latitude (°N)",
-                     breaks = c(50.4, 50.6, 50.8, 51.0, 51.2, 51.4),
-                     labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4"), 
+                     labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4", "51.6"), 
                      expand = c(0, 0)) +
   labs(title = "Area of Agreement", 
        subtitle = "Bioclim30s Present and Future Models")
   
 
 skeetch_agreement_future
+
 ggsave("outputs/skeetch_agreement_future.png", plot = skeetch_agreement_future)
 
 
@@ -273,12 +279,12 @@ ggsave("outputs/agreement_full_extent_faceted.png", agreement_facet_plot,
 
 # Skeetchestn Territory:
 
-agreement_pres_skeetch
-agreement_fut_skeetch
+agreement_present_skeetch
+agreement_future_skeetch
 
 # create temp rasters so we don't overwrite the originals:
-agreement_skeetch_temp <- agreement_pres_skeetch
-agreement_fut_skeetch_temp <- agreement_fut_skeetch
+agreement_skeetch_temp <- agreement_present_skeetch
+agreement_fut_skeetch_temp <- agreement_future_skeetch
 
 # change the names of our rasters:
 names(agreement_skeetch_temp) <- "Informed and Bioclim Present"
