@@ -175,8 +175,12 @@ pres_abs_pred %>% check_sdm_presence(class)
 skwenkwinem_rf <-
   workflow_set(
     preproc = list(default = model_recipe), 
-    models = list(rf = sdm_spec_rf()), 
-    cross = TRUE)
+    models = list(
+      rf = sdm_spec_rf(), # rf specs with tuning
+      gbm = sdm_spec_boost_tree() # boosted tree specs with tuning
+    ), 
+    cross = TRUE) %>%
+  option_add(control = control_ensemble_grid())
   
 
 # set up spatial block cross-validation to tune and assess models:
@@ -193,9 +197,9 @@ set.seed(1234567)
 skwenkwinem_rf <- 
   skwenkwinem_rf %>% 
   workflow_map("tune_grid", 
-               resamples = cross_val, grid = 10, # attempting 10 combos of hyperparameters
-               metrics = sdm_metric_set(), verbose = TRUE
-  ) 
+               resamples = cross_val, grid = 10, # 10 combos of hyperparameters
+               metrics = sdm_metric_set(), verbose = TRUE) %>% 
+  fit_best(save_workflow = TRUE)
 
 # want workflow_set to correctly detect no tuning parameters for GLM
 # inspect performance of models:
@@ -221,7 +225,7 @@ autoplot(rf_ensemble)
 # create an explainer object
 library(DALEX)
 library(vip)
-explainer_skwenkwinem_rf <- explain_tidysdm(skwenkwinem_rf)
+explainer_skwenkwinem_rf <- explain_tidysdm(rf_ensemble)
 vip_rf <- model_parts(explainer = explainer_skwenkwinem_rf, 
                             type = "variable_importance")
 plot(vip_rf)

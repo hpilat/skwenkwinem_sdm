@@ -314,28 +314,29 @@ vip_ensemble <- model_parts(explainer = explainer_skwenkwinem_ensemble,
 plot(vip_ensemble)
 
 
-# get mean dropout loss and SEM for each of the variables:
-# informed_var_imp <- vip_ensemble %>% 
- # group_by(vip_ensemble$variable) %>% 
- # summarize(across(dropout_loss, list(mean = mean, se = ~sd(.)/sqrt(.)))) %>% 
- # summarize(mean = mean(informed_var_imp$dropout_loss_se))
- # summarize(across(mean(dropout_loss), std.error(dropout_loss)))
-
-
+# get variable importance metrics:
 informed_var_imp <- vip_ensemble %>% 
   dplyr::filter(variable != "_baseline_" & variable != "_full_model_")
 
+# get mean dropout loss for each of the variables in a dataframe
+informed_var_imp_df <- as.data.frame(vip_ensemble) %>% 
+  group_by(variable) %>% 
+  summarize(across(dropout_loss, list(mean = mean))) %>% 
+  arrange(desc(dropout_loss_mean)) %>% 
+  dplyr::filter(variable != "_baseline_" & variable != "_full_model_")
 
-informed_var_imp_boxplot <- ggplot(informed_var_imp, aes(x = reorder(variable, -dropout_loss), y = dropout_loss, 
-                         # ymin = dropout_loss_mean - dropout_loss_se, 
-                         # ymax = dropout_loss_mean + dropout_loss_se, 
-                          fill = variable), colour = "grey85") +
-  geom_boxplot(colour = "grey", size = 0.65) +
+write.csv(informed_var_imp, file = "outputs/informed_variable_importance.csv")
+
+# plot variable importance
+informed_var_imp_boxplot <- ggplot(informed_var_imp, aes(x = reorder(variable, -dropout_loss),
+                                                         y = dropout_loss,
+                                                         fill = variable)) +
+  geom_boxplot(colour = "grey65", size = 0.65) +
   coord_flip() +
   scale_fill_viridis_d() +
   scale_y_continuous(expand = c(0,0),
-                     limits = c(0, 0.175),
-                     breaks = c(0.00, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15)) +
+                     limits = c(0, 0.105),
+                     breaks = c(0.00, 0.025, 0.05, 0.075, 0.10)) +
   scale_x_discrete(labels = c("elevation", "soil temperature",  "climate zones", "watersheds",
                               "ecoregions", "anthropogenic biomes","landcover")) +
   theme_classic() +
@@ -346,45 +347,6 @@ informed_var_imp_boxplot <- ggplot(informed_var_imp, aes(x = reorder(variable, -
 informed_var_imp_boxplot
 
 ggsave("outputs/informed_var_imp.png", informed_var_imp_boxplot)
-
-
-# try above code to get SD only, then do math on that column to get SE column, add it to informed_var_imp
-# informed_var_sd <- vip_ensemble %>% 
- # group_by(variable) %>% 
- # summarize(across(dropout_loss, list(mean = mean, sd = sd))) %>% 
- # dplyr::filter(variable != "_baseline_" & variable != "_full_model_")
-
-# calculate SEM based on SD column:
-# dropout_loss_se <- informed_var_sd$dropout_loss_sd/sqrt(length(informed_var_sd))
-
-# add SE vector to informed_var_imp:
-# informed_vars <- informed_var_sd %>% 
- # dplyr::mutate(dropout_loss_se = dropout_loss_se) %>% 
- # dplyr::arrange(desc(dropout_loss_mean))
-
-
-# informed_var_imp_bars <- ggplot(informed_vars, aes(x = variable, y = dropout_loss_mean, 
-                                                 # ymin = dropout_loss_mean - dropout_loss_se, 
-                                                 # ymax = dropout_loss_mean + dropout_loss_se, 
-                                                 # fill = variable)) +
- # geom_bar(stat= "identity") +
- # geom_errorbar(width = 0.25, size = 0.75, colour = "grey") +
- # coord_flip() +
- # scale_fill_viridis_d() +
- # scale_y_continuous(expand = c(0,0),
-                   #  limits = c(0, 0.175),
-                   #  breaks = c(0.00, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15)) +
- # scale_x_discrete(labels = c("anthropogenic biomes", "climate zones", 
-                             # "ecoregions", "elevation", "landcover", 
-                             # "soil temperature", "watersheds")) +
- # theme_classic() +
- # theme(legend.position = "none") +
- # labs(x = "Variable", y = "Mean dropout loss") +
- # theme(axis.title.y = element_blank())
-
-# informed_var_imp_bars
-
-# ggsave("outputs/informed_var_imp_bars.png", informed_var_imp_bars)
 
 
 
@@ -415,11 +377,6 @@ ggplot(anth_biome_data, aes(x = anth_biome, y = pred)) +
 
 ggsave("outputs/anth_biome_response.png")
 
-# get most suitable anthropogenic biomes
-anth_biome_most_suitable <- anth_biome_data %>%
-  arrange(desc(anth_biome_data$pred))
-anth_biome_most_suitable
-
 
 # investigate the contribution of Climate (climate_zones):
 climate_zones_prof <- model_recipe %>%  # recipe from above
@@ -440,11 +397,6 @@ ggplot(climate_zones_data, aes(x = climate_zones, y = pred)) +
   theme_classic()
 
 ggsave("outputs/climate_zones_response.png")
-
-# get most suitable climate zones
-climate_zones_most_suitable <- climate_zones_data %>%
-  arrange(desc(climate_zones_data$pred))
-climate_zones_most_suitable
 
 
 # investigate the contribution of ecoregions:
@@ -467,10 +419,6 @@ ggplot(ecoregions_data, aes(x = ecoregions, y = pred)) +
 
 ggsave("outputs/ecoregions_response.png")
 
-# get most suitable ecoregions
-ecoregions_most_suitable <- ecoregions_data %>%
-  arrange(desc(ecoregions_data$pred))
-ecoregions_most_suitable
 
 # investigate the contribution of elevation:
 elevation_prof <- model_recipe %>%  # recipe from above
@@ -491,11 +439,6 @@ ggplot(elevation_data, aes(x = elevation, y = pred)) +
   theme_classic()
 
 ggsave("outputs/elevation_response.png")
-
-# get most suitable elevation
-elevation_most_suitable <- elevation_data %>%
-  arrange(desc(elevation_data$pred))
-elevation_most_suitable
 
 
 # investigate the contribution of lndcvr_na:
@@ -518,10 +461,6 @@ ggplot(landcover_data, aes(x = landcover, y = pred)) +
 
 ggsave("outputs/landcover_response.png")
 
-# get most suitable landcover types
-landcover_most_suitable <- landcover_data %>%
-  arrange(desc(landcover_data$pred))
-landcover_most_suitable
 
 # investigate the contribution of soil_temp_5_15:
 soil_temp_5_15_prof <- model_recipe %>%  # recipe from above
@@ -546,11 +485,6 @@ ggplot(soil_temp_5_15_data, aes(x = soil_temp_5_15, y = pred)) +
 
 ggsave("outputs/soil_temp_5_15_response.png")
 
-# get most suitable soil temperature
-soil_temp_5_15_most_suitable <- soil_temp_5_15_data %>%
-  arrange(desc(soil_temp_5_15_data$pred))
-soil_temp_5_15_most_suitable
-
 
 # investigate the contribution of watersheds:
 watersheds_prof <- model_recipe %>%  # recipe from above
@@ -572,7 +506,3 @@ ggplot(watersheds_data, aes(x = watersheds, y = pred)) +
 
 ggsave("outputs/watersheds_response.png")
 
-# get most suitable watersheds
-watersheds_most_suitable <- watersheds_data %>%
-  arrange(desc(watersheds_data$pred))
-watersheds_most_suitable
