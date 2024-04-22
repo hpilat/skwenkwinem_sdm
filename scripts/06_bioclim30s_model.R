@@ -344,8 +344,43 @@ library(DALEX)
 explainer_skwenkwinem_ensemble <- explain_tidysdm(skwenkwinem_ensemble)
 vip_ensemble <- model_parts(explainer = explainer_skwenkwinem_ensemble, 
                             type = "variable_importance")
-vip_ensemble
 plot(vip_ensemble)
+
+
+# get variable importance metrics:
+bioclim_var_imp <- vip_ensemble %>% 
+  dplyr::filter(variable != "_baseline_" & variable != "_full_model_")
+
+# get mean dropout loss for each of the variables in a dataframe
+bioclim_var_imp_df <- as.data.frame(vip_ensemble) %>% 
+  group_by(variable) %>% 
+  summarize(across(dropout_loss, list(mean = mean))) %>% 
+  arrange(desc(dropout_loss_mean)) %>% 
+  dplyr::filter(variable != "_baseline_" & variable != "_full_model_")
+
+write.csv(bioclim_var_imp, file = "outputs/bioclim_variable_importance.csv")
+
+# plot variable importance
+bioclim_var_imp_boxplot <- ggplot(bioclim_var_imp, aes(x = reorder(variable, -dropout_loss),
+                                                         y = dropout_loss,
+                                                         fill = variable)) +
+  geom_boxplot(colour = "grey65", size = 0.65) +
+  coord_flip() +
+  scale_fill_viridis_d() +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0, 0.16),
+                     breaks = c(0.00, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15)) +
+  #scale_x_discrete(labels = c("elevation", "soil temperature",  "climate zones", "watersheds",
+                             # "ecoregions", "anthropogenic biomes","landcover")) +
+  theme_classic() +
+  theme(legend.position = "none") +
+  labs(x = "Variable", y = "Mean dropout loss") +
+  theme(axis.title.y = element_blank())
+
+bioclim_var_imp_boxplot
+
+ggsave("outputs/bioclim_var_imp.png", bioclim_var_imp_boxplot)
+
 
 
 # Marginal Response Curves
@@ -478,7 +513,8 @@ bio13_data <- bio13_data %>%
 
 ggplot(bio13_data, aes(x = bio13, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
-  scale_x_continuous(name = "Precipitation wettest month (mm)") +
+  scale_x_continuous(name = "Precipitation wettest month (mm)", 
+                     breaks = c(0, 100, 200, 300, 400, 500)) +
   scale_y_continuous(name = "Relative habitat suitability") +
   theme_classic()
 
