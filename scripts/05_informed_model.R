@@ -479,7 +479,7 @@ soil_temp_5_15_data$soil_temp_5_15 <- soil_temp_5_15_data$soil_temp_5_15/10
 
 ggplot(soil_temp_5_15_data, aes(x = soil_temp_5_15, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
-  scale_x_continuous(name = "Soil Temperature (°C)") +
+  scale_x_continuous(name = "Soil Temperature Seasonality (°C)") +
   scale_y_continuous(name = "Relative habitat suitability") +
   theme_classic()
 
