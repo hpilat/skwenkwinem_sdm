@@ -272,7 +272,7 @@ plot(western.inner.divide, col = "green") +
   plot(western.border, col = "red", add = TRUE)
 ```
 
-Now we can buffer the border of the divide 250km eastward!
+Now we can buffer the border of the divide 300km eastward!
 
 ```{r}
 western.border.buffer <- western.border |>
