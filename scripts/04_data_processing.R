@@ -34,15 +34,15 @@ na_bound_rast <- rast("data/extents/na_bound_rast.tif")
 skwenkwinem_vect <- vect("data/processed/skwenkwinem_masked.shp")
 worldclim_future_na <- rast("data/raw/wc2.1_30s_bioc_HadGEM3-GC31-LL_ssp126_2081-2100.tif")
 anth_biome_na <- rast("data/raw/anthromes_EqArea.tif")
-climate_zones_na <- vect("data/raw/North_America_Climate_Zones.shp")
-ecoregions_na <- vect("data/raw/na_terrestrial_ecoregions_v2_level_iii_shapefile/NA_Terrestrial_Ecoregions_v2_Level_III_Shapefile/NA_TerrestrialEcoregions_LIII/data/NA_Terrestrial_Ecoregions_v2_level3.shp")
+#climate_zones_na <- vect("data/raw/North_America_Climate_Zones.shp")
+#ecoregions_na <- vect("data/raw/na_terrestrial_ecoregions_v2_level_iii_shapefile/NA_Terrestrial_Ecoregions_v2_Level_III_Shapefile/NA_TerrestrialEcoregions_LIII/data/NA_Terrestrial_Ecoregions_v2_level3.shp")
 elevation_na <- rast("data/raw/northamerica_elevation_cec_2023.tif")
 lndcvr_na <- rast("data/raw/NA_NALCMS_landcover_2020_30m.tif")
 soil_phh2o_0_5_global <- rast("data/raw/soil_world/phh2o_0-5cm_mean_30s.tif")
-soil_phh2o_5_15_global <- rast("data/raw/soil_world/phh2o_5-15cm_mean_30s.tif")
+#soil_phh2o_5_15_global <- rast("data/raw/soil_world/phh2o_5-15cm_mean_30s.tif")
 soil_temp_0_5_global <- rast("data/raw/SBIO4_0_5cm_Temperature_Seasonality.tif")
-soil_temp_5_15_global <- rast("data/raw/SBIO4_5_15cm_Temperature_Seasonality.tif")
-watersheds_na <- vect("data/raw/watersheds_shapefile/Watersheds_Shapefile/NA_Watersheds/data/watershed_p_v2.shp")
+#soil_temp_5_15_global <- rast("data/raw/SBIO4_5_15cm_Temperature_Seasonality.tif")
+#watersheds_na <- vect("data/raw/watersheds_shapefile/Watersheds_Shapefile/NA_Watersheds/data/watershed_p_v2.shp")
 
 
 
@@ -186,7 +186,7 @@ writeRaster(worldclim_future_masked, filename = "data/processed/worldclim_future
 na_bound_rast <- resample(na_bound_rast, worldclim_present_masked)
 na_bound_rast
 # write to file
-writeRaster(na_bound_rast, filename = "data/extents/na_bound_rast.tif", overwrite = TRUE)
+#writeRaster(na_bound_rast, filename = "data/extents/na_bound_rast.tif", overwrite = TRUE)
 
 
 # Informed Data (for use in Informed Model)
@@ -198,39 +198,39 @@ writeRaster(na_bound_rast, filename = "data/extents/na_bound_rast.tif", overwrit
 ## Soil Temperature
 
 soil_temp_0_5_global
-soil_temp_5_15_global
+#soil_temp_5_15_global
 # correct CRS and resolution, just need to crop
 
 # crop soil temperature SpatRaster to North American extent
 soil_temp_0_5 <- crop(soil_temp_0_5_global, na_bound_vect)
-soil_temp_5_15 <- crop(soil_temp_5_15_global, na_bound_vect)
+#soil_temp_5_15 <- crop(soil_temp_5_15_global, na_bound_vect)
 
 # change the layer names to match the object name
 names(soil_temp_0_5) <- "soil_temp_0_5"
-names(soil_temp_5_15) <- "soil_temp_5_15"
+#names(soil_temp_5_15) <- "soil_temp_5_15"
 
 # write processed data to file for faster computation
 writeRaster(soil_temp_0_5, filename = "data/processed/soil_temp_0_5.tif", overwrite = TRUE)
-writeRaster(soil_temp_5_15, filename = "data/processed/soil_temp_5_15.tif", overwrite = TRUE)
+#writeRaster(soil_temp_5_15, filename = "data/processed/soil_temp_5_15.tif", overwrite = TRUE)
 
 
 # Soil pH
 
 soil_phh2o_0_5_global
-soil_phh2o_5_15_global
+#soil_phh2o_5_15_global
 # correct CRS and resolution, just need to crop
 
 # crop pH SpatRaster to North American extent
 soil_phh2o_0_5 <- crop(soil_phh2o_0_5_global, na_bound_vect)
-soil_phh2o_5_15 <- crop(soil_phh2o_5_15_global, na_bound_vect)
+#soil_phh2o_5_15 <- crop(soil_phh2o_5_15_global, na_bound_vect)
 
 # change the layer names to match the object name
 names(soil_phh2o_0_5) <- "soil_phh2o_0_5"
-names(soil_phh2o_5_15) <- "soil_phh2o_5_15"
+#names(soil_phh2o_5_15) <- "soil_phh2o_5_15"
 
 # write processed soil pH data to file for faster computation
 writeRaster(soil_phh2o_0_5, filename = "data/processed/soil_phh2o_0_5.tif", overwrite = TRUE)
-writeRaster(soil_phh2o_5_15, filename = "data/processed/soil_phh2o_5_15.tif", overwrite = TRUE)
+#writeRaster(soil_phh2o_5_15, filename = "data/processed/soil_phh2o_5_15.tif", overwrite = TRUE)
 
 
 # Elevation:
@@ -256,138 +256,147 @@ writeRaster(elevation, filename = "data/processed/elevation.tif", overwrite = TR
 
 
 
-## Categorical Rasters
+## For each of the remaining layers, we need to (not necesarily in this order):
 
+## 1. Reproject to correct CRS
+## 2. Crop to study extent
+## 3. Rasterize vector files
+## 4. Resample to correct resolution
+## 5. Ensure that categorical raster are properly categorical
+##    - and ensure they have proper categorical levels
+## 6. Mask rasters
 
-# Landcover:
+## First deal with Vector layers
 
-lndcvr_na # wrong CRS, resolution
-# this is a huge file, so we need to aggregate the cells before 
-# it can be reprojected and cropped
+## Reproject to WGS84
+# we can do this on vectors without first cropping, because vectors are fast
+#climate_zones_wgs <- terra::project(climate_zones_na, "EPSG:4326")
+#ecoregions_wgs <- terra::project(ecoregions_na, "EPSG:4326")
+#watersheds_wgs <- terra::project(watersheds_na, "EPSG:4326")
+
+# for rasters, it's best to clip to study region first, then reproject
+# so let's reproject study region vector to appropriate CRS for each raster
+
+na_bound_anth <- terra::project(na_bound_vect, crs(anth_biome_na))
+na_bound_land <- terra::project(na_bound_vect, crs(lndcvr_na))
+na_bound_elev <- terra::project(na_bound_vect, crs(elevation_na))
+
+# now crop to study region extent
+anth_biome_crop <- terra::crop(anth_biome_na, na_bound_anth)
+elevation_crop <- terra::crop(elevation_na, na_bound_elev)
+lndcvr_crop <- terra::crop(lndcvr_na, na_bound_land)
+
+## REPROJECT rasters
+# ensuring appropriate method depending on numerical vs categorical
+
+# anthropogenic biomes data to WGS84
+# this is categorical, so use "near"
+anth_biome_wgs_crop <- terra::project(anth_biome_crop, "EPSG:4326", method = "near", threads = 4)
+
+# elevation is numeric, so use "bilinear"
+elevation_wgs_crop <- terra::project(elevation_crop, "EPSG:4326", method = "bilinear", threads = 4)
+
+# For Landcover, we need to first aggregate before reprojecting, because big!
 # selected a factor of 15 - reduce # of cells by 15 times
-
-lndcvr_na_agg <- aggregate(lndcvr_na, fact = 15)
-
-# write aggregated landcover data to file for easier reuse
-lndcvr_na_agg <-writeRaster(lndcvr_na_agg, 
-                            filename = "data/processed/lndcvr-north-america_agg.tif", 
-                            overwrite = TRUE)
-
-# read in aggregated landcover data from new file
-lndcvr_na_agg <- rast("data/processed/lndcvr-north-america_agg.tif")
-
+lndcvr_na_agg <- aggregate(lndcvr_crop, fun = "modal", fact = 15, cores = 4)
 # reproject landcover North America data to WGS84
-lndcvr_na_agg <- terra::project(lndcvr_na_agg, "EPSG:4326", method = "near")
+lndcvr_wgs_crop <- terra::project(lndcvr_na_agg, "EPSG:4326", method = "near", threads = 4)
 
-# resample landcover data to change resolution
-landcover <- resample(lndcvr_na_agg, na_bound_rast)
+## Now crop the vector files to study extent
+#climate_zones_wgs_crop <- crop(climate_zones_wgs, na_bound_vect)
+#ecoregions_wgs_crop <- crop(ecoregions_wgs, na_bound_vect)
+#watersheds_wgs_crop <- crop(watersheds_wgs, na_bound_vect)
 
-# crop landcover North America data to study extent
-landcover <- crop(landcover, na_bound_vect)
-
-# change layer name to match object name
-names(landcover) <- "landcover"
-
-# create file of processed landcover data for re-use
-writeRaster(landcover, filename = "data/processed/landcover.tif", overwrite = TRUE)
-
-
-# Anthropogenic Biomes
-
-anth_biome_na
-# wrong CRS and resolution
-
-# reproject anthropogenic biomes data to WGS84
-anth_biomeWGS <- terra::project(anth_biome_na, "EPSG:4326", method = "near")
-
-# resample anth_biome to change resolution
-anth_biome <- resample(anth_biomeWGS, na_bound_rast)
-
-# crop anth_biome to study extent
-anth_biome <- crop(anth_biome, na_bound_vect)
-
-# code categorical values as numeric:
-anth_biome <-as.numeric(anth_biome, index = 1:nlevels(anth_biome))
-
-# change layer name to match object name
-names(anth_biome) <- "anth_biome"
-
-# write anth_biome to file for reuse
-writeRaster(anth_biome, filename = "data/processed/anth_biome.tif", overwrite = TRUE)
-
-
-# Categorical Data from Shapefiles:
-# need to create a temporary raster so the Shapefiles can take on its structure
-# tried using na_bound_rast which worked, except for changing categorical values to numeric
-
-dim(landcover)
-temprast <- rast(climate_zones_na, ncols = 3265, nrows = 4109)
-
-# Climate Zones
-# code categories as numeric
-climate_zones_na$Climate_numeric <- as.numeric(as.factor(as.character(climate_zones_na$Climate)))
-climate_zones_na$Climate_numeric
+### NOW RASTERIZE vector files
 
 # create raster from SpatVector and structure of na_bound_rast
-climate_zones <- rasterize(climate_zones_na, temprast, field = "Climate_numeric")
-climate_zones
-# reproject to WGS84 lat/lon
-climate_zones <- terra::project(climate_zones, "EPSG:4326", method = "near")
-climate_zones <- resample(climate_zones, na_bound_rast)
-climate_zones <- crop(climate_zones, na_bound_vect)
-# change the name to match the object
-names(climate_zones) <- "climate_zones"
+# use na_bound_rast as template
+#climate_zones_rast <- terra::rasterize(climate_zones_wgs_crop, na_bound_rast, field = "Climate")
+#ecoregions_rast <- rasterize(ecoregions_wgs_crop, na_bound_rast, field = "NameL3_En")
+#watersheds_rast <- rasterize(watersheds_wgs_crop, na_bound_rast, field = "NAW4_EN")
 
-# write to file for reuse
-writeRaster(climate_zones, filename = "data/processed/climate_zones.tif", overwrite = TRUE)
+# NOTE that the above rasters are all properly categorical (factor) rasters
 
-# Ecoregions
-# repeat steps above for ecoregions
-# select "NameL3_En" column, names in English
-# code categories as numeric
-ecoregions_na$NameL3_En <- as.numeric(as.factor(as.character(ecoregions_na$NameL3_En)))
-# create raster from SpatVector and structure of na_bound_rast
-ecoregions <- rasterize(ecoregions_na, temprast, field = "NameL3_En")
-ecoregions
-# reproject to WGS84 lat/lon
-ecoregions <- terra::project(ecoregions, "EPSG:4326", method = "near")
-ecoregions <- resample(ecoregions, na_bound_rast)
-ecoregions <- crop(ecoregions, na_bound_vect)
+## RESAMPLE RASTERS to common CRS
+## being sure to use proper "method" depending on data type (categorical vs numerical)
 
-# change the name to match the object
-names(ecoregions) <- "ecoregions"
+elevation <- terra::resample(elevation_wgs_crop, na_bound_rast, method = "bilinear", threads = 4)
+landcover <- terra::resample(lndcvr_wgs_crop, na_bound_rast, method = "mode", threads = 4)
+anth_biome <- terra::resample(anth_biome_wgs_crop, na_bound_rast, method = "mode", threads = 4)
 
-# write to file for reuse
-writeRaster(ecoregions, filename = "data/processed/ecoregions.tif", overwrite = TRUE)
+#climate_zones <- resample(climate_zones_rast, na_bound_rast, method = "mode", threads = 4)
+#ecoregions <- terra::resample(ecoregions_rast, na_bound_rast, method = "mode", threads = 4)
+#watersheds <- terra::resample(watersheds_rast, na_bound_rast, method = "mode", threads = 4)
+
+## Ensure CATEGORIES are named (all but the elevation layer)
+
+## LANDCOVER
+# first, convert this to categorical:
+landcover_cat <- as.factor(landcover)
+
+# assign colour table to landcover
+coltab(landcover_cat) <- coltab(lndcvr_na_agg)
+
+# get category names for land covers
+# I created a CSV file from the metadata document
+landcover_categories <- read.csv("data/raw/landcover_categories.csv", header = T, strip.white = TRUE)
+
+# note there is no category 4, so remove this row from names.
+levels(landcover_cat) <- landcover_categories[-4,]
+
+## ANTH BIOME
+anth_biome_cat <- as.factor(anth_biome)
+levels(anth_biome_cat) <- levels(anth_biome_na)
+
+## CLIMATE ZONES
+
+#climate_zones_cat <- as.factor(climate_zones)
+#levels(climate_zones_cat) <- levels(climate_zones_rast)
+
+## ECOREGIONS
+#ecoregions_cat <- as.factor(ecoregions)
+#levels(ecoregions_cat) <- levels(ecoregions_rast)
+
+## WATERSHEDS
+#watersheds_cat <- as.factor(watersheds)
+#levels(watersheds_cat) <- levels(watersheds_rast)
 
 
-# Watersheds
-# repeat above steps for watersheds raster
-# watersheds data was not behaving like the rest, so used different approach
-watersheds_na$NAW4_numeric <- as.numeric(as.factor(as.character(watersheds_na$NAW4_EN)))
-# create raster from SpatVector and structure of na_bound_rast
-watersheds <- rasterize(watersheds_na, temprast, field = "NAW4_numeric")
-watersheds
-# reproject to WGS84 lat/lon
-watersheds <- terra::project(watersheds, "EPSG:4326", method = "near")
-watersheds <- resample(watersheds, na_bound_rast)
-watersheds <- crop(watersheds, na_bound_vect)
-# change the name to match the object
-names(watersheds) <- "watersheds"
-watersheds
+# change the layer name to match object name
+names(elevation) <- "elevation"
+names(landcover_cat) <- "landcover"
+names(anth_biome_cat) <- "anth_biome"
+#names(climate_zones_cat) <- "climate_zones"
+#names(ecoregions_cat) <- "ecoregions"
+#names(watersheds_cat) <- "watersheds"
+
+## WRITE FILES
+
+writeRaster(elevation, filename = "data/processed/elevation.tif", overwrite = TRUE)
+
+writeRaster(landcover_cat, filename = "data/processed/landcover_cat.tif", overwrite = TRUE)
+
+writeRaster(anth_biome_cat, filename = "data/processed/anth_biome_cat.tif", overwrite = TRUE)
+
+#writeRaster(climate_zones_cat, filename = "data/processed/climate_zones_cat.tif", overwrite = TRUE)
+
+#writeRaster(ecoregions_cat, filename = "data/processed/ecoregions_cat.tif", overwrite = TRUE)
+
+#writeRaster(watersheds_cat, filename = "data/processed/watersheds_cat.tif", overwrite = TRUE)
+
 
 # now create a multilayer SpatRaster with all the above rasters
 
-predictors_multi <- c(anth_biome, 
-                      climate_zones, 
-                      ecoregions, 
+predictors_multi <- c(anth_biome_cat, 
+                     # climate_zones_cat, 
+                     # ecoregions_cat, 
                       elevation, 
-                      landcover,
+                      landcover_cat,
                       soil_phh2o_0_5, 
-                      soil_phh2o_5_15, 
-                      soil_temp_0_5, 
-                      soil_temp_5_15,  
-                      watersheds)
+                      #soil_phh2o_5_15, 
+                      soil_temp_0_5)#, 
+                      # soil_temp_5_15,  
+                     # watersheds_cat)
 
 # mask the multilayer raster so the values outside of na_bound are NA
 predictors_multi <- mask(predictors_multi, na_bound_vect)
