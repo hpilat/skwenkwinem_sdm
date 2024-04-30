@@ -166,9 +166,9 @@ skwenkwinem_models <-
   workflow_set(
     preproc = list(default = skwenkwinem_recipe), 
     models = list(
-      glm = sdm_spec_glm(), # standard GLM specs
+     # glm = sdm_spec_glm(), # standard GLM specs
       rf = sdm_spec_rf(), # rf specs with tuning
-      gbm = sdm_spec_boost_tree(), # boosted tree specs with tuning
+     # gbm = sdm_spec_boost_tree(), # boosted tree specs with tuning
       maxent = sdm_spec_maxent() # maxent specs with tuning
     ), 
     # make all combos of preproc and models:
@@ -370,8 +370,6 @@ bioclim_var_imp_boxplot <- ggplot(bioclim_var_imp, aes(x = reorder(variable, -dr
   scale_y_continuous(expand = c(0,0),
                      limits = c(0, 0.16),
                      breaks = c(0.00, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15)) +
-  #scale_x_discrete(labels = c("elevation", "soil temperature",  "climate zones", "watersheds",
-                             # "ecoregions", "anthropogenic biomes","landcover")) +
   theme_classic() +
   theme(legend.position = "none") +
   labs(x = "Variable", y = "Mean dropout loss") +
@@ -390,8 +388,6 @@ ggsave("outputs/bioclim_var_imp.png", bioclim_var_imp_boxplot)
 # all other variables at their mean
 # use step_profile() to create a new recipe for generating a dataset to make 
 # the marginal prediction
-# uncorrelated predictors:
-predictors_uncorr
 
 
 # investigate the contribution of bio02:
