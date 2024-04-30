@@ -26,6 +26,10 @@ informed_present_continuous <- rast("outputs/skwenkwinem_informed_predict_presen
 bioclim30s_present_continuous <- rast("outputs/skwenkwinem_bioclim30s_predict_present_cont.tif")
 bioclim30s_future_continuous <- rast("outputs/skwenkwinem_bioclim30s_predict_future_cont.tif")
 
+# reproject to North America Albers equal-area conic
+# https://spatialreference.org/ref/esri/102008/
+# define CRS
+new_crs <- "+proj=aea +lat_0=40 +lon_0=-96 +lat_1=20 +lat_2=60 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +type=crs"
 
 # reproject continuous rasters to new CRS
 informed_present_continuous <- terra::project(informed_present_continuous, new_crs, method = "near")
@@ -36,10 +40,6 @@ bioclim30s_future_continuous <- terra::project(bioclim30s_future_continuous, new
 
 # total study area boundary
 na_bound_vect <- vect("data/extents/na_bound_vect.shp") # WGS84
-# reproject to North America Albers equal-area conic
-# https://spatialreference.org/ref/esri/102008/
-# define CRS
-new_crs <- "+proj=aea +lat_0=40 +lon_0=-96 +lat_1=20 +lat_2=60 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +type=crs"
 # project na_bound_vect to new CRS:
 na_bound_vect <- terra::project(na_bound_vect, new_crs) 
 # sf object masked to study extent, for area calculations
@@ -48,6 +48,8 @@ na_bound_sf <- read_sf("data/extents/na_bound_sf.shp")
 skeetch_vect <- vect("data/extents/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
 # reproject:
 skeetch_vect <- terra::project(skeetch_vect, "EPSG:4326")
+# create a lines object so we can outline Skeetchestn Territory
+skeetch_lines <- as.lines(skeetch_vect)
 
 # create an extent object slightly larger than skeetch_vect
 skeetch_vect # round up extent values:
