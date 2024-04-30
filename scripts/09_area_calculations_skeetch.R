@@ -71,8 +71,8 @@ cell_resolution_km <- cell_resolution_m / 1000000 # 1 000 000 m^2 in 1 km^2
 # number of cells in each category:
 cell_counts_informed <- freq(informed_skeetch)
 cell_counts_informed
-# 6808 presence cells
-# 5502 pseudoabsence cells
+# 9682 presence cells
+# 2628 pseudoabsence cells
 
 # number of cells classified as presence (row 1):
 informed_presence_cells <- cell_counts_informed$count[1]
@@ -81,7 +81,7 @@ informed_presence_cells
 # area of cells classified as presence:
 area_informed <- informed_presence_cells * cell_resolution_km
 area_informed
-# 3948.771 km^2
+# 5615.746 km^2
 
 # total number of cells (presence and pseudoabsence, not including NAs):
 sum(cell_counts_informed$count)
@@ -101,18 +101,18 @@ bioclim_pres_skeetch
 # number of cells in each category:
 cell_counts_bioclim_pres <- freq(bioclim_pres_skeetch)
 cell_counts_bioclim_pres
-# 5496 presence cells
-# 6900 pseudoabsence cells
+# 8811 presence cells
+# 3585 pseudoabsence cells
 
 # number of cells classified as presence (row 1):
 bioclim_pres_presence_cells <- cell_counts_bioclim_pres$count[1]
 bioclim_pres_presence_cells
-# 5496 cells
+# 8811 cells
 
 # area of cells classified as presence:
 area_bioclim_pres <- bioclim_pres_presence_cells * cell_resolution_km
 area_bioclim_pres
-# 3187.785 km^2
+#  5110.549 km^2
 
 # total number of cells (presence and pseudoabsence, not including NAs):
 sum(cell_counts_bioclim_pres$count)
@@ -131,7 +131,7 @@ sum(cell_counts_bioclim_pres$count) + global(bioclim_pres_skeetch, fun="isNA")
 # row 1, column 4 is difference in presence area in km^2
 diff_informed_bioclim_pres <- area_informed - area_bioclim_pres
 diff_informed_bioclim_pres
-#  760.9852 km^2, informed model predicts more suitable area than bioclim model
+#  505.1967 km^2, informed model predicts more suitable area than bioclim model
 
 
 # Area of agreement between informed and bioclim_present models:
@@ -156,12 +156,12 @@ sum(cell_counts_informed_bioclim_pres$count)
 # number of cells classified as presence for both models (row 3):
 agreement_present_cells <- cell_counts_informed_bioclim_pres$count[3]
 agreement_present_cells
-# 4748
+# 7226
 
 # area of cells classified as presence for both models:
 area_agreement_present <- agreement_present_cells * cell_resolution_km
 area_agreement_present
-# 2619.947 km^2
+# 4191.219 km^2
 
 
 
@@ -175,18 +175,18 @@ total_cells <- 166 * 108
 # number of cells in each category:
 cell_counts_bioclim_fut <- freq(bioclim_fut_skeetch)
 cell_counts_bioclim_fut
-# 2469 presence cells
-# 9927 pseudoabsence cells
+# 3561 presence cells
+# 8835 pseudoabsence cells
 
 # number of cells classified as presence (row 1):
 bioclim_fut_presence_cells <- cell_counts_bioclim_fut$count[1]
 bioclim_fut_presence_cells
-# 2469 cells
+# 3561 cells
 
 # area of cells classified as presence:
 area_bioclim_fut <- bioclim_fut_presence_cells * cell_resolution_km
 area_bioclim_fut
-# 1432.067 km^2
+# 2065.448 km^2
 
 # total number of cells (presence and pseudoabsence, not including NAs):
 sum(cell_counts_bioclim_fut$count)
@@ -204,11 +204,11 @@ sum(cell_counts_bioclim_fut$count) + global(bioclim_fut_skeetch, fun="isNA")
 # calculate difference in number of cells predicted as presence by each model:
 diff_bioclim_pres_fut <- area_bioclim_fut - area_bioclim_pres
 diff_bioclim_pres_fut
-# -1755.718, bioclim future model predicts less suitable area than bioclim present model
+#  -3045.101, bioclim future model predicts less suitable area than bioclim present model
 
 diff_bioclim_pres_fut <- diff_bioclim_pres_fut * cell_resolution_km
 diff_bioclim_pres_fut
-# -1018.35 km^2
+# -1766.217 km^2
 
 
 # Area of agreement between bioclim_present and bioclim_future models:
@@ -224,6 +224,7 @@ agree_bioclim_fut_pres[bioclim_pres_skeetch == 2 & bioclim_fut_skeetch == 2] <- 
 
 agree_bioclim_fut_pres
 plot(agree_bioclim_fut_pres)
+##### no cells with future only prediction (no cells with value 5 as assigned above) #####
 writeRaster(agree_bioclim_fut_pres, filename = "outputs/agreement_bioclim_fut_pres_skeetch.tif", overwrite = TRUE)
 
 cell_counts_bioclim_fut_pres <- freq(agree_bioclim_fut_pres)
@@ -231,46 +232,43 @@ cell_counts_bioclim_fut_pres
 sum(cell_counts_bioclim_fut_pres$count)
 # 17 928
 
-# looks like different cell counts for bioclim_present because of different overlap 
-# compared to informed vs bioclim_present
-
 
 # number of cells classified as presence for both models (row 3):
 agreement_future_cells <- cell_counts_bioclim_fut_pres$count[3]
 agreement_future_cells
-# 2467 cells
+# 3561 cells
 
 # area of cells classified as presence for both models (overlap only):
 area_agreement_future <- agreement_future_cells * cell_resolution_km
 area_agreement_future
-#  1430.907 km^2
+# 2065.448 km^2
 
 
 # total suitable habitat by informed and bioclim_present models:
 total_suitable_present <- sum(cell_counts_informed_bioclim_pres$count[2:4]) 
 total_suitable_present
-# 7784 cells
+# 11 203 cells
 area_total_suitable_present <- total_suitable_present * cell_resolution_km
 area_total_suitable_present
-# 4514.869 km^2
+# 6497.955 km^2
 
 
 # total suitable habitat by bioclim present and future models:
-total_suitable_future <- sum(cell_counts_bioclim_fut_pres$count[2:4])
+total_suitable_future <- sum(cell_counts_bioclim_fut_pres$count[2:3])
 total_suitable_future
-# 5498 cells
+# 8811 cells
 area_total_suitable_future <- total_suitable_future * cell_resolution_km
 area_total_suitable_future
-# 3188.945 km^2
+# 5110.549 km^2 same as bioclim only calculated above - no additional area predicted by bioclim future
 
 # total suitable habitat difference between future and present predictions:
 area_change_pres_fut_suitable <- area_total_suitable_future - area_total_suitable_present
 area_change_pres_fut_suitable
-# -1400.166 km^2
+# -1387.406 km^2
 
 # total area of Skeetch:
 # used bioclim_fut_pres because the informed model introduces NAs for water bodies
-area_skeetch <- sum(cell_counts_bioclim_fut_pres$count[2:5])
+area_skeetch <- sum(cell_counts_bioclim_fut_pres$count[2:4])
 area_skeetch # NOT including NA values
 # 12 396 cells
 area_skeetch <- area_skeetch * cell_resolution_km
@@ -283,48 +281,47 @@ area_skeetch
 # percent of Skeetch predicted as suitable by informed model:
 percent_skeetch_informed <- (area_informed / area_skeetch) * 100
 percent_skeetch_informed
-# 54.92094
+# 78.10584
 
 # percent of Skeetch predicted as suitable by bioclim present model:
 percent_skeetch_bioclim_pres <- (area_bioclim_pres / area_skeetch) * 100
 percent_skeetch_bioclim_pres
-# 44.33688
+# 71.07938
 
 # percent of Skeetch predicted as suitable by overlap between informed
 # and bioclim present models:
 percent_skeetch_overlap_present <- (area_agreement_present / area_skeetch) * 100
 percent_skeetch_overlap_present
-# 36.43917
+# 58.293
 
 # percent of Skeetch predicted as suitable by bioclim future model:
 percent_skeetch_bioclim_fut <- (area_bioclim_fut / area_skeetch) * 100
 percent_skeetch_bioclim_fut
-# 19.91772
+# 28.72701
 
 # percent of Skeetch predicted as suitable by overlap between bioclim 
 # present and future models:
 percent_skeetch_overlap_future <- (area_agreement_future / area_skeetch) * 100
 percent_skeetch_overlap_future
-# 19.90158
+# 28.72701
 
 # percent of Skeetch changed from present to future:
 # ***** NOTE: might axe this and proceeding calculation, unsure if it makes sense*****
 percent_change_pres_fut <- (diff_bioclim_pres_fut / area_skeetch) * 100
 percent_change_pres_fut
-# -24.41917
+# -24.56519
 
 # percent of total suitable habitat changed from present to future:
 percent_change_suitable_pres_fut <- (area_change_pres_fut_suitable / area_total_suitable_future) * 100
 percent_change_suitable_pres_fut
-# -43.90688
-
+# -27.14788
 
 # overlap as a percent of total suitable habitat predicted by informed and bioclim present:
 percent_overlap_suitable_pres <- (area_agreement_present / area_total_suitable_present) * 100
 percent_overlap_suitable_pres
-# 58.02929
+# 64.50058
 
 # overlap as a percent of total suitable habitat predicted by bioclim present and future:
 percent_overlap_suitable_fut <- (area_agreement_future / area_total_suitable_future) * 100
 percent_overlap_suitable_fut
-# 44.87086
+# 40.41539
