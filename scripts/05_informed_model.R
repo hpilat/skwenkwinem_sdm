@@ -17,7 +17,6 @@ library(sf)
 library(ggplot2)
 library(overlapping)
 library(xgboost)
-library(plotrix)
 
 # North American extent (west coast to continental divide)
 # new geographic extent created in 02_continental_divide.Rmd
@@ -121,12 +120,13 @@ summary(pres_abs_pred) # still some NAs, bioclim script magically has none at th
 
 # remove rows with NA values
 pres_abs_pred <- na.omit(pres_abs_pred)
-nrow(pres_abs_pred) # 8904, 545 rows removed
+nrow(pres_abs_pred) # 8993, 545 rows removed
 
 # skipped non-overlapping distribution step in tutorial
 
 # inspect the variables for collinearity
-pairs(predictors_multi)
+# pairs(predictors_multi) 
+  # error said plot margins too large
 
 # may need a smaller sample to calculate collinearity between variables
 
@@ -178,9 +178,9 @@ skwenkwinem_models <-
   workflow_set(
     preproc = list(default = model_recipe), 
     models = list(
-      glm = sdm_spec_glm(), # standard GLM specs
+      #glm = sdm_spec_glm(), # standard GLM specs
       rf = sdm_spec_rf(), # rf specs with tuning
-      gbm = sdm_spec_boost_tree(), # boosted tree specs with tuning
+      #gbm = sdm_spec_boost_tree(), # boosted tree specs with tuning
       maxent = sdm_spec_maxent() # maxent specs with tuning
     ), 
     # make all combos of preproc and models:
@@ -212,6 +212,7 @@ skwenkwinem_models <-
 # inspect performance of models:
 autoplot(skwenkwinem_models)
 model_metrics <- collect_metrics(skwenkwinem_models)
+model_metrics
 
 # write to file
 write.csv(model_metrics, file = "outputs/skwenkwinem_informed_model_metrics.csv")
@@ -328,17 +329,18 @@ informed_var_imp_df <- as.data.frame(vip_ensemble) %>%
 write.csv(informed_var_imp, file = "outputs/informed_variable_importance.csv")
 
 # plot variable importance
-informed_var_imp_boxplot <- ggplot(informed_var_imp, aes(x = reorder(variable, -dropout_loss),
-                                                         y = dropout_loss,
-                                                         fill = variable)) +
+informed_var_imp_boxplot <- ggplot(informed_var_imp, 
+                                   aes(x = reorder(variable, -dropout_loss),
+                                       y = dropout_loss,
+                                       fill = variable)) +
   geom_boxplot(colour = "grey65", size = 0.65) +
   coord_flip() +
   scale_fill_viridis_d() +
   scale_y_continuous(expand = c(0,0),
-                     limits = c(0, 0.105),
-                     breaks = c(0.00, 0.025, 0.05, 0.075, 0.10)) +
-  scale_x_discrete(labels = c("elevation", "soil temperature",  "climate zones", "watersheds",
-                              "ecoregions", "anthropogenic biomes","landcover")) +
+                     limits = c(0.05, 0.275),
+                     breaks = c(0.05, 0.1, 0.15, 0.2, 0.25)) +
+  scale_x_discrete(labels = c("soil temperature", "elevation", 
+                              "anthropogenic biomes","landcover")) +
   theme_classic() +
   theme(legend.position = "none") +
   labs(x = "Variable", y = "Mean dropout loss") +
@@ -369,55 +371,22 @@ anth_biome_data <- anth_biome_data %>%
   )
 anth_biome_data
 
-ggplot(anth_biome_data, aes(x = anth_biome, y = pred)) +
-  geom_point(alpha = 0.25, cex = 4) +
-  scale_x_continuous(name = "Anthropogenic biomes") +
+ggplot(anth_biome_data) +
+  geom_col(aes(x = anth_biome, y = pred)) +
+  scale_x_discrete(name = "Anthropogenic biomes", 
+                   labels = c("urban", "dense settlements", "irrigated villages", 
+                              "cropped and pastoral villages", "rainfed villages",
+                              "rainfed mosaic villages", "residential irrigated cropland",
+                              "residential rainfed mosaic", "populated irrigated cropland",
+                              "populated rainfed cropland", "remote cropland",
+                              "residential rangelands", "populated rangelands",
+                              "remote rangelands", "populated forests", "remote forests",
+                              "wild forests", "sparse trees", "barren")) +
+  theme(axis.title.x = element_text(angle = 45)) +
   scale_y_continuous(name = "Relative habitat suitability") +
   theme_classic()
 
 ggsave("outputs/anth_biome_response.png")
-
-
-# investigate the contribution of Climate (climate_zones):
-climate_zones_prof <- model_recipe %>%  # recipe from above
-  step_profile(-climate_zones, profile = vars(climate_zones)) %>% 
-  prep(training = pres_abs_pred)
-
-climate_zones_data <- bake(climate_zones_prof, new_data = NULL)
-
-climate_zones_data <- climate_zones_data %>% 
-  mutate(
-    pred = predict(skwenkwinem_ensemble, climate_zones_data)$mean
-  )
-
-ggplot(climate_zones_data, aes(x = climate_zones, y = pred)) +
-  geom_point(alpha = 0.25, cex = 4) +
-  scale_x_continuous(name = "Climate zones") +
-  scale_y_continuous(name = "Relative habitat suitability") +
-  theme_classic()
-
-ggsave("outputs/climate_zones_response.png")
-
-
-# investigate the contribution of ecoregions:
-ecoregions_prof <- model_recipe %>%  # recipe from above
-  step_profile(-ecoregions, profile = vars(ecoregions)) %>% 
-  prep(training = pres_abs_pred)
-
-ecoregions_data <- bake(ecoregions_prof, new_data = NULL)
-
-ecoregions_data <- ecoregions_data %>% 
-  mutate(
-    pred = predict(skwenkwinem_ensemble, ecoregions_data)$mean
-  )
-
-ggplot(ecoregions_data, aes(x = ecoregions, y = pred)) +
-  geom_point(alpha = 0.25, cex = 4) +
-  scale_x_continuous(name = "Ecoregions (level III)") +
-  scale_y_continuous(name = "Relative habitat suitability") +
-  theme_classic()
-
-ggsave("outputs/ecoregions_response.png")
 
 
 # investigate the contribution of elevation:
@@ -455,54 +424,33 @@ landcover_data <- landcover_data %>%
 
 ggplot(landcover_data, aes(x = landcover, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
-  scale_x_continuous(name = "Landcover") +
+  scale_x_discrete(name = "Landcover") +
+  theme(axis.text.x = element_text(angle = 45)) +
   scale_y_continuous(name = "Relative habitat suitability") +
   theme_classic()
 
 ggsave("outputs/landcover_response.png")
 
 
-# investigate the contribution of soil_temp_5_15:
-soil_temp_5_15_prof <- model_recipe %>%  # recipe from above
-  step_profile(-soil_temp_5_15, profile = vars(soil_temp_5_15)) %>% 
+# investigate the contribution of soil_temp_0_5:
+soil_temp_0_5_prof <- model_recipe %>%  # recipe from above
+  step_profile(-soil_temp_0_5, profile = vars(soil_temp_0_5)) %>% 
   prep(training = pres_abs_pred)
 
-soil_temp_5_15_data <- bake(soil_temp_5_15_prof, new_data = NULL)
+soil_temp_0_5_data <- bake(soil_temp_0_5_prof, new_data = NULL)
 
-soil_temp_5_15_data <- soil_temp_5_15_data %>% 
+soil_temp_0_5_data <- soil_temp_0_5_data %>% 
   mutate(
-    pred = predict(skwenkwinem_ensemble, soil_temp_5_15_data)$mean
+    pred = predict(skwenkwinem_ensemble, soil_temp_0_5_data)$mean
   )
 
-# convert soil_temp_5_15 to °C:
-soil_temp_5_15_data$soil_temp_5_15 <- soil_temp_5_15_data$soil_temp_5_15/10
+# convert soil_temp_0_5 to °C:
+soil_temp_0_5_data$soil_temp_0_5 <- soil_temp_0_5_data$soil_temp_0_5/10
 
-ggplot(soil_temp_5_15_data, aes(x = soil_temp_5_15, y = pred)) +
+ggplot(soil_temp_0_5_data, aes(x = soil_temp_0_5, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Soil Temperature Seasonality (°C)") +
   scale_y_continuous(name = "Relative habitat suitability") +
   theme_classic()
 
-ggsave("outputs/soil_temp_5_15_response.png")
-
-
-# investigate the contribution of watersheds:
-watersheds_prof <- model_recipe %>%  # recipe from above
-  step_profile(-watersheds, profile = vars(watersheds)) %>% 
-  prep(training = pres_abs_pred)
-
-watersheds_data <- bake(watersheds_prof, new_data = NULL)
-
-watersheds_data <- watersheds_data %>% 
-  mutate(
-    pred = predict(skwenkwinem_ensemble, watersheds_data)$mean
-  )
-
-ggplot(watersheds_data, aes(x = watersheds, y = pred)) +
-  geom_point(alpha = 0.25, cex = 4) +
-  scale_x_continuous(name = "Watersheds") +
-  scale_y_continuous(name = "Relative habitat suitability") +
-  theme_classic()
-
-ggsave("outputs/watersheds_response.png")
-
+ggsave("outputs/soil_temp_0_5_response.png")
