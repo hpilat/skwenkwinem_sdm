@@ -80,7 +80,7 @@ ensemble_metrics <- ggplot(ensemble_AUC, aes(x = algorithm, y = mean, colour = m
   geom_errorbar(aes(ymin = mean - std_err, ymax = mean + std_err), width= 0.5, size = 0.75) +
   geom_hline(yintercept = 0.8, linetype = "dashed") +
   theme(legend.title = element_blank()) +
-  scale_x_discrete(labels = c("GBM", "GLM", "MaxEnt", "rf")) +
+  scale_x_discrete(labels = c("MaxEnt", "rf")) +
   labs(x = "Algorithm", y = "Mean AUC") +
   theme(axis.title.x = element_text(vjust = -1.0), 
         axis.title.y = element_text(hjust = -1.0)) +
