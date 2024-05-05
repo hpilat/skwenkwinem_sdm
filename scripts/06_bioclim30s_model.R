@@ -369,7 +369,12 @@ bioclim_var_imp_boxplot <- ggplot(bioclim_var_imp, aes(x = reorder(variable, -dr
   scale_fill_viridis_d() +
   scale_y_continuous(expand = c(0,0),
                      limits = c(0, 0.16),
-                     breaks = c(0.00, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15)) +
+                     breaks = c(0.00, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15))+
+  scale_x_discrete(labels = c("Precip wettest month", "Precip seasonality", 
+                              "Mean temp wettest quarter", "Temp annual range", 
+                              "Precip warmest quarter", "Mean temp driest quarter", 
+                              "Isothermality", "Mean diurnal range")) +
+  theme(axis.text.x = element_text(angle = 90)) +
   theme_classic() +
   theme(legend.position = "none") +
   labs(x = "Variable", y = "Mean dropout loss") +
@@ -405,7 +410,8 @@ bio02_data <- bio02_data %>%
 ggplot(bio02_data, aes(x = bio02, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Mean diurnal range (°C)") +
-  scale_y_continuous(name = "Relative habitat suitability") +
+  scale_y_continuous(name = "Relative habitat suitability", 
+                     limits = c(0,1)) +
   theme_classic()
 
 ggsave("outputs/bio02_response.png")
@@ -426,7 +432,8 @@ bio03_data <- bio03_data %>%
 ggplot(bio03_data, aes(x = bio03, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Isothermality (%)") +
-  scale_y_continuous(name = "Relative habitat suitability") +
+  scale_y_continuous(name = "Relative habitat suitability", 
+                     limits = c(0,1)) +
   theme_classic()
 
 ggsave("outputs/bio03_response.png")
@@ -447,7 +454,8 @@ bio07_data <- bio07_data %>%
 ggplot(bio07_data, aes(x = bio07, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Temperature annual range (°C)") +
-  scale_y_continuous(name = "Relative habitat suitability") +
+  scale_y_continuous(name = "Relative habitat suitability", 
+                     limits = c(0,1)) +
   theme_classic()
 
 ggsave("outputs/bio07_response.png")
@@ -468,7 +476,8 @@ bio08_data <- bio08_data %>%
 ggplot(bio08_data, aes(x = bio08, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Mean temperature wettest quarter (°C)") +
-  scale_y_continuous(name = "Relative habitat suitability") +
+  scale_y_continuous(name = "Relative habitat suitability", 
+                     limits = c(0,1)) +
   theme_classic()
 
 ggsave("outputs/bio08_response.png")
@@ -489,7 +498,8 @@ bio09_data <- bio09_data %>%
 ggplot(bio09_data, aes(x = bio09, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Mean temperature driest quarter (°C)") +
-  scale_y_continuous(name = "Relative habitat suitability") +
+  scale_y_continuous(name = "Relative habitat suitability", 
+                     limits = c(0,1)) +
   theme_classic()
 
 ggsave("outputs/bio09_response.png")
@@ -511,7 +521,8 @@ ggplot(bio13_data, aes(x = bio13, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Precipitation wettest month (mm)", 
                      breaks = c(0, 100, 200, 300, 400, 500)) +
-  scale_y_continuous(name = "Relative habitat suitability") +
+  scale_y_continuous(name = "Relative habitat suitability", 
+                     limits = c(0,1)) +
   theme_classic()
 
 ggsave("outputs/bio13_response.png")
@@ -532,7 +543,8 @@ bio15_data <- bio15_data %>%
 ggplot(bio15_data, aes(x = bio15, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Precipitation seasonality (%)") +
-  scale_y_continuous(name = "Relative habitat suitability") +
+  scale_y_continuous(name = "Relative habitat suitability", 
+                     limits = c(0,1)) +
   theme_classic()
 
 ggsave("outputs/bio15_response.png")
@@ -554,7 +566,8 @@ bio18_data <- bio18_data %>%
 ggplot(bio18_data, aes(x = bio18, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Precipitation warmest quarter (mm)") +
-  scale_y_continuous(name = "Relative habitat suitability") +
+  scale_y_continuous(name = "Relative habitat suitability", 
+                     limits = c(0,1)) +
   theme_classic()
 
 ggsave("outputs/bio18_response.png")
