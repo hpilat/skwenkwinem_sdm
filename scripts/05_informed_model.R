@@ -26,6 +26,10 @@ library(xgboost)
 na_bound_rast <- rast("data/extents/na_bound_rast.tif")
 # vector object to use for masking and area calculations
 na_bound_vect <- vect("data/extents/na_bound_vect.shp")
+skeetch_vect <- vect("data/extents/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
+# reproject to WGS84
+skeetch_vect <- terra::project(skeetch_vect, "EPSG:4326")
+
 
 # read in skwenkwinem occurrences:
 # cropped to proper study extent in 04_data_processing.R
@@ -333,7 +337,7 @@ informed_var_imp_boxplot <- ggplot(informed_var_imp,
                                    aes(x = reorder(variable, -dropout_loss),
                                        y = dropout_loss,
                                        fill = variable)) +
-  geom_boxplot(colour = "grey65", size = 0.65) +
+  geom_boxplot(fill = "lightgrey", colour = "grey40", size = 0.65) +
   coord_flip() +
   scale_y_continuous(expand = c(0,0),
                      limits = c(0.05, 0.325),
@@ -343,7 +347,7 @@ informed_var_imp_boxplot <- ggplot(informed_var_imp,
   scale_fill_viridis_d() +
   theme_classic() +
   theme(legend.position = "none") +
-  labs(x = "Variable", y = "Mean dropout loss") +
+  labs(x = "Variable", y = "Variable importance") +
   theme(axis.title.y = element_blank())
 
 informed_var_imp_boxplot
@@ -351,6 +355,18 @@ informed_var_imp_boxplot
 ggsave("outputs/informed_var_imp.png", informed_var_imp_boxplot)
 
 
+
+# Extract Skeetchestn values for the two most important predictors: 
+  # elevation and soil temperature
+elevation_skeetch <- terra::extract(predictors_multi$elevation, skeetch_vect)
+summary(elevation_skeetch)
+
+soil_temp_skeetch <- terra::extract(predictors_multi$soil_temp_0_5, skeetch_vect)
+# divide by 10 to get degrees Celsius:
+soil_temp_skeetch <- soil_temp_skeetch/10
+summary(soil_temp_skeetch)
+# remove NAs:
+soil_temp_skeetch <- drop_na(soil_temp_skeetch)
 
 # marginal response curves can show the effect of a variable while keeping
 # all other variables at their mean
@@ -401,11 +417,18 @@ elevation_data <- elevation_data %>%
     pred = predict(skwenkwinem_ensemble, elevation_data)$mean
   )
 
+# plot marginal response with average elevation from Skeetch and 
+  # average study site elevation
 ggplot(elevation_data, aes(x = elevation, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Elevation (m)") +
   scale_y_continuous(name = "Relative habitat suitability", 
-                     limits = c(0, 1)) +
+                     limits = c(0, 1), 
+                     expand = c(0, 0)) +
+  annotate("rect", xmin = min(elevation_skeetch$elevation), 
+           xmax = max(elevation_skeetch$elevation), ymin = 0, ymax = 1, 
+           alpha = .25, fill = "grey") +
+  geom_vline(xintercept = 1157) + # mean elevation of our study sites
   theme_classic()
 
 ggsave("outputs/elevation_response.png")
@@ -450,9 +473,13 @@ soil_temp_0_5_data$soil_temp_0_5 <- soil_temp_0_5_data$soil_temp_0_5/10
 
 ggplot(soil_temp_0_5_data, aes(x = soil_temp_0_5, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
-  scale_x_continuous(name = "Soil Temperature Seasonality (°C)") +
+  scale_x_continuous(name = "Soil temperature seasonality (°C)") +
   scale_y_continuous(name = "Relative habitat suitability", 
-                     limits = c(0,1)) +
+                     limits = c(0, 1), 
+                     expand = c(0, 0)) +
+  annotate("rect", xmin = min(soil_temp_skeetch$soil_temp_0_5), 
+           xmax = max(soil_temp_skeetch$soil_temp_0_5), ymin = 0, ymax = 1, 
+           alpha = .25, fill = "grey") +
   theme_classic()
 
 ggsave("outputs/soil_temp_0_5_response.png")
