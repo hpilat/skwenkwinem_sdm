@@ -76,15 +76,16 @@ ensemble_AUC
 # plot ensemble metrics together
 # plot ensemble metrics together
 ensemble_metrics <- ggplot(ensemble_AUC, aes(x = algorithm, y = mean, colour = model)) +
-  geom_point(size = 2.5) +
-  geom_errorbar(aes(ymin = mean - std_err, ymax = mean + std_err), width= 0.5, size = 0.75) +
+  geom_point(size = 3.5) +
+  geom_errorbar(aes(ymin = mean - std_err, ymax = mean + std_err), width= 0.5, linewidth = 1.25) +
   geom_hline(yintercept = 0.8, linetype = "dashed") +
-  theme(legend.title = element_blank()) +
+  theme_classic() +
   scale_x_discrete(labels = c("MaxEnt", "rf")) +
   labs(x = "Algorithm", y = "Mean AUC") +
   theme(axis.title.x = element_text(vjust = -1.0), 
-        axis.title.y = element_text(hjust = -1.0)) +
-  theme_classic()
+        axis.title.y = element_text(hjust = -1.0), 
+        legend.title = element_blank()) +
+  theme(legend.position = "top")
 
 ensemble_metrics
 

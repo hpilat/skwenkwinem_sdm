@@ -243,7 +243,7 @@ model_agreement_pres_temp <- model_agreement_presNA
 model_agreement_fut_temp <- model_agreement_futNA
 
 # change the names of our rasters:
-names(model_agreement_pres_temp) <- "Informed and bioclim present"
+names(model_agreement_pres_temp) <- "Informed and Bioclim present"
 names(model_agreement_fut_temp) <- "Bioclim present and future"
 
 # create a multilayer raster object:
@@ -258,7 +258,7 @@ agreement_facet_plot <- ggplot() +
         panel.border = element_blank(), 
         strip.text = element_text(size = 10)) +
   scale_fill_manual(name = NULL, na.translate = FALSE,
-                    labels = c("bioclim present", "informed & bioclim present", "informed present", "unsuitable", "bioclim present & future", "bioclim future"), 
+                    labels = c("Bioclim present", "Informed & Bioclim present", "Informed present", "Unsuitable", "Bioclim present & future", "Bioclim future"), 
                     values = c("#FDE725", "#95D054","#2A7B8EFF", "grey", "#F8870E", "#C73E4C")) +
   scale_x_continuous(name = "Longitude (°W)", 
                      labels = c("135", "130", "125", "120", "115", "110", "105"),
@@ -287,8 +287,8 @@ agreement_skeetch_temp <- agreement_present_skeetch
 agreement_fut_skeetch_temp <- agreement_future_skeetch
 
 # change the names of our rasters:
-names(agreement_skeetch_temp) <- "Informed and Bioclim Present"
-names(agreement_fut_skeetch_temp) <- "Bioclim Present and Future"
+names(agreement_skeetch_temp) <- "Informed and Bioclim present"
+names(agreement_fut_skeetch_temp) <- "Bioclim present and future"
 
 # create a multilayer raster object:
 agreement_skeetch <- c(agreement_skeetch_temp, agreement_fut_skeetch_temp)
@@ -301,8 +301,8 @@ agreement_skeetch_facet_plot <- ggplot() +
   theme(axis.line = element_line(colour = "black"),
         strip.background = element_blank(),
         panel.border = element_blank()) +
-  scale_fill_manual(name = NULL, na.translate = FALSE, 
-                    labels = c("bioclim present", "informed & bioclim present", "informed", "pseudoabsence", "bioclim present & future", "bioclim future"), 
+  scale_fill_manual(name = NULL, na.translate = FALSE,
+                    labels = c("Bioclim present", "Informed & Bioclim present", "Informed present", "Unsuitable", "Bioclim present & future", "Bioclim future"), 
                     values = c("#FDE725", "#95D054","#2A7B8EFF", "grey", "#F8870E", "#C73E4C")) +
   scale_x_continuous(name = "Longitude (°W)", 
                      # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
