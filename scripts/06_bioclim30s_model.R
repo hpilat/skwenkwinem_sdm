@@ -26,6 +26,10 @@ library(xgboost)
 na_bound_rast <- rast("data/extents/na_bound_rast.tif")
 # vector object to use for masking and area calculations
 na_bound_vect <- vect("data/extents/na_bound_vect.shp")
+skeetch_vect <- vect("data/extents/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
+# reproject to WGS84
+skeetch_vect <- terra::project(skeetch_vect, "EPSG:4326")
+
 
 # read in skwenkwinem occurrences:
 # cropped to proper study extent in 04_data_processing.R
@@ -364,7 +368,7 @@ write.csv(bioclim_var_imp, file = "outputs/bioclim_variable_importance.csv")
 bioclim_var_imp_boxplot <- ggplot(bioclim_var_imp, aes(x = reorder(variable, -dropout_loss),
                                                          y = dropout_loss,
                                                          fill = variable)) +
-  geom_boxplot(colour = "grey65", size = 0.65) +
+  geom_boxplot(fill = "lightgrey", colour = "grey40", size = 0.65) +
   coord_flip() +
   scale_fill_viridis_d() +
   scale_y_continuous(expand = c(0,0),
@@ -377,12 +381,29 @@ bioclim_var_imp_boxplot <- ggplot(bioclim_var_imp, aes(x = reorder(variable, -dr
   theme(axis.text.x = element_text(angle = 90)) +
   theme_classic() +
   theme(legend.position = "none") +
-  labs(x = "Variable", y = "Mean dropout loss") +
+  labs(x = "Variable", y = "Variable importance") +
   theme(axis.title.y = element_blank())
 
 bioclim_var_imp_boxplot
 
 ggsave("outputs/bioclim_var_imp.png", bioclim_var_imp_boxplot)
+
+
+
+# Extract Skeetchestn values for the two most important predictors: 
+# Present time:
+# bio13 and bio15
+bio13_skeetch_present <- terra::extract(climate_present$bio13, skeetch_vect)
+summary(bio13_skeetch_present)
+
+bio15_skeetch_present <- terra::extract(climate_present$bio15, skeetch_vect)
+summary(bio15_skeetch_present)
+
+# Future:
+bio13_skeetch_future <- terra::extract(climate_future$bio13, skeetch_vect)
+summary(bio13_skeetch_future)
+
+bio15_skeetch_future <- terra::extract(climate_future$bio15, skeetch_vect)
 
 
 
@@ -522,7 +543,14 @@ ggplot(bio13_data, aes(x = bio13, y = pred)) +
   scale_x_continuous(name = "Precipitation wettest month (mm)", 
                      breaks = c(0, 100, 200, 300, 400, 500)) +
   scale_y_continuous(name = "Relative habitat suitability", 
-                     limits = c(0,1)) +
+                     limits = c(0,1), 
+                     expand = c(0, 0)) +
+  annotate("rect", xmin = min(bio13_skeetch_future$bio13), 
+           xmax = max(bio13_skeetch_future$bio13), ymin = 0, ymax = 1, 
+           alpha = .5, fill = "red") +
+  annotate("rect", xmin = min(bio13_skeetch_present$bio13), 
+           xmax = max(bio13_skeetch_present$bio13), ymin = 0, ymax = 1, 
+           alpha = .35, fill = "yellow") +
   theme_classic()
 
 ggsave("outputs/bio13_response.png")
@@ -544,7 +572,14 @@ ggplot(bio15_data, aes(x = bio15, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Precipitation seasonality (%)") +
   scale_y_continuous(name = "Relative habitat suitability", 
-                     limits = c(0,1)) +
+                     limits = c(0,1), 
+                     expand = c(0, 0)) +
+  annotate("rect", xmin = min(bio15_skeetch_future$bio15), 
+           xmax = max(bio15_skeetch_future$bio15), ymin = 0, ymax = 1, 
+           alpha = .5, fill = "red") +
+  annotate("rect", xmin = min(bio15_skeetch_present$bio15), 
+           xmax = max(bio15_skeetch_present$bio15), ymin = 0, ymax = 1, 
+           alpha = .35, fill = "yellow") +
   theme_classic()
 
 ggsave("outputs/bio15_response.png")

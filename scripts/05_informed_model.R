@@ -335,12 +335,12 @@ informed_var_imp_boxplot <- ggplot(informed_var_imp,
                                        fill = variable)) +
   geom_boxplot(colour = "grey65", size = 0.65) +
   coord_flip() +
-  scale_fill_viridis_d() +
   scale_y_continuous(expand = c(0,0),
-                     limits = c(0.05, 0.275),
-                     breaks = c(0.05, 0.1, 0.15, 0.2, 0.25)) +
+                     limits = c(0.05, 0.325),
+                     breaks = c(0.05, 0.1, 0.15, 0.2, 0.25, 0.3)) +
   scale_x_discrete(labels = c("soil temperature", "elevation", 
                               "anthropogenic biomes","landcover")) +
+  scale_fill_viridis_d() +
   theme_classic() +
   theme(legend.position = "none") +
   labs(x = "Variable", y = "Mean dropout loss") +
@@ -404,7 +404,8 @@ elevation_data <- elevation_data %>%
 ggplot(elevation_data, aes(x = elevation, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Elevation (m)") +
-  scale_y_continuous(name = "Relative habitat suitability") +
+  scale_y_continuous(name = "Relative habitat suitability", 
+                     limits = c(0, 1)) +
   theme_classic()
 
 ggsave("outputs/elevation_response.png")
@@ -450,7 +451,8 @@ soil_temp_0_5_data$soil_temp_0_5 <- soil_temp_0_5_data$soil_temp_0_5/10
 ggplot(soil_temp_0_5_data, aes(x = soil_temp_0_5, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Soil Temperature Seasonality (°C)") +
-  scale_y_continuous(name = "Relative habitat suitability") +
+  scale_y_continuous(name = "Relative habitat suitability", 
+                     limits = c(0,1)) +
   theme_classic()
 
 ggsave("outputs/soil_temp_0_5_response.png")
