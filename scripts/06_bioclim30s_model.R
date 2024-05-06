@@ -539,18 +539,18 @@ bio13_data <- bio13_data %>%
   )
 
 ggplot(bio13_data, aes(x = bio13, y = pred)) +
+  annotate("rect", xmin = min(bio13_skeetch_future$bio13), 
+           xmax = max(bio13_skeetch_future$bio13), ymin = 0, ymax = 1, 
+           alpha = .7, fill = "lightgrey") +
+  annotate("rect", xmin = min(bio13_skeetch_present$bio13), 
+           xmax = max(bio13_skeetch_present$bio13), ymin = 0, ymax = 1, 
+           alpha = .4, fill = "grey50") +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Precipitation wettest month (mm)", 
                      breaks = c(0, 100, 200, 300, 400, 500)) +
   scale_y_continuous(name = "Relative habitat suitability", 
                      limits = c(0,1), 
                      expand = c(0, 0)) +
-  annotate("rect", xmin = min(bio13_skeetch_future$bio13), 
-           xmax = max(bio13_skeetch_future$bio13), ymin = 0, ymax = 1, 
-           alpha = .5, fill = "red") +
-  annotate("rect", xmin = min(bio13_skeetch_present$bio13), 
-           xmax = max(bio13_skeetch_present$bio13), ymin = 0, ymax = 1, 
-           alpha = .35, fill = "yellow") +
   theme_classic()
 
 ggsave("outputs/bio13_response.png")
@@ -569,17 +569,17 @@ bio15_data <- bio15_data %>%
   )
 
 ggplot(bio15_data, aes(x = bio15, y = pred)) +
+  annotate("rect", xmin = min(bio15_skeetch_future$bio15), 
+           xmax = max(bio15_skeetch_future$bio15), ymin = 0, ymax = 1, 
+           alpha = .7, fill = "lightgrey") +
+  annotate("rect", xmin = min(bio15_skeetch_present$bio15), 
+           xmax = max(bio15_skeetch_present$bio15), ymin = 0, ymax = 1, 
+           alpha = .15, fill = "grey50") +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Precipitation seasonality (%)") +
   scale_y_continuous(name = "Relative habitat suitability", 
                      limits = c(0,1), 
                      expand = c(0, 0)) +
-  annotate("rect", xmin = min(bio15_skeetch_future$bio15), 
-           xmax = max(bio15_skeetch_future$bio15), ymin = 0, ymax = 1, 
-           alpha = .5, fill = "red") +
-  annotate("rect", xmin = min(bio15_skeetch_present$bio15), 
-           xmax = max(bio15_skeetch_present$bio15), ymin = 0, ymax = 1, 
-           alpha = .35, fill = "yellow") +
   theme_classic()
 
 ggsave("outputs/bio15_response.png")
