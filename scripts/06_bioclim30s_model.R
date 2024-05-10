@@ -41,7 +41,7 @@ skwenkwinem_sf <- st_as_sf(skwenkwinem_vect)
 
 # read in processed WorldClim rasters
 climate_present <- rast("data/processed/worldclim_present_masked.tif")
-climate_future <- rast("data/processed/worldclim_future_masked.tif")
+climate_future <- rast("data/processed/worldclim_future_585_masked.tif")
 
 # use tidyterra package for plotting so ggplot can be used with terra rasters
 # aes(fill = layer) refers to column name in na_bound_rast
@@ -307,7 +307,7 @@ ggplot() +
   labs(title = "Skwenkwinem Future Prediction", subtitle = "Bioclim Model", xlab = "Longitude", ylab = "Latitude")
 
 # write to file
-writeRaster(prediction_future_best, filename = "outputs/skwenkwinem_bioclim30s_predict_future_cont.tif", overwrite = TRUE)
+writeRaster(prediction_future_best, filename = "outputs/skwenkwinem_bioclim30s_predict_future_cont_585.tif", overwrite = TRUE)
 
 
 
@@ -327,13 +327,13 @@ prediction_future_binary <- predict_raster(skwenkwinem_ensemble_binary,
                                            class_thresh = c("tss_max"))
 prediction_future_binary
 
-ggplot() +
-  geom_spatraster(data = prediction_future_binary, aes(fill = binary_mean)) +
-  labs(title = "Skwenkwinem Future Prediction", subtitle = "Bioclim Model", xlab = "Longitude", ylab = "Latitude")#+
+#ggplot() +
+#  geom_spatraster(data = prediction_future_binary, aes(fill = binary_mean)) +
+#  labs(title = "Skwenkwinem Future Prediction", subtitle = "Bioclim Model", xlab = "Longitude", ylab = "Latitude")#+
 # geom_sf(data = pres_abs_pred %>% filter(class == "presence"))
 
 # write to file
-writeRaster(prediction_future_binary, filename = "outputs/skwenkwinem_bioclim30s_predict_future_binary.tif", overwrite = TRUE)
+writeRaster(prediction_future_binary, filename = "outputs/skwenkwinem_bioclim30s_predict_future_binary_585.tif", overwrite = TRUE)
 
 
 
@@ -553,7 +553,7 @@ ggplot(bio13_data, aes(x = bio13, y = pred)) +
                      expand = c(0, 0)) +
   theme_classic()
 
-ggsave("outputs/bio13_response.png")
+ggsave("outputs/bio13_response_585.png")
 
 
 # investigate the contribution of bio15:
@@ -582,7 +582,7 @@ ggplot(bio15_data, aes(x = bio15, y = pred)) +
                      expand = c(0, 0)) +
   theme_classic()
 
-ggsave("outputs/bio15_response.png")
+ggsave("outputs/bio15_response_585.png")
 
 
 # investigate the contribution of bio18:

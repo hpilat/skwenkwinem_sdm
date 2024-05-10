@@ -20,7 +20,7 @@ library(dplyr)
 
 informed <- terra::rast("outputs/skwenkwinem_informed_predict_present_binary.tif")
 bioclim_pres <- terra::rast("outputs/skwenkwinem_bioclim30s_predict_present_binary.tif")
-bioclim_fut <- terra::rast("outputs/skwenkwinem_bioclim30s_predict_future_binary.tif")
+bioclim_fut <- terra::rast("outputs/skwenkwinem_bioclim30s_predict_future_binary_585.tif")
 
 # reproject to North America Albers equal-area conic for area calculation
 # https://spatialreference.org/ref/esri/102008/
@@ -158,12 +158,14 @@ cell_counts_bioclim_fut
 # number of cells classified as presence (row 1):
 bioclim_fut_presence_cells <- cell_counts_bioclim_fut$count[1]
 bioclim_fut_presence_cells
-# 1 889 663 cells
+# 1 889 663 cells with SSP 1-2.6
+# 2 032 665 cells with SSP 5-8.5
 
 # area of cells classified as presence:
 area_bioclim_fut <- bioclim_fut_presence_cells * cell_resolution_km
 area_bioclim_fut
-# 1 096 041 km^2
+# 1 096 041 km^2 with SSP 1-2.6
+# 1 178 985 km^2 with SSP 5-8.5
 
 # total number of cells (presence and pseudoabsence, not including NAs):
 sum(cell_counts_bioclim_fut$count)
@@ -181,8 +183,8 @@ sum(cell_counts_bioclim_fut$count) + global(bioclim_fut_albers, fun="isNA")
 # calculate difference in number of cells predicted as presence by each model:
 diff_bioclim_pres_fut <- area_bioclim_fut - area_bioclim_pres
 diff_bioclim_pres_fut
-# -107 184.1, bioclim future model predicts less suitable area than bioclim present model
-
+# -107 184.1, bioclim future model (SSP 1-2.6) predicts less suitable area than bioclim present model
+# -24 240.16, bioclim future model (SSP 5-8.5) predicts less suitable area than bioclim present
 
 
 # Area of agreement between bioclim_present and bioclim_future models:
@@ -198,7 +200,7 @@ agree_bioclim_fut_pres[bioclim_pres_albers == 2 & bioclim_fut_albers == 2] <- 6
 
 agree_bioclim_fut_pres
 plot(agree_bioclim_fut_pres)
-writeRaster(agree_bioclim_fut_pres, filename = "outputs/agreement_bioclim_fut_pres.tif", overwrite = TRUE)
+writeRaster(agree_bioclim_fut_pres, filename = "outputs/agreement_bioclim_fut_pres_585.tif", overwrite = TRUE)
 
 cell_counts_bioclim_fut_pres <- freq(agree_bioclim_fut_pres)
 cell_counts_bioclim_fut_pres
@@ -208,12 +210,14 @@ sum(cell_counts_bioclim_fut_pres$count)
 # number of cells classified as presence for both models (row 3):
 agreement_future_cells <- cell_counts_bioclim_fut_pres$count[3]
 agreement_future_cells
-# 1 493 108
+# 1 493 108 SSP 1-2.6
+# 1 679 553 SSP 5-8.5
 
 # area of cells classified as presence for both models (overlap only):
 area_agreement_future <- agreement_future_cells * cell_resolution_km
 area_agreement_future
-# 866 031.3 km^2
+# 866 031.3 km^2 SSP 1-2.6
+# 974 172.9 km^2 SSP 5-8.5
 
 
 # total suitable habitat by informed and bioclim_present models:
@@ -228,15 +232,18 @@ area_total_suitable_present
 # total suitable habitat by bioclim present and future models:
 total_suitable_future <- sum(cell_counts_bioclim_fut_pres$count[2:4])
 total_suitable_future
-# 2 471 012 cells
+# 2 471 012 cells SSP 1-2.6
+# 2 427 569 cells SSP 5-8.5
 area_total_suitable_future <- total_suitable_future * cell_resolution_km
 area_total_suitable_future
-# 1 433 234 km^2
+# 1 433 234 km^2 SSP 1-2.6
+# 1 408 037 km^2 SSP 5-8.5
 
 # total suitable habitat difference between future and present predictions:
 area_change_pres_fut_suitable <- area_total_suitable_future - area_total_suitable_present
 area_change_pres_fut_suitable
-# -196 793.5 km^2
+# -196 793.5 km^2 SSP 1-2.6
+# -221 991.3 km^2 SSP 5-8.5
 
 # total area of our study extent:
 area_full_extent <- sum(cell_counts_bioclim_fut_pres$count[2:5])
@@ -268,23 +275,27 @@ percent_full_overlap_present
 # percent of study extent predicted as suitable by bioclim future model:
 percent_full_bioclim_fut <- (area_bioclim_fut / area_full_extent) * 100
 percent_full_bioclim_fut
-# 27.24067
+# 27.24067 SSP 1-2.6
+# 29.30213 SSP 5-8.5
 
 # percent of study extent predicted as suitable by overlap between bioclim 
 # present and future models:
 percent_full_overlap_future <- (area_agreement_future / area_full_extent) * 100
 percent_full_overlap_future
-# 21.52408
+# 21.52408 SSP 1-2.6
+# 24.2118 SSP 5-8.5
 
 # percent of study extent changed from present to future:
 percent_change_pres_fut <- (diff_bioclim_pres_fut / area_full_extent) * 100
 percent_change_pres_fut
-# -2.663921
+# -2.663921 SSP 1-2.6
+# -0.6024577 SSP 5-8.5
 
 # percent of total suitable habitat changed from present to future:
 percent_change_suitable_pres_fut <- (area_change_pres_fut_suitable / area_total_suitable_future) * 100
 percent_change_suitable_pres_fut
-# -13.73073
+# -13.73073 SSP 1-2.6
+# -15.76602 SSP 5-8.5
 
 # overlap as a percent of total suitable habitat predicted by informed and bioclim present:
 percent_overlap_suitable_pres <- (area_agreement_present / area_total_suitable_present) * 100
@@ -294,4 +305,5 @@ percent_overlap_suitable_pres
 # overlap as a percent of total suitable habitat predicted by bioclim present and future:
 percent_overlap_suitable_fut <- (area_agreement_future / area_total_suitable_future) * 100
 percent_overlap_suitable_fut
-# 60.42496
+# 60.42496 SSP 1-2.6
+# 69.18662 SSP 5-8.5

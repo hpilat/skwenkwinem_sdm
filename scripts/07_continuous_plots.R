@@ -17,14 +17,13 @@ library(tidyverse)
 library(tidyterra)
 library(terra)
 library(sf)
-library(devtools)
 
 # Predictions:
 
 # Continuous prediction rasters:
 informed_present_continuous <- rast("outputs/skwenkwinem_informed_predict_present_cont.tif")
 bioclim30s_present_continuous <- rast("outputs/skwenkwinem_bioclim30s_predict_present_cont.tif")
-bioclim30s_future_continuous <- rast("outputs/skwenkwinem_bioclim30s_predict_future_cont.tif")
+bioclim30s_future_continuous <- rast("outputs/skwenkwinem_bioclim30s_predict_future_cont_585.tif")
 
 # reproject to North America Albers equal-area conic
 # https://spatialreference.org/ref/esri/102008/
@@ -124,7 +123,7 @@ bioclim_fut_full_extent_cont <- ggplot() +
 
 bioclim_fut_full_extent_cont
 
-ggsave("outputs/bioclim_fut_full_extent_cont.png", plot = bioclim_fut_full_extent_cont)
+ggsave("outputs/bioclim_fut_full_extent_cont_585.png", plot = bioclim_fut_full_extent_cont)
 
 
 
@@ -171,7 +170,7 @@ predictions_continuous_plot <- ggplot() +
 
 predictions_continuous_plot
 
-ggsave("outputs/full_extent_cont_plots.png", predictions_continuous_plot, 
+ggsave("outputs/full_extent_cont_plots_585.png", predictions_continuous_plot, 
        width = 8, height = 4, units = "in")
 
 
@@ -255,7 +254,7 @@ skeetch_bioclim_future_cont <- ggplot() +
 
 skeetch_bioclim_future_cont
 
-ggsave("outputs/skeetch_bioclim_future_cont.png", plot = skeetch_bioclim_future_cont)
+ggsave("outputs/skeetch_bioclim_future_cont_585.png", plot = skeetch_bioclim_future_cont)
 
 
 
@@ -302,5 +301,5 @@ predictions_cont_skeetch_plot <- ggplot() +
 
 predictions_cont_skeetch_plot
 
-ggsave("outputs/skeetch_cont_plots.png", predictions_cont_skeetch_plot, 
+ggsave("outputs/skeetch_cont_plots_585.png", predictions_cont_skeetch_plot, 
        width = 12, height = 4, units = "in")

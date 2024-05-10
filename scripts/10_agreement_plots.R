@@ -47,7 +47,7 @@ skeetch_extent <- ext(-121.6, -120.1, 50.3, 51.6)
 
 # Read in agreement maps for total study extent:
 model_agreement_pres <- rast("outputs/agreement_informed_bioclim.tif")
-model_agreement_fut <- rast("outputs/agreement_bioclim_fut_pres.tif")
+model_agreement_fut <- rast("outputs/agreement_bioclim_fut_pres_585.tif")
 
 # convert to factor so we can alter the scale manually in ggplot:
 model_agreement_pres <- as.factor(model_agreement_pres)
@@ -183,7 +183,7 @@ agreement_future <- ggplot() +
   theme_classic()
 
 agreement_future
-ggsave("outputs/agreement_future.png", plot = agreement_future)
+ggsave("outputs/agreement_future_585.png", plot = agreement_future)
 
 
 
@@ -225,7 +225,7 @@ skeetch_agreement_future <- ggplot() +
 
 skeetch_agreement_future
 
-ggsave("outputs/skeetch_agreement_future.png", plot = skeetch_agreement_future)
+ggsave("outputs/skeetch_agreement_future_585.png", plot = skeetch_agreement_future)
 
 
 
@@ -272,7 +272,7 @@ agreement_facet_plot <- ggplot() +
 
 agreement_facet_plot
 
-ggsave("outputs/agreement_full_extent_faceted.png", agreement_facet_plot, 
+ggsave("outputs/agreement_full_extent_faceted_585.png", agreement_facet_plot, 
        width = 8, height = 4, units = "in")
 
 
@@ -317,5 +317,5 @@ agreement_skeetch_facet_plot <- ggplot() +
 
 agreement_skeetch_facet_plot
 
-ggsave("outputs/agreement_skeetch_faceted.png", agreement_skeetch_facet_plot, 
+ggsave("outputs/agreement_skeetch_faceted_585.png", agreement_skeetch_facet_plot, 
        width = 12, height = 4, units = "in")

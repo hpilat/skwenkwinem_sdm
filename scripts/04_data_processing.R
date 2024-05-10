@@ -32,7 +32,7 @@ na_bound_rast <- rast("data/extents/na_bound_rast.tif")
 # import files (already downloaded in 01_data_download.R)
 # raw files are appended with _na or _global, cropped files are not
 skwenkwinem_vect <- vect("data/processed/skwenkwinem_masked.shp")
-worldclim_future_na <- rast("data/raw/wc2.1_30s_bioc_HadGEM3-GC31-LL_ssp126_2081-2100.tif")
+worldclim_future_na <- rast("data/raw/wc2.1_30s_bioc_HadGEM3-GC31-LL_ssp585_2021-2040.tif")
 anth_biome_na <- rast("data/raw/anthromes_EqArea.tif")
 #climate_zones_na <- vect("data/raw/North_America_Climate_Zones.shp")
 #ecoregions_na <- vect("data/raw/na_terrestrial_ecoregions_v2_level_iii_shapefile/NA_Terrestrial_Ecoregions_v2_Level_III_Shapefile/NA_TerrestrialEcoregions_LIII/data/NA_Terrestrial_Ecoregions_v2_level3.shp")
@@ -178,7 +178,7 @@ names(worldclim_future_masked) <- c("bio01", "bio02", "bio03", "bio04", "bio05",
                                     "bio16", "bio17", "bio18", "bio19")
 
 # write to file for reuse in 05_tidysdm_bioclim_30s
-writeRaster(worldclim_future_masked, filename = "data/processed/worldclim_future_masked.tif", overwrite = TRUE)
+writeRaster(worldclim_future_masked, filename = "data/processed/worldclim_future_585_masked.tif", overwrite = TRUE)
 
 # now that we have a layer with our goal resolution and extent, 
 # can resample our empty raster (created in 03_cropped_extent.R) 

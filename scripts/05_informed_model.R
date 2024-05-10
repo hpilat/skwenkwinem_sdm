@@ -363,7 +363,7 @@ summary(elevation_skeetch)
 
 soil_temp_skeetch <- terra::extract(predictors_multi$soil_temp_0_5, skeetch_vect)
 # divide by 10 to get degrees Celsius:
-soil_temp_skeetch <- soil_temp_skeetch/10
+soil_temp_skeetch <- soil_temp_skeetch/100
 summary(soil_temp_skeetch)
 # remove NAs:
 soil_temp_skeetch <- drop_na(soil_temp_skeetch)
@@ -428,7 +428,6 @@ ggplot(elevation_data, aes(x = elevation, y = pred)) +
   annotate("rect", xmin = min(elevation_skeetch$elevation), 
            xmax = max(elevation_skeetch$elevation), ymin = 0, ymax = 1, 
            alpha = .25, fill = "grey") +
-  geom_vline(xintercept = 1157) + # mean elevation of our study sites
   theme_classic()
 
 ggsave("outputs/elevation_response.png")
@@ -468,8 +467,8 @@ soil_temp_0_5_data <- soil_temp_0_5_data %>%
     pred = predict(skwenkwinem_ensemble, soil_temp_0_5_data)$mean
   )
 
-# convert soil_temp_0_5 to °C:
-soil_temp_0_5_data$soil_temp_0_5 <- soil_temp_0_5_data$soil_temp_0_5/10
+# convert soil_temp_0_5 to °C (values are standard deviation X 100)
+soil_temp_0_5_data$soil_temp_0_5 <- soil_temp_0_5_data$soil_temp_0_5/100
 
 ggplot(soil_temp_0_5_data, aes(x = soil_temp_0_5, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
