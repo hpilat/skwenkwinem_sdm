@@ -35,6 +35,14 @@ bioclim_pres_albers <- terra::project(bioclim_pres, new_crs, method = "near")
 bioclim_fut_albers <- terra::project(bioclim_fut, new_crs, method = "near")
 
 
+# Calculate cell size for the rasters:
+cell_size <- cellSize(informed_albers, unit = "km")/10000
+resampled_rast <- resample(cell_size, informed_albers)
+minmax(cell_size)
+# min = 5.799786e-05
+# max = 5.800600e-05
+# difference of only 0.014033%
+
 # Informed vs Bioclim Present:
 
 
@@ -307,3 +315,4 @@ percent_overlap_suitable_fut <- (area_agreement_future / area_total_suitable_fut
 percent_overlap_suitable_fut
 # 60.42496 SSP 1-2.6
 # 69.18662 SSP 5-8.5
+
