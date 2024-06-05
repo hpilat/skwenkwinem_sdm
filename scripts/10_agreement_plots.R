@@ -35,7 +35,7 @@ na_bound_vect <- terra::project(na_bound_vect, new_crs)
 # Skeetchestn territory boundary vector for masking:
 skeetch_vect <- vect("data/extents/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
 # reproject:
-skeetch_vect <- terra::project(skeetch_vect, "EPSG:4326")
+skeetch_vect <- terra::project(skeetch_vect, new_crs)
 # turn Skeetchestn boundary polygon into lines geometry:
 skeetch_lines <- as.lines(skeetch_vect)
 
@@ -53,7 +53,7 @@ model_agreement_fut <- rast("outputs/agreement_bioclim_fut_pres_585.tif")
 model_agreement_pres <- as.factor(model_agreement_pres)
 model_agreement_fut <- as.factor(model_agreement_fut)
 
-# reproject to WGS84:
+# reproject to new CRS:
 model_agreement_pres <- terra::project(model_agreement_pres, new_crs, method = "near")
 model_agreement_fut <- terra::project(model_agreement_fut, new_crs, method = "near")
 
@@ -250,9 +250,12 @@ names(model_agreement_fut_temp) <- "Bioclim present and future"
 agreement_full_extent <- c(model_agreement_pres_temp, model_agreement_fut_temp)
 levels(agreement_full_extent)
 
+# create a coordinate point for the Skeetchestn community
+
 agreement_facet_plot <- ggplot() +
   geom_spatraster(data = agreement_full_extent) +
   facet_wrap(~lyr, nrow = 1, ncol = 2, labeller = label_wrap_gen(width = 18)) +
+  geom_spatvector(data = skeetch_lines, colour = "black") +
   theme(axis.line = element_line(colour = "black"),
         strip.background = element_blank(),
         panel.border = element_blank(), 

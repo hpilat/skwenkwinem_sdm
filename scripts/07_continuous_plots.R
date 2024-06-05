@@ -43,11 +43,12 @@ na_bound_vect <- vect("data/extents/na_bound_vect.shp") # WGS84
 na_bound_vect <- terra::project(na_bound_vect, new_crs) 
 # sf object masked to study extent, for area calculations
 na_bound_sf <- read_sf("data/extents/na_bound_sf.shp")
+
 # Skeetchestn territory boundary vector for masking:
 skeetch_vect <- vect("data/extents/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
 # reproject:
-skeetch_vect <- terra::project(skeetch_vect, "EPSG:4326")
-# create a lines object so we can outline Skeetchestn Territory
+skeetch_vect <- terra::project(skeetch_vect, new_crs)
+# turn Skeetchestn boundary polygon into lines geometry:
 skeetch_lines <- as.lines(skeetch_vect)
 
 # create an extent object slightly larger than skeetch_vect
@@ -150,6 +151,7 @@ continuous_predictions
 predictions_continuous_plot <- ggplot() +
   geom_spatraster(data = continuous_predictions) +
   facet_wrap(~lyr, nrow = 1, ncol = 3) +
+  geom_spatvector(data = skeetch_lines, colour = "white") +
   theme(axis.line = element_line(colour = "black"),
         strip.background = element_blank(),
         panel.border = element_blank(), 
