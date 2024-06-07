@@ -92,4 +92,4 @@ ensemble_metrics <- ggplot(ensemble_AUC, aes(x = algorithm, y = mean, colour = m
 ensemble_metrics
 
 # save to file
-ggsave("outputs/ensemble_metrics_new.png", plot = ensemble_metrics)
+ggsave("outputs/ensemble_metrics_new.png", plot = ensemble_metrics, height = 6, width = 4)
