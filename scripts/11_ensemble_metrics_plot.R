@@ -79,10 +79,11 @@ ensemble_metrics <- ggplot(ensemble_AUC, aes(x = algorithm, y = mean, colour = m
   geom_point(size = 1) +
   geom_errorbar(aes(ymin = mean - std_err, ymax = mean + std_err), width= 0.15, linewidth = 0.75) +
   geom_hline(yintercept = 0.8, linetype = "dashed") +
+  labs(y = "Mean AUC", x = "Algorithm") +
   theme_classic() +
   scale_x_discrete(labels = c("MaxEnt", "rf")) +
-  scale_y_continuous(limits = c(0,1)) +
-  labs(x = "Algorithm", y = "Mean AUC") +
+  scale_y_continuous(limits = c(0,1), 
+                     expand = c(0,0)) +
   theme(axis.title.x = element_text(vjust = -1.0), 
         axis.title.y = element_text(hjust = -1.0), 
         legend.title = element_blank()) +
@@ -91,4 +92,4 @@ ensemble_metrics <- ggplot(ensemble_AUC, aes(x = algorithm, y = mean, colour = m
 ensemble_metrics
 
 # save to file
-ggsave("outputs/ensemble_metrics_new.png", plot = ensemble_metrics, width = 3, height = 6)
+ggsave("outputs/ensemble_metrics_new.png", plot = ensemble_metrics)
