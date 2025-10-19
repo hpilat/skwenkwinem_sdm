@@ -11,6 +11,7 @@
 library(tidyverse)
 library(sf)
 library(terra)
+library(tidyterra)
 library(ggplot2)
 library(geodata)
 library(here)
