@@ -18,6 +18,17 @@ options(timeout = max(6000, getOption("timeout")))
 # ├── outputs
 # └── _README.md
 
+# Uncomment and run the following if necessary to make the above directory structure:
+#data_dir <- here("data")
+#data_raw <- here("data", "raw")
+#data_extents <- here("data", "extents")
+#data_processed <- here("data", "processed")
+
+#dir.create(data_dir, recursive = TRUE)
+#dir.create(data_raw, recursive = TRUE)
+#dir.create(data_extents, recursive = TRUE)
+#dir.create(data_processed, recursive = TRUE)
+
 # Get session info
 
 sessionInfo()
