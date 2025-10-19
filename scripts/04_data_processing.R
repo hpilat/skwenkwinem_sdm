@@ -1,13 +1,14 @@
 # Author: Hannah Pilat, Jason Pither, David Ensing
 # Date: April 12th, 2024
 
-# This is script 04/07
+# This is script 04/10
 # This script prepares spatial extent, occurrence records, and predictor data
 # for input into the tidysdm pipeline
 # Please first run these scripts in the following order:
 # 01_data_download_ranunculus.R
 # 02_continental_divide.Rmd
-# 03_cropped_extent.R
+# 03a_cropped_extent.R
+# [03b is not necessary to run]
 
 # goal is to have raster files in WGS84, with 0.0083 resolution, 
 # cropped and masked to na_bound_vect
@@ -23,130 +24,77 @@
 library(tidyverse)
 library(sf)
 library(terra)
-
+library(here)
+library(purrr)
 
 # import extent files (created in 03_cropped_extent.R)
-na_bound_vect <- vect("data/extents/na_bound_vect.shp")
-na_bound_rast <- rast("data/extents/na_bound_rast.tif")
+na_bound_vect <- vect(here::here("data", "extents", "na_bound_vect.shp"))
+na_bound_rast <- rast(here::here("data", "extents", "na_bound_rast.tif"))
 
 # import files (already downloaded in 01_data_download.R)
 # raw files are appended with _na or _global, cropped files are not
-skwenkwinem_vect <- vect("data/processed/skwenkwinem_masked.shp")
-worldclim_future_na <- rast("data/raw/wc2.1_30s_bioc_HadGEM3-GC31-LL_ssp585_2021-2040.tif")
-anth_biome_na <- rast("data/raw/anthromes_EqArea.tif")
-#climate_zones_na <- vect("data/raw/North_America_Climate_Zones.shp")
-#ecoregions_na <- vect("data/raw/na_terrestrial_ecoregions_v2_level_iii_shapefile/NA_Terrestrial_Ecoregions_v2_Level_III_Shapefile/NA_TerrestrialEcoregions_LIII/data/NA_Terrestrial_Ecoregions_v2_level3.shp")
-elevation_na <- rast("data/raw/northamerica_elevation_cec_2023.tif")
-lndcvr_na <- rast("data/raw/NA_NALCMS_landcover_2020_30m.tif")
-soil_phh2o_0_5_global <- rast("data/raw/soil_world/phh2o_0-5cm_mean_30s.tif")
-#soil_phh2o_5_15_global <- rast("data/raw/soil_world/phh2o_5-15cm_mean_30s.tif")
-soil_temp_0_5_global <- rast("data/raw/SBIO4_0_5cm_Temperature_Seasonality.tif")
-#soil_temp_5_15_global <- rast("data/raw/SBIO4_5_15cm_Temperature_Seasonality.tif")
-#watersheds_na <- vect("data/raw/watersheds_shapefile/Watersheds_Shapefile/NA_Watersheds/data/watershed_p_v2.shp")
+
+# ** Jason changed skwenkwinem_masked.shp to "skwenkwinem_sf.shp"
+skwenkwinem_vect <- vect(here::here("data", "processed", "skwenkwinem_sf.shp"))
+
+# ** Jason: this TIF file is different from what's referenced in preceding scripts
+# Corrected
+
+worldclim_future_na <- rast(here::here("data", "raw", "wc2.1_30s_bioc_HadGEM3-GC31-LL_ssp585_2081-2100.tif"))
+
+anth_biome_na <- rast(here::here("data", "raw", "anthropogenicbiomes_2008_tif", "anthropogenicbiomes", "data", "anthromes_EqArea.tif"))
+
+#climate_zones_na <- vect(here::here("data", "raw", "North_America_Climate_Zones.shp")
+#ecoregions_na <- vect(here::here("data", "raw", "na_terrestrial_ecoregions_v2_level_iii_shapefile/NA_Terrestrial_Ecoregions_v2_Level_III_Shapefile/NA_TerrestrialEcoregions_LIII/data/NA_Terrestrial_Ecoregions_v2_level3.shp")
+
+elevation_na <- rast(here::here("data", "raw", "Elevation_TIF", "NA_Elevation", "data", "northamerica", "northamerica_elevation_cec_2023.tif"))
+
+lndcvr_na <- rast(here::here("data", "raw", "land_cover_2020v2_30m_tif", "NA_NALCMS_landcover_2020v2_30m", "data", "NA_NALCMS_landcover_2020v2_30m.tif"))
+
+soil_phh2o_0_5_global <- rast(here::here("data", "raw", "phh2o_0-5cm_mean_30s.tif"))
+
+#soil_phh2o_5_15_global <- rast(here::here("data", "raw", "soil_world/phh2o_5-15cm_mean_30s.tif"))
+
+soil_temp_0_5_global <- rast(here::here("data", "raw", "SBIO4_0_5cm_Temperature_Seasonality.tif"))
+
+#soil_temp_5_15_global <- rast(here::here("data", "raw", "SBIO4_5_15cm_Temperature_Seasonality.tif"))
+#watersheds_na <- vect(here::here("data", "raw", "watersheds_shapefile/Watersheds_Shapefile/NA_Watersheds/data/watershed_p_v2.shp"))
 
 
 
 ### Occurrence Data ##
 
-skwenkwinem_vect # WGS84, cropped in 03_cropped_extent.R
+skwenkwinem_vect
+# needs to be WGS84, cropped in 03_cropped_extent.R
+skwenkwinem_vect <- terra::project(skwenkwinem_vect, na_bound_vect)
 # Use na_bound_vect as a mask for ran_occ_vect
 # already in WGS84 so we can mask at this point
 # so observations outside of our study area are set to NA
 skwenkwinem_masked <- mask(skwenkwinem_vect, na_bound_vect)
 
 # write to file, ready for tidysdm so write to processed folder
-writeVector(skwenkwinem_masked, "data/processed/skwenkwinem_masked.shp", overwrite = TRUE)
-
-
+terra::writeVector(skwenkwinem_masked, here::here("data", "processed", "skwenkwinem_masked.shp"), overwrite = TRUE)
 
 ## Predictor Data ##
-
-
 
 ## WorldClim data, for use in Bioclim model:
 # start with WorldClim data to get our desired resolution and dimensions for all
 # other rasters
 
+# Function to import all bioclim layers and crop
+load_and_crop_bioclim <- function(bio_nums = 1:19, boundary_vect, base_path = here("data", "raw", "worldclim_bio")) {
+  map(bio_nums, function(i) {
+    file_path <- file.path(base_path, sprintf("wc2.1_30s_bio_%d.tif", i))
+    cropped_rast <- crop(rast(file_path), boundary_vect)
+    return(cropped_rast)
+  }) |> set_names(sprintf("bio%02d", bio_nums))
+}
 
-# Present Data:
+# run function:
+worldclim_present_bio_list <- load_and_crop_bioclim(boundary_vect = na_bound_vect)
 
-worldclim_present_na_bio01 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_1.tif")
-worldclim_present_bio01 <- crop(worldclim_present_na_bio01, na_bound_vect)
-
-worldclim_present_na_bio02 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_2.tif")
-worldclim_present_bio02 <- crop(worldclim_present_na_bio02, na_bound_vect)
-
-worldclim_present_na_bio03 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_3.tif")
-worldclim_present_bio03 <- crop(worldclim_present_na_bio03, na_bound_vect)
-
-worldclim_present_na_bio04 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_4.tif")
-worldclim_present_bio04 <- crop(worldclim_present_na_bio04, na_bound_vect)
-
-worldclim_present_na_bio05 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_5.tif")
-worldclim_present_bio05 <- crop(worldclim_present_na_bio05, na_bound_vect)
-
-worldclim_present_na_bio06 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_6.tif")
-worldclim_present_bio06 <- crop(worldclim_present_na_bio06, na_bound_vect)
-
-worldclim_present_na_bio07 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_7.tif")
-worldclim_present_bio07 <- crop(worldclim_present_na_bio07, na_bound_vect)
-
-worldclim_present_na_bio08 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_8.tif")
-worldclim_present_bio08 <- crop(worldclim_present_na_bio08, na_bound_vect)
-
-worldclim_present_na_bio09 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_9.tif")
-worldclim_present_bio09 <- crop(worldclim_present_na_bio09, na_bound_vect)
-
-worldclim_present_na_bio10 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_10.tif")
-worldclim_present_bio10 <- crop(worldclim_present_na_bio10, na_bound_vect)
-
-worldclim_present_na_bio11 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_11.tif")
-worldclim_present_bio11 <- crop(worldclim_present_na_bio11, na_bound_vect)
-
-worldclim_present_na_bio12 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_12.tif")
-worldclim_present_bio12 <- crop(worldclim_present_na_bio12, na_bound_vect)
-
-worldclim_present_na_bio13 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_13.tif")
-worldclim_present_bio13 <- crop(worldclim_present_na_bio13, na_bound_vect)
-
-worldclim_present_na_bio14 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_14.tif")
-worldclim_present_bio14 <- crop(worldclim_present_na_bio14, na_bound_vect)
-
-worldclim_present_na_bio15 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_15.tif")
-worldclim_present_bio15 <- crop(worldclim_present_na_bio15, na_bound_vect)
-
-worldclim_present_na_bio16 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_16.tif")
-worldclim_present_bio16 <- crop(worldclim_present_na_bio16, na_bound_vect)
-
-worldclim_present_na_bio17 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_17.tif")
-worldclim_present_bio17 <- crop(worldclim_present_na_bio17, na_bound_vect)
-
-worldclim_present_na_bio18 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_18.tif")
-worldclim_present_bio18 <- crop(worldclim_present_na_bio18, na_bound_vect)
-
-worldclim_present_na_bio19 <- rast("data/raw/wc2.1_30s_bio/wc2.1_30s_bio_19.tif")
-worldclim_present_bio19 <- crop(worldclim_present_na_bio19, na_bound_vect)
-
-# create a multilayer raster
-worldclim_present <- c(worldclim_present_bio01,
-                       worldclim_present_bio02,
-                       worldclim_present_bio03,
-                       worldclim_present_bio04,
-                       worldclim_present_bio05,
-                       worldclim_present_bio06,
-                       worldclim_present_bio07,
-                       worldclim_present_bio08,
-                       worldclim_present_bio09,
-                       worldclim_present_bio10,
-                       worldclim_present_bio11,
-                       worldclim_present_bio12,
-                       worldclim_present_bio13,
-                       worldclim_present_bio14,
-                       worldclim_present_bio15,
-                       worldclim_present_bio16,
-                       worldclim_present_bio17,
-                       worldclim_present_bio18,
-                       worldclim_present_bio19)
+# stack layers
+worldclim_present <- rast(worldclim_present_bio_list)
 
 
 worldclim_present # CRS and resolution match what we need
@@ -161,8 +109,8 @@ names(worldclim_present_masked) <- c("bio01", "bio02", "bio03", "bio04", "bio05"
 worldclim_present_masked
 
 # write to file for reuse in 05_tidysdm_bioclim_30s.R
-writeRaster(worldclim_present_masked, filename = "data/processed/worldclim_present_masked.tif", overwrite = TRUE)
-worldclim_present_masked <- rast("data/processed/worldclim_present_masked.tif")
+writeRaster(worldclim_present_masked, filename = here::here("data", "processed", "worldclim_present_masked.tif"), overwrite = TRUE)
+#worldclim_present_masked <- rast(here::here("data", "processed", "worldclim_present_masked.tif"))
 
 # Future Data:
 
@@ -178,22 +126,20 @@ names(worldclim_future_masked) <- c("bio01", "bio02", "bio03", "bio04", "bio05",
                                     "bio16", "bio17", "bio18", "bio19")
 
 # write to file for reuse in 05_tidysdm_bioclim_30s
-writeRaster(worldclim_future_masked, filename = "data/processed/worldclim_future_585_masked.tif", overwrite = TRUE)
+writeRaster(worldclim_future_masked, filename = here::here("data", "processed", "worldclim_future_585_masked.tif"), overwrite = TRUE)
 
 # now that we have a layer with our goal resolution and extent, 
-# can resample our empty raster (created in 03_cropped_extent.R) 
+# can resample our empty raster (created in 03a_cropped_extent.R) 
 # to have the correct resolution
 na_bound_rast <- resample(na_bound_rast, worldclim_present_masked)
 na_bound_rast
 # write to file
-#writeRaster(na_bound_rast, filename = "data/extents/na_bound_rast.tif", overwrite = TRUE)
+writeRaster(na_bound_rast, filename = here::here("data", "extents", "na_bound_rast.tif"), overwrite = TRUE)
 
 
 # Informed Data (for use in Informed Model)
 
-
 ## Numeric Rasters:
-
 
 ## Soil Temperature
 
@@ -210,15 +156,15 @@ names(soil_temp_0_5) <- "soil_temp_0_5"
 #names(soil_temp_5_15) <- "soil_temp_5_15"
 
 # write processed data to file for faster computation
-writeRaster(soil_temp_0_5, filename = "data/processed/soil_temp_0_5.tif", overwrite = TRUE)
-#writeRaster(soil_temp_5_15, filename = "data/processed/soil_temp_5_15.tif", overwrite = TRUE)
+writeRaster(soil_temp_0_5, filename = here::here("data", "processed", "soil_temp_0_5.tif"), overwrite = TRUE)
+#writeRaster(soil_temp_5_15, filename = here::here("data", "processed", "soil_temp_5_15.tif", overwrite = TRUE)
 
 
 # Soil pH
 
 soil_phh2o_0_5_global
 #soil_phh2o_5_15_global
-# correct CRS and resolution, just need to crop
+# correct WGS84 (** only if downloaded from UCDavis site, NOT Soilgrids)
 
 # crop pH SpatRaster to North American extent
 soil_phh2o_0_5 <- crop(soil_phh2o_0_5_global, na_bound_vect)
@@ -229,8 +175,8 @@ names(soil_phh2o_0_5) <- "soil_phh2o_0_5"
 #names(soil_phh2o_5_15) <- "soil_phh2o_5_15"
 
 # write processed soil pH data to file for faster computation
-writeRaster(soil_phh2o_0_5, filename = "data/processed/soil_phh2o_0_5.tif", overwrite = TRUE)
-#writeRaster(soil_phh2o_5_15, filename = "data/processed/soil_phh2o_5_15.tif", overwrite = TRUE)
+writeRaster(soil_phh2o_0_5, filename = here::here("data", "processed", "soil_phh2o_0_5.tif"), overwrite = TRUE)
+#writeRaster(soil_phh2o_5_15, filename = here::here("data", "processed", "soil_phh2o_5_15.tif", overwrite = TRUE)
 
 
 # Elevation:
@@ -252,11 +198,10 @@ elevation <- crop(elevation_na, na_bound_vect)
 names(elevation) <- "elevation"
 
 # write elevation to file for easier reuse
-writeRaster(elevation, filename = "data/processed/elevation.tif", overwrite = TRUE)
+writeRaster(elevation, filename = here::here("data", "processed", "elevation.tif"), overwrite = TRUE)
 
 
-
-## For each of the remaining layers, we need to (not necesarily in this order):
+## For each of the remaining layers, we need to (not necessarily in this order):
 
 ## 1. Reproject to correct CRS
 ## 2. Crop to study extent
@@ -338,11 +283,29 @@ landcover_cat <- as.factor(landcover)
 coltab(landcover_cat) <- coltab(lndcvr_na_agg)
 
 # get category names for land covers
-# I created a CSV file from the metadata document
-landcover_categories <- read.csv("data/raw/landcover_categories.csv", header = T, strip.white = TRUE)
+# can get these from the "lndcvr_na_agg" object
 
-# note there is no category 4, so remove this row from names.
-levels(landcover_cat) <- landcover_categories[-4,]
+library(dplyr)
+
+# Assuming your dataframes are named:
+# lookup_df = first dataframe (with Value and Class_EN)
+# main_df = second dataframe (with ID and Class_EN to be replaced)
+
+# First, rename the Class_EN column in the second dataframe to avoid confusion
+levels(landcover_cat)[[1]] <- levels(landcover_cat)[[1]] %>%
+  left_join(levels(lndcvr_na_agg)[[1]], by = c("ID" = "Value")) %>%
+  rename(Class_Code = Class_EN.x, Class_EN = Class_EN.y) %>%
+  select(ID, Class_EN)
+
+# To check that categories worked, uncomment this:
+
+# # Define a smaller extent (adjust as needed)
+# small_extent <- ext(-120, -119, 50, 51)
+# # Crop the raster
+# landcover_small <- crop(landcover_cat, small_extent)
+# # Plot the result
+# plot(landcover_small, main = "Subset of Landcover Raster")
+
 
 ## ANTH BIOME
 anth_biome_cat <- as.factor(anth_biome)
@@ -372,36 +335,45 @@ names(anth_biome_cat) <- "anth_biome"
 
 ## WRITE FILES
 
-writeRaster(elevation, filename = "data/processed/elevation.tif", overwrite = TRUE)
+writeRaster(elevation, filename = here::here("data", "processed", "elevation.tif"), overwrite = TRUE)
 
-writeRaster(landcover_cat, filename = "data/processed/landcover_cat.tif", overwrite = TRUE)
+writeRaster(landcover_cat, filename = here::here("data", "processed", "landcover_cat.tif"), overwrite = TRUE)
 
-writeRaster(anth_biome_cat, filename = "data/processed/anth_biome_cat.tif", overwrite = TRUE)
+writeRaster(anth_biome_cat, filename = here::here("data", "processed", "anth_biome_cat.tif"), overwrite = TRUE)
 
-#writeRaster(climate_zones_cat, filename = "data/processed/climate_zones_cat.tif", overwrite = TRUE)
+#writeRaster(climate_zones_cat, filename = here::here("data", "processed", "climate_zones_cat.tif", overwrite = TRUE)
 
-#writeRaster(ecoregions_cat, filename = "data/processed/ecoregions_cat.tif", overwrite = TRUE)
+#writeRaster(ecoregions_cat, filename = here::here("data", "processed", "ecoregions_cat.tif", overwrite = TRUE)
 
-#writeRaster(watersheds_cat, filename = "data/processed/watersheds_cat.tif", overwrite = TRUE)
+#writeRaster(watersheds_cat, filename = here::here("data", "processed", "watersheds_cat.tif", overwrite = TRUE)
 
 
 # now create a multilayer SpatRaster with all the above rasters
 
 predictors_multi <- c(anth_biome_cat, 
-                     # climate_zones_cat, 
-                     # ecoregions_cat, 
+                     #climate_zones_cat, 
+                     #ecoregions_cat, 
                       elevation, 
                       landcover_cat,
                       soil_phh2o_0_5, 
                       #soil_phh2o_5_15, 
                       soil_temp_0_5)#, 
-                      # soil_temp_5_15,  
-                     # watersheds_cat)
+                      #soil_temp_5_15,  
+                      #watersheds_cat)
 
 # mask the multilayer raster so the values outside of na_bound are NA
 predictors_multi <- mask(predictors_multi, na_bound_vect)
 
+
+# First change names of variables in predictors
+
+names(predictors_multi) <- c("anth_biome", "elevation", "landcover", "soil_phh2o_0_5", "soil_temp_0_5")
+
+# convert soil_temp_0_5 to °C (values are standard deviation X 100)
+predictors_multi$soil_temp_0_5 <- predictors_multi$soil_temp_0_5/100
+
+
 # write the multilayer raster to file for reuse
 writeRaster(predictors_multi, 
-            filename = "data/processed/predictors_multi.tif", 
+            filename = here::here("data", "processed", "predictors_multi.tif"), 
             overwrite = TRUE)

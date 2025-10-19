@@ -11,7 +11,7 @@
 # 04_data_processing
 # 05_tidysdm_ranunculus_informed.R
 # 06_tidysdm_ranunculus_bioclim30s.R
-# 08_area_calculations_full_extent.R
+# 08a_area_calculations_full_extent.R
 
 
 library(terra)
@@ -71,8 +71,13 @@ cell_resolution_km <- cell_resolution_m / 1000000 # 1 000 000 m^2 in 1 km^2
 # number of cells in each category:
 cell_counts_informed <- freq(informed_skeetch)
 cell_counts_informed
+# Original:
 # 9682 presence cells
 # 2628 pseudoabsence cells
+
+# October:
+# 9324 presence cells
+# 2986 pseudoabsence cells
 
 # number of cells classified as presence (row 1):
 informed_presence_cells <- cell_counts_informed$count[1]
@@ -81,7 +86,11 @@ informed_presence_cells
 # area of cells classified as presence:
 area_informed <- informed_presence_cells * cell_resolution_km
 area_informed
+# Original:
 # 5615.746 km^2
+
+# October:
+# 5408.099 km^2
 
 # total number of cells (presence and pseudoabsence, not including NAs):
 sum(cell_counts_informed$count)
@@ -101,18 +110,31 @@ bioclim_pres_skeetch
 # number of cells in each category:
 cell_counts_bioclim_pres <- freq(bioclim_pres_skeetch)
 cell_counts_bioclim_pres
+# Original:
 # 8811 presence cells
 # 3585 pseudoabsence cells
+
+# October:
+# 8722 presence cells
+# 3672 pseudoabsence cells
 
 # number of cells classified as presence (row 1):
 bioclim_pres_presence_cells <- cell_counts_bioclim_pres$count[1]
 bioclim_pres_presence_cells
+# Original:
 # 8811 cells
+
+# October:
+# 8722 cells
 
 # area of cells classified as presence:
 area_bioclim_pres <- bioclim_pres_presence_cells * cell_resolution_km
 area_bioclim_pres
-#  5110.549 km^2
+# Original:
+# 5110.549 km^2
+
+# October:
+# 5058.928 km^2
 
 # total number of cells (presence and pseudoabsence, not including NAs):
 sum(cell_counts_bioclim_pres$count)
@@ -131,8 +153,11 @@ sum(cell_counts_bioclim_pres$count) + global(bioclim_pres_skeetch, fun="isNA")
 # row 1, column 4 is difference in presence area in km^2
 diff_informed_bioclim_pres <- area_informed - area_bioclim_pres
 diff_informed_bioclim_pres
-#  505.1967 km^2, informed model predicts more suitable area than bioclim model
+# Original:
+# 505.1967 km^2, informed model predicts more suitable area than bioclim model
 
+# October:
+# 349.1715 km^2, informed model predicts more suitable are than bioclim model
 
 # Area of agreement between informed and bioclim_present models:
 
@@ -156,13 +181,20 @@ sum(cell_counts_informed_bioclim_pres$count)
 # number of cells classified as presence for both models (row 3):
 agreement_present_cells <- cell_counts_informed_bioclim_pres$count[3]
 agreement_present_cells
+# Original:
 # 7226
+
+# October:
+# 6981
 
 # area of cells classified as presence for both models:
 area_agreement_present <- agreement_present_cells * cell_resolution_km
 area_agreement_present
+# Original:
 # 4191.219 km^2
 
+# October:
+# 4049.114 km^2
 
 
 # Bioclim Present vs Future:
@@ -176,21 +208,23 @@ total_cells <- 166 * 108
 cell_counts_bioclim_fut <- freq(bioclim_fut_skeetch)
 cell_counts_bioclim_fut
 # 3561 presence cells SSP 1-2.6
-# 9262 presence cells SSP 5-8.5
+# 4498 presence cells SSP 5-8.5
 # 8835 pseudoabsence cells SSP 1-2.6
-# 3134 pseudoabsence cells SSP 5-8.5
+# 7898 pseudoabsence cells SSP 5-8.5
 
 # number of cells classified as presence (row 1):
 bioclim_fut_presence_cells <- cell_counts_bioclim_fut$count[1]
 bioclim_fut_presence_cells
 # 3561 cells SSP 126
 # 9262 cells SSP 585
+# 4498 cells SSP 585 October
 
 # area of cells classified as presence:
 area_bioclim_fut <- bioclim_fut_presence_cells * cell_resolution_km
 area_bioclim_fut
 # 2065.448 km^2 SSP 126
 # 5372.138 km^2 SSP 585
+# 2608.926 km^2 SSP 585 October
 
 # total number of cells (presence and pseudoabsence, not including NAs):
 sum(cell_counts_bioclim_fut$count)
@@ -208,13 +242,14 @@ sum(cell_counts_bioclim_fut$count) + global(bioclim_fut_skeetch, fun="isNA")
 # calculate difference in number of cells predicted as presence by each model:
 diff_bioclim_pres_fut <- area_bioclim_fut - area_bioclim_pres
 diff_bioclim_pres_fut
+# 261.5886, SSP 126 bioclim future model predicts MORE suitable area than present
 #  -3045.101, SSP 126 bioclim future model predicts less suitable area than bioclim present model
-# 261.5886, SSP 585 bioclim future model predicts MORE suitable area than present
-
+# -2450.001 SSP 585 October
 diff_bioclim_pres_fut <- diff_bioclim_pres_fut * cell_resolution_km
 diff_bioclim_pres_fut
-# -1766.217 km^2 SSP 126
-# 151.7264 km^2 SSP 585
+# 151.7264 km^2 SSP 126
+# -1766.217 km^2 SSP 585
+# -1421.048 km^2 SSP 585 October
 
 
 # Area of agreement between bioclim_present and bioclim_future models:
@@ -244,21 +279,32 @@ agreement_future_cells <- cell_counts_bioclim_fut_pres$count[3]
 agreement_future_cells
 # 3561 cells SSP 126
 # 7464 cells SSP 585
+# 4481 cells SSP 585 October
 
 # area of cells classified as presence for both models (overlap only):
 area_agreement_future <- agreement_future_cells * cell_resolution_km
 area_agreement_future
 # 2065.448 km^2 SSP 126
 # 4329.263 km^2 SSP 585
+# 2599.066 km^2 SSP 585 October
 
 
 # total suitable habitat by informed and bioclim_present models:
 total_suitable_present <- sum(cell_counts_informed_bioclim_pres$count[2:4]) 
 total_suitable_present
+# Original:
 # 11 203 cells
+
+# October:
+# 11 034 cells
+
 area_total_suitable_present <- total_suitable_present * cell_resolution_km
 area_total_suitable_present
+# Original:
 # 6497.955 km^2
+
+# October:
+# 6399.932
 
 
 # total suitable habitat by bioclim present and future models:
@@ -267,16 +313,19 @@ total_suitable_future <- sum(cell_counts_bioclim_fut_pres$count[2:4])
 total_suitable_future
 # 8811 cells SSP 126
 # 10 609 cells SSP 585
+# 8739 cells SSP 585 October
 area_total_suitable_future <- total_suitable_future * cell_resolution_km
 area_total_suitable_future
 # 5110.549 km^2 SSP 126, same as bioclim only calculated above - no additional area predicted by bioclim future
 # 6153.423 km^2 SSP 585
+# 5068.788 km^2 SSP 585 October
 
 # total suitable habitat difference between future and present predictions:
 area_change_pres_fut_suitable <- area_total_suitable_future - area_total_suitable_present
 area_change_pres_fut_suitable
 # -1387.406 km^2 SSP 126
-# -344.5314
+# -344.5314 km^2 SSP 585
+# -1331.144 km^2 SSP 585 October
 
 # total area of Skeetch:
 # used bioclim_fut_pres because the informed model introduces NAs for water bodies
@@ -293,24 +342,37 @@ area_skeetch
 # percent of Skeetch predicted as suitable by informed model:
 percent_skeetch_informed <- (area_informed / area_skeetch) * 100
 percent_skeetch_informed
+# Original:
 # 78.10584
+
+# October:
+# 75.21781
 
 # percent of Skeetch predicted as suitable by bioclim present model:
 percent_skeetch_bioclim_pres <- (area_bioclim_pres / area_skeetch) * 100
 percent_skeetch_bioclim_pres
+# Original:
 # 71.07938
+
+# October:
+# 70.36141
 
 # percent of Skeetch predicted as suitable by overlap between informed
 # and bioclim present models:
 percent_skeetch_overlap_present <- (area_agreement_present / area_skeetch) * 100
 percent_skeetch_overlap_present
+# Original:
 # 58.293
+
+# October:
+# 56.31655
 
 # percent of Skeetch predicted as suitable by bioclim future model:
 percent_skeetch_bioclim_fut <- (area_bioclim_fut / area_skeetch) * 100
 percent_skeetch_bioclim_fut
 # 28.72701 SSP 126
 # 74.71765 SSP 585
+# 36.2859 SSP 585 October
 
 # percent of Skeetch predicted as suitable by overlap between bioclim 
 # present and future models:
@@ -318,27 +380,35 @@ percent_skeetch_overlap_future <- (area_agreement_future / area_skeetch) * 100
 percent_skeetch_overlap_future
 # 28.72701 SSP 126
 # 60.21297 SSP 585
+# 36.14876 SSP 585 October
 
 # percent of Skeetch changed from present to future:
 # ***** NOTE: might axe this and proceeding calculation, unsure if it makes sense*****
 percent_change_pres_fut <- (diff_bioclim_pres_fut / area_skeetch) * 100
 percent_change_pres_fut
-# -24.56519 SSP 126
-# + 2.110267 SSP 585
+# + 2.110267 SSP 126
+# -24.56519 SSP 585
+# -19.76445 SSP 585 October
 
 # percent of total suitable habitat changed from present to future:
 percent_change_suitable_pres_fut <- (area_change_pres_fut_suitable / area_total_suitable_future) * 100
 percent_change_suitable_pres_fut
-# -27.14788 SSP 126
-# -5.59902 SSP 585
+# -5.59902 SSP 126
+# -27.14788 SSP 585
+# -26.26159 SSP 585 October
 
 # overlap as a percent of total suitable habitat predicted by informed and bioclim present:
 percent_overlap_suitable_pres <- (area_agreement_present / area_total_suitable_present) * 100
 percent_overlap_suitable_pres
+# Original:
 # 64.50058 
+
+# October:
+# 63.26808
 
 # overlap as a percent of total suitable habitat predicted by bioclim present and future:
 percent_overlap_suitable_fut <- (area_agreement_future / area_total_suitable_future) * 100
 percent_overlap_suitable_fut
 # 40.41539 SSP 126
 # 70.35536 SSP 585
+# 51.27589 SSP 585 October

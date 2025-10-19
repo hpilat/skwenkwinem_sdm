@@ -1,14 +1,16 @@
 # Author: Hannah Pilat, Jason Pither, David Ensing
 # Date: April 12th, 2024
 
-# This is script 06/07
+# This is script 06/10
 # Following tidysdm tutorial, we input Skwenkwinem (Claytonia lanceolata) occurrence records 
 # and WorldClim predictors at 30 arcsec resolution into the tidysdm pipeline
 # Please first run scripts in the following order: 
 # 01_data_download.R
 # 02_continental_divide.Rmd
 # 03_cropped_extent.R
+# [03b is not necessary to run]
 # 04_data_processing.R
+# 05_informed_model.R
 
 library(tidysdm) # version >= 0.9.3
 library(tidyterra)
@@ -17,31 +19,32 @@ library(terra)
 library(ggplot2)
 library(overlapping)
 library(xgboost)
+library(here)
 
 # North American extent (west coast to continental divide)
 # new geographic extent created in 02_continental_divide.Rmd
 # extent cropped to smaller extent in 03_extent_cropped.R
 # read in extent objects:
 # raster to use as a basemap
-na_bound_rast <- rast("data/extents/na_bound_rast.tif")
+na_bound_rast <- rast(here::here("data", "extents","na_bound_rast.tif"))
 # vector object to use for masking and area calculations
-na_bound_vect <- vect("data/extents/na_bound_vect.shp")
-skeetch_vect <- vect("data/extents/SkeetchestnTT_2020/SkeetchestnTT_2020.shp")
+na_bound_vect <- vect(here::here("data", "extents","na_bound_vect.shp"))
+#skeetch_vect <- vect(here::here("data", "extents","SkeetchestnTT_2020/SkeetchestnTT_2020.shp"))
 # reproject to WGS84
-skeetch_vect <- terra::project(skeetch_vect, "EPSG:4326")
+#skeetch_vect <- terra::project(skeetch_vect, "EPSG:4326")
 
 
 # read in skwenkwinem occurrences:
 # cropped to proper study extent in 04_data_processing.R
-skwenkwinem_vect <- vect("data/processed/skwenkwinem_masked.shp")
+skwenkwinem_vect <- vect(here::here("data", "processed","skwenkwinem_masked.shp"))
 # mask to study area (all occurrences outside bounds set to NA)
 skwenkwinem_vect <- mask(skwenkwinem_vect, na_bound_vect)
 # cast to sf object
 skwenkwinem_sf <- st_as_sf(skwenkwinem_vect)
 
 # read in processed WorldClim rasters
-climate_present <- rast("data/processed/worldclim_present_masked.tif")
-climate_future <- rast("data/processed/worldclim_future_585_masked.tif")
+climate_present <- rast(here::here("data", "processed","worldclim_present_masked.tif"))
+climate_future <- rast(here::here("data", "processed","worldclim_future_585_masked.tif"))
 
 # use tidyterra package for plotting so ggplot can be used with terra rasters
 # aes(fill = layer) refers to column name in na_bound_rast
@@ -59,7 +62,7 @@ ggplot()+
 
 set.seed(1234567)
 thin_cell <- thin_by_cell(skwenkwinem_sf, raster = na_bound_rast)
-nrow(thin_cell) # 2462
+nrow(thin_cell) # 2565
 
 ggplot() +
   geom_spatraster(data = na_bound_rast, aes(fill = layer)) +
@@ -129,7 +132,7 @@ predictors_sample <- terra::spatSample(climate_present, size = 5000,
                                        na.rm = FALSE, as.raster = TRUE,
                                        values = TRUE, cells = FALSE, xy = TRUE)
 
-pairs(predictors_sample)
+#pairs(predictors_sample)
 
 # subset to variables below 0.8 Pearson's correlation coefficient
 # climate_present = SpatRaster with predictor data (all numeric, no NAs)
@@ -199,11 +202,12 @@ skwenkwinem_models <-
 
 # want workflow_set to correctly detect no tuning parameters for GLM
 # inspect performance of models:
-autoplot(skwenkwinem_models)
+#autoplot(skwenkwinem_models)
 model_metrics <- collect_metrics(skwenkwinem_models)
+model_metrics
 
 # write to file
-write.csv(model_metrics, file = "outputs/skwenkwinem_bioclim30s_model_metrics.csv")
+write.csv(model_metrics, file = here::here("outputs", "skwenkwinem_bioclim30s_model_metrics.csv"))
 
 
 
@@ -218,12 +222,13 @@ skwenkwinem_ensemble <- simple_ensemble() %>%
   add_member(skwenkwinem_models, metric = "roc_auc")
 # can also use roc_auc and tss_max as metrics
 skwenkwinem_ensemble
-autoplot(skwenkwinem_ensemble)
+#autoplot(skwenkwinem_ensemble)
 # need to have tidysdm version 0.9.3 or greater for this to work
 skwenkwinem_ensemble_metrics <- collect_metrics(skwenkwinem_ensemble)
+skwenkwinem_ensemble_metrics
 
 # write to file:
-write.csv(skwenkwinem_ensemble_metrics, file = "outputs/skwenkwinem_bioclim30s_ensemble_metrics.csv")
+write.csv(skwenkwinem_ensemble_metrics, file = here::here("outputs", "skwenkwinem_bioclim30s_ensemble_metrics.csv"))
 
 
 
@@ -254,7 +259,7 @@ ggplot() +
 # model gives us probability of occurrence
 
 # write to file
-writeRaster(prediction_present_best, filename = "outputs/skwenkwinem_bioclim30s_predict_present_cont.tif")
+writeRaster(prediction_present_best, filename = here::here("outputs", "skwenkwinem_bioclim30s_predict_present_cont.tif"))
 
 
 # can convert to binary predictions (present vs absence)
@@ -276,7 +281,7 @@ ggplot() +
 # geom_sf(data = pres_abs_pred %>% filter(class == "presence"))
 
 # write to file
-writeRaster(prediction_present_binary, filename = "outputs/skwenkwinem_bioclim30s_predict_present_binary.tif", overwrite = TRUE)
+writeRaster(prediction_present_binary, filename = here::here("outputs", "skwenkwinem_bioclim30s_predict_present_binary.tif"), overwrite = TRUE)
 
 
 
@@ -307,7 +312,7 @@ ggplot() +
   labs(title = "Skwenkwinem Future Prediction", subtitle = "Bioclim Model", xlab = "Longitude", ylab = "Latitude")
 
 # write to file
-writeRaster(prediction_future_best, filename = "outputs/skwenkwinem_bioclim30s_predict_future_cont_585.tif", overwrite = TRUE)
+writeRaster(prediction_future_best, filename = here::here("outputs", "skwenkwinem_bioclim30s_predict_future_cont_585.tif"), overwrite = TRUE)
 
 
 
@@ -333,7 +338,7 @@ prediction_future_binary
 # geom_sf(data = pres_abs_pred %>% filter(class == "presence"))
 
 # write to file
-writeRaster(prediction_future_binary, filename = "outputs/skwenkwinem_bioclim30s_predict_future_binary_585.tif", overwrite = TRUE)
+writeRaster(prediction_future_binary, filename = here::here("outputs", "skwenkwinem_bioclim30s_predict_future_binary_585.tif"), overwrite = TRUE)
 
 
 
@@ -362,7 +367,7 @@ bioclim_var_imp_df <- as.data.frame(vip_ensemble) %>%
   arrange(desc(dropout_loss_mean)) %>% 
   dplyr::filter(variable != "_baseline_" & variable != "_full_model_")
 
-write.csv(bioclim_var_imp, file = "outputs/bioclim_variable_importance.csv")
+write.csv(bioclim_var_imp, file = here::here("outputs", "bioclim_variable_importance.csv"))
 
 # plot variable importance
 bioclim_var_imp_boxplot <- ggplot(bioclim_var_imp, aes(x = reorder(variable, -dropout_loss),
@@ -386,24 +391,24 @@ bioclim_var_imp_boxplot <- ggplot(bioclim_var_imp, aes(x = reorder(variable, -dr
 
 bioclim_var_imp_boxplot
 
-ggsave("outputs/bioclim_var_imp.png", bioclim_var_imp_boxplot)
+ggsave(here::here("outputs", "bioclim_var_imp.png"), bioclim_var_imp_boxplot)
 
 
 
 # Extract Skeetchestn values for the two most important predictors: 
 # Present time:
 # bio13 and bio15
-bio13_skeetch_present <- terra::extract(climate_present$bio13, skeetch_vect)
-summary(bio13_skeetch_present)
+#bio13_skeetch_present <- terra::extract(climate_present$bio13, skeetch_vect)
+#summary(bio13_skeetch_present)
 
-bio15_skeetch_present <- terra::extract(climate_present$bio15, skeetch_vect)
-summary(bio15_skeetch_present)
+#bio15_skeetch_present <- terra::extract(climate_present$bio15, skeetch_vect)
+#summary(bio15_skeetch_present)
 
 # Future:
-bio13_skeetch_future <- terra::extract(climate_future$bio13, skeetch_vect)
-summary(bio13_skeetch_future)
+#bio13_skeetch_future <- terra::extract(climate_future$bio13, skeetch_vect)
+#summary(bio13_skeetch_future)
 
-bio15_skeetch_future <- terra::extract(climate_future$bio15, skeetch_vect)
+#bio15_skeetch_future <- terra::extract(climate_future$bio15, skeetch_vect)
 
 
 
@@ -428,14 +433,14 @@ bio02_data <- bio02_data %>%
     pred = predict(skwenkwinem_ensemble, bio02_data)$mean
   )
 
-ggplot(bio02_data, aes(x = bio02, y = pred)) +
+bio02_response <- ggplot(bio02_data, aes(x = bio02, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Mean diurnal range (°C)") +
   scale_y_continuous(name = "Relative habitat suitability", 
                      limits = c(0,1)) +
   theme_classic()
 
-ggsave("outputs/bio02_response.png")
+ggsave(here::here("outputs", "bio02_response.png"), bio02_response)
 
 
 # investigate the contribution of bio07:
@@ -450,14 +455,14 @@ bio03_data <- bio03_data %>%
     pred = predict(skwenkwinem_ensemble, bio03_data)$mean
   )
 
-ggplot(bio03_data, aes(x = bio03, y = pred)) +
+bio03_response <- ggplot(bio03_data, aes(x = bio03, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Isothermality (%)") +
   scale_y_continuous(name = "Relative habitat suitability", 
                      limits = c(0,1)) +
   theme_classic()
 
-ggsave("outputs/bio03_response.png")
+ggsave(here::here("outputs", "bio03_response.png"), bio03_response)
 
 
 # investigate the contribution of bio05:
@@ -472,14 +477,14 @@ bio07_data <- bio07_data %>%
     pred = predict(skwenkwinem_ensemble, bio07_data)$mean
   )
 
-ggplot(bio07_data, aes(x = bio07, y = pred)) +
+bio07_response <- ggplot(bio07_data, aes(x = bio07, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Temperature annual range (°C)") +
   scale_y_continuous(name = "Relative habitat suitability", 
                      limits = c(0,1)) +
   theme_classic()
 
-ggsave("outputs/bio07_response.png")
+ggsave(here::here("outputs", "bio07_response.png"), bio07_response)
 
 
 # investigate the contribution of bio08:
@@ -494,14 +499,14 @@ bio08_data <- bio08_data %>%
     pred = predict(skwenkwinem_ensemble, bio08_data)$mean
   )
 
-ggplot(bio08_data, aes(x = bio08, y = pred)) +
+bio08_response <- ggplot(bio08_data, aes(x = bio08, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Mean temperature wettest quarter (°C)") +
   scale_y_continuous(name = "Relative habitat suitability", 
                      limits = c(0,1)) +
   theme_classic()
 
-ggsave("outputs/bio08_response.png")
+ggsave(here::here("outputs", "bio08_response.png"), bio08_response)
 
 
 # investigate the contribution of bio09:
@@ -516,14 +521,14 @@ bio09_data <- bio09_data %>%
     pred = predict(skwenkwinem_ensemble, bio09_data)$mean
   )
 
-ggplot(bio09_data, aes(x = bio09, y = pred)) +
+bio09_response <- ggplot(bio09_data, aes(x = bio09, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Mean temperature driest quarter (°C)") +
   scale_y_continuous(name = "Relative habitat suitability", 
                      limits = c(0,1)) +
   theme_classic()
 
-ggsave("outputs/bio09_response.png")
+ggsave(here::here("outputs", "bio09_response.png"), bio09_response)
 
 
 # investigate the contribution of bio13:
@@ -538,13 +543,13 @@ bio13_data <- bio13_data %>%
     pred = predict(skwenkwinem_ensemble, bio13_data)$mean
   )
 
-ggplot(bio13_data, aes(x = bio13, y = pred)) +
-  annotate("rect", xmin = min(bio13_skeetch_future$bio13), 
-           xmax = max(bio13_skeetch_future$bio13), ymin = 0, ymax = 1, 
-           alpha = .7, fill = "lightgrey") +
-  annotate("rect", xmin = min(bio13_skeetch_present$bio13), 
-           xmax = max(bio13_skeetch_present$bio13), ymin = 0, ymax = 1, 
-           alpha = .4, fill = "grey50") +
+bio13_response_585 <- ggplot(bio13_data, aes(x = bio13, y = pred)) +
+  #annotate("rect", xmin = min(bio13_skeetch_future$bio13), 
+           #xmax = max(bio13_skeetch_future$bio13), ymin = 0, ymax = 1, 
+           #alpha = .7, fill = "lightgrey") +
+  #annotate("rect", xmin = min(bio13_skeetch_present$bio13), 
+           #xmax = max(bio13_skeetch_present$bio13), ymin = 0, ymax = 1, 
+           #alpha = .4, fill = "grey50") +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Precipitation wettest month (mm)", 
                      breaks = c(0, 100, 200, 300, 400, 500)) +
@@ -553,7 +558,7 @@ ggplot(bio13_data, aes(x = bio13, y = pred)) +
                      expand = c(0, 0)) +
   theme_classic()
 
-ggsave("outputs/bio13_response_585.png")
+ggsave(here::here("outputs", "bio13_response_585.png"), bio13_response_585)
 
 
 # investigate the contribution of bio15:
@@ -568,13 +573,13 @@ bio15_data <- bio15_data %>%
     pred = predict(skwenkwinem_ensemble, bio15_data)$mean
   )
 
-ggplot(bio15_data, aes(x = bio15, y = pred)) +
-  annotate("rect", xmin = min(bio15_skeetch_future$bio15), 
-           xmax = max(bio15_skeetch_future$bio15), ymin = 0, ymax = 1, 
-           alpha = .7, fill = "lightgrey") +
-  annotate("rect", xmin = min(bio15_skeetch_present$bio15), 
-           xmax = max(bio15_skeetch_present$bio15), ymin = 0, ymax = 1, 
-           alpha = .15, fill = "grey50") +
+bio15_response_585 <- ggplot(bio15_data, aes(x = bio15, y = pred)) +
+  #annotate("rect", xmin = min(bio15_skeetch_future$bio15), 
+           #xmax = max(bio15_skeetch_future$bio15), ymin = 0, ymax = 1, 
+           #alpha = .7, fill = "lightgrey") +
+  #annotate("rect", xmin = min(bio15_skeetch_present$bio15), 
+           #xmax = max(bio15_skeetch_present$bio15), ymin = 0, ymax = 1, 
+           #alpha = .15, fill = "grey50") +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Precipitation seasonality (%)") +
   scale_y_continuous(name = "Relative habitat suitability", 
@@ -582,7 +587,7 @@ ggplot(bio15_data, aes(x = bio15, y = pred)) +
                      expand = c(0, 0)) +
   theme_classic()
 
-ggsave("outputs/bio15_response_585.png")
+ggsave(here::here("outputs", "bio15_response_585.png"), bio15_response_585)
 
 
 # investigate the contribution of bio18:
@@ -598,11 +603,11 @@ bio18_data <- bio18_data %>%
   )
 
 
-ggplot(bio18_data, aes(x = bio18, y = pred)) +
+bio18_response <- ggplot(bio18_data, aes(x = bio18, y = pred)) +
   geom_point(alpha = 0.25, cex = 4) +
   scale_x_continuous(name = "Precipitation warmest quarter (mm)") +
   scale_y_continuous(name = "Relative habitat suitability", 
                      limits = c(0,1)) +
   theme_classic()
 
-ggsave("outputs/bio18_response.png")
+ggsave(here::here("outputs", "bio18_response.png"), bio18_response)
