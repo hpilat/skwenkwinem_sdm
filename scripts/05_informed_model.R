@@ -361,8 +361,8 @@ ggsave(here::here("outputs", "informed_var_imp.png"), informed_var_imp_boxplot)
 
 # Extract Skeetchestn values for the two most important predictors: 
   # elevation and soil temperature
-elevation_skeetch <- terra::extract(predictors_multi$elevation, skeetch_vect)
-summary(elevation_skeetch)
+#elevation_skeetch <- terra::extract(predictors_multi$elevation, skeetch_vect)
+#summary(elevation_skeetch)
 
 #soil_temp_skeetch <- terra::extract(predictors_multi$soil_temp_0_5, skeetch_vect)
 #summary(soil_temp_skeetch)
