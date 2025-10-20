@@ -23,11 +23,13 @@ options(timeout = max(6000, getOption("timeout")))
 #data_raw <- here("data", "raw")
 #data_extents <- here("data", "extents")
 #data_processed <- here("data", "processed")
+#data_outputs <- here("data", "outputs")
 
 #dir.create(data_dir, recursive = TRUE)
 #dir.create(data_raw, recursive = TRUE)
 #dir.create(data_extents, recursive = TRUE)
 #dir.create(data_processed, recursive = TRUE)
+#dir.create(data_outputs, recursive = TRUE)
 
 # Get session info
 
