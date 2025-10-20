@@ -259,7 +259,7 @@ ggplot() +
 # model gives us probability of occurrence
 
 # write to file
-writeRaster(prediction_present_best, filename = here::here("outputs", "skwenkwinem_bioclim30s_predict_present_cont.tif"))
+writeRaster(prediction_present_best, filename = here::here("outputs", "skwenkwinem_bioclim30s_predict_present_cont.tif"), overwrite = TRUE)
 
 
 # can convert to binary predictions (present vs absence)
