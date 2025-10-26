@@ -56,8 +56,8 @@ na_bound_sf <- read_sf("data/extents/na_bound_sf.shp")
 
 # create a dataframe containing a coordinate for the Skeetchestn band office
 # 50.83951982786047, -120.95445365748702
-#skeetch_coord <- data.frame(lat = 50.83951982786047, lon = -120.95445365748702)
-#skeetch_coord_vect <- terra::vect(skeetch_coord, crs = "EPSG:4326")
+skeetch_coord <- data.frame(lat = 50.83951982786047, lon = -120.95445365748702)
+skeetch_coord_vect <- terra::vect(skeetch_coord, crs = "EPSG:4326")
 
 # crop continuous rasters to na_bound_vect
 informed_present_continuous <- terra::crop(informed_present_continuous, na_bound_vect)
@@ -72,7 +72,7 @@ bioclim30s_future_continuous <- terra::crop(bioclim30s_future_continuous, na_bou
 # Informed Model:
 informed_full_extent_cont <- ggplot() +
   geom_spatraster(data = informed_present_continuous, aes(fill = mean)) +
-  #geom_spatvector(data = skeetch_coord_vect, color = "white", size = 1.75, shape = 17) +
+  geom_spatvector(data = skeetch_coord_vect, color = "white", size = 1.75, shape = 17) +
   scale_fill_viridis_c(name = "Relative \nhabitat\nsuitability", na.value = "transparent", limits = c(0, 1.0)) +
   guides(fill = guide_colorbar(ticks.colour = NA)) +
   theme(legend.title = element_text(vjust = + 2.5)) +
@@ -93,7 +93,7 @@ ggsave("outputs/informed_full_extent_cont.png", plot = informed_full_extent_cont
 # Bioclim30s Present Model:
 bioclim_pres_full_extent_cont <- ggplot() +
   geom_spatraster(data = bioclim30s_present_continuous, aes(fill = mean)) +
-  #geom_spatvector(data = skeetch_coord_vect, color = "white", size = 1.75, shape = 17) +
+  geom_spatvector(data = skeetch_coord_vect, color = "white", size = 1.75, shape = 17) +
   scale_fill_viridis_c(name = "Relative \nhabitat\nsuitability", na.value = "transparent", limits = c(0, 1.0)) +
   guides(fill = guide_colorbar(ticks.colour = NA)) +
   theme(legend.title = element_text(vjust = + 2.5)) +
@@ -114,7 +114,7 @@ ggsave("outputs/bioclim_pres_full_extent_cont.png", plot = bioclim_pres_full_ext
 # Bioclim30s Future Model:
 bioclim_fut_full_extent_cont <- ggplot() +
   geom_spatraster(data = bioclim30s_future_continuous, aes(fill = mean)) +
-  #geom_spatvector(data = skeetch_coord_vect, color = "white", size = 1.75, shape = 17) +
+  geom_spatvector(data = skeetch_coord_vect, color = "white", size = 1.75, shape = 17) +
   scale_fill_viridis_c(name = "Relative \nhabitat\nsuitability", na.value = "transparent", limits = c(0, 1.0)) +
   guides(fill = guide_colorbar(ticks.colour = NA)) +
   theme(legend.title = element_text(vjust = + 2.5)) +
@@ -155,7 +155,7 @@ continuous_predictions
 
 predictions_continuous_plot <- ggplot() +
   geom_spatraster(data = continuous_predictions) +
-  #geom_spatvector(data = skeetch_coord_vect, color = "white", size = 1.75, shape = 17) +
+  geom_spatvector(data = skeetch_coord_vect, color = "white", size = 1.75, shape = 17) +
   facet_wrap(~lyr, nrow = 1, ncol = 3) +
   theme(axis.line = element_line(colour = "black"),
         strip.background = element_blank(),
