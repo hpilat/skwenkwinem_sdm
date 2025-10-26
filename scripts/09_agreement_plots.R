@@ -43,7 +43,10 @@ na_bound_vect <- terra::project(na_bound_vect, new_crs)
 #skeetch_vect # round up extent values:
 #skeetch_extent <- ext(-121.6, -120.1, 50.3, 51.6)
 
-
+# create a dataframe containing a coordinate for the Skeetchestn band office
+# 50.83951982786047, -120.95445365748702
+skeetch_coord <- data.frame(lat = 50.83951982786047, lon = -120.95445365748702)
+skeetch_coord_vect <- terra::vect(skeetch_coord, crs = "EPSG:4326")
 
 # Read in agreement maps for total study extent:
 model_agreement_pres <- rast("outputs/agreement_informed_bioclim.tif")
@@ -84,6 +87,7 @@ plot(model_agreement_presNA)
 
 agreement_present <- ggplot() +
   geom_spatraster(data = model_agreement_presNA, aes(fill = lyr.1)) +
+  geom_spatvector(data = skeetch_coord_vect, color = "white", size = 1.75, shape = 17) +
   scale_fill_manual(name = NULL, na.translate = FALSE,
                     labels = c("bioclim present", "overlap", "informed present", "pseudoabsence"), 
                     values = c("#FDE725", "#95D054", "#2A7B8EFF", "grey")) +
@@ -168,6 +172,7 @@ plot(model_agreement_futNA)
 
 agreement_future <- ggplot() +
   geom_spatraster(data = model_agreement_futNA, aes(fill = lyr.1)) +
+  geom_spatvector(data = skeetch_coord_vect, color = "white", size = 1.75, shape = 17) +
   scale_fill_manual(name = NULL, na.translate = FALSE,
                     labels = c("bioclim present", "overlap", "bioclim future", "pseudoabsence"), 
                     values = c("#FDE725", "#F8870E", "#C73E4C", "grey")) +
@@ -183,6 +188,7 @@ agreement_future <- ggplot() +
   theme_classic()
 
 agreement_future
+
 ggsave("outputs/agreement_future_585.png", plot = agreement_future)
 
 
@@ -254,6 +260,7 @@ levels(agreement_full_extent)
 
 agreement_facet_plot <- ggplot() +
   geom_spatraster(data = agreement_full_extent) +
+  geom_spatvector(data = skeetch_coord_vect, color = "white", size = 1.75, shape = 17) +
   facet_wrap(~lyr, nrow = 1, ncol = 2, labeller = label_wrap_gen(width = 18)) +
   #geom_spatvector(data = skeetch_lines, colour = "black") +
   theme(axis.line = element_line(colour = "black"),
@@ -262,7 +269,7 @@ agreement_facet_plot <- ggplot() +
         strip.text = element_text(size = 10)) +
   scale_fill_manual(name = NULL, na.translate = FALSE,
                     labels = c("Bioclim present", "Informed & Bioclim present", "Informed present", "Unsuitable", "Bioclim present & future", "Bioclim future"), 
-                    values = c("#FDE725", "#95D054","#2A7B8EFF", "grey", "#F8870E", "#C73E4C")) +
+                    values = c("#FDE725", "#95D054","#2A7B8EFF", "#C73E4C", "#F8870E", "grey")) +
   scale_x_continuous(name = "Longitude (°W)", 
                      labels = c("135", "130", "125", "120", "115", "110", "105"),
                      expand = c(0,0)) +
