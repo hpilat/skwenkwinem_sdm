@@ -73,15 +73,15 @@ model_agreement_fut
 # Plotting:
 
 
-# Informed and Bioclim Present:
+# Informed and WorldClim Present:
 summary(model_agreement_pres)
 # want to set 0 from lyr.1 to NA so they can be ignored in ggplot:
 model_agreement_presNA <- terra::subst(model_agreement_pres, from = 0, to = NA)
 summary(model_agreement_presNA)
 plot(model_agreement_presNA)
 # 0 = NA
-# 1 = bioclim prediction of presence
-# 2 = both bioclim and informed prediction of presence
+# 1 = WorldClim prediction of presence
+# 2 = both WorldClim and informed prediction of presence
 # 3 = informed prediction of presence
 # 4 = pseudoabsence
 
@@ -89,7 +89,7 @@ agreement_present <- ggplot() +
   geom_spatraster(data = model_agreement_presNA, aes(fill = lyr.1)) +
   geom_spatvector(data = skeetch_coord_vect, color = "white", size = 1.75, shape = 17) +
   scale_fill_manual(name = NULL, na.translate = FALSE,
-                    labels = c("bioclim present", "overlap", "informed present", "pseudoabsence"), 
+                    labels = c("WorldClim present", "Overlap", "Informed present", "Pseudoabsence"), 
                     values = c("#FDE725", "#95D054", "#2A7B8EFF", "grey")) +
   scale_x_continuous(name = "Longitude (°W)", 
                      labels = c("135", "130", "125", "120", "115", "110", "105"),
@@ -98,7 +98,7 @@ agreement_present <- ggplot() +
                      labels = c("30", "35", "40", "45", "50", "55", "60"), 
                      expand = c(0, 0)) +
   labs(title = "Area of Agreement", 
-       subtitle = "Informed and Bioclim30s Models (Present)") +
+       subtitle = "Informed and WorldClim Models (Present)") +
   theme_classic()
 
 agreement_present
@@ -125,8 +125,8 @@ ggsave("outputs/agreement_present.png", plot = agreement_present)
 #agreement_present_skeetch
 # 0 = pseudoabsence
 # 1 = informed prediction of presence
-# 2 = bioclim30s prediction of presence
-# 3 = agreement between both informed and bioclim30s predicted presence
+# 2 = WorldClim30s prediction of presence
+# 3 = agreement between both informed and WorldClim30s predicted presence
 
 
 #skeetch_agreement_present <- ggplot() +
@@ -134,7 +134,7 @@ ggsave("outputs/agreement_present.png", plot = agreement_present)
   #geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white", show.legend = FALSE) +
   #theme_classic() +
   #scale_fill_manual(name = NULL, na.translate = FALSE,
-                    #labels = c("bioclim present", "overlap", "informed present", "pseudoabsence"), 
+                    #labels = c("WorldClim present", "overlap", "informed present", "pseudoabsence"), 
                     #values = c("#FDE725", "#95D054", "#2A7B8EFF", "grey")) +
   #scale_x_continuous(name = "Longitude (°W)",
                      #labels = c("121.6", "121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"),
@@ -144,7 +144,7 @@ ggsave("outputs/agreement_present.png", plot = agreement_present)
                      #labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4", "51.6"), 
                      #expand = c(0, 0)) +
   #labs(title = "Area of Agreement", 
-       #subtitle = "Informed and Bioclim30s Models (Present)")
+       #subtitle = "Informed and WorldClim Models (Present)")
 
 #skeetch_agreement_present
 
@@ -152,7 +152,7 @@ ggsave("outputs/agreement_present.png", plot = agreement_present)
 
 
 
-# Bioclim30s Future:
+# WorldClim Future:
 
 # Plotting:
 
@@ -164,17 +164,17 @@ model_agreement_futNA <- terra::subst(model_agreement_fut, from = 0, to = NA)
 summary(model_agreement_futNA)
 plot(model_agreement_futNA)
 
-# 1 = bioclim present prediction
+# 1 = WorldClim present prediction
 # 2 = pseudoabsence
-# 3 = agreement between both bioclim present and future predictions
-# 4 = bioclim future prediction
+# 3 = agreement between both WorldClim present and future predictions
+# 4 = WorldClim future prediction
 
 
 agreement_future <- ggplot() +
   geom_spatraster(data = model_agreement_futNA, aes(fill = lyr.1)) +
   geom_spatvector(data = skeetch_coord_vect, color = "white", size = 1.75, shape = 17) +
   scale_fill_manual(name = NULL, na.translate = FALSE,
-                    labels = c("bioclim present", "overlap", "bioclim future", "pseudoabsence"), 
+                    labels = c("WorldClim present", "Overlap", "WorldClim future", "Pseudoabsence"), 
                     values = c("#FDE725", "#F8870E", "#C73E4C", "grey")) +
   scale_x_continuous(name = "Longitude (°W)", 
                      labels = c("135", "130", "125", "120", "115", "110", "105"), 
@@ -184,7 +184,7 @@ agreement_future <- ggplot() +
                      labels = c("35", "40", "45", "50", "55"), 
                      expand = c(0, 0)) +
   labs(title = "Area of Agreement", 
-       subtitle = "Bioclim30s Present and Future Models") + 
+       subtitle = "WorldClim Present and Future Models") + 
   theme_classic()
 
 agreement_future
@@ -207,8 +207,8 @@ ggsave("outputs/agreement_future_585.png", plot = agreement_future)
 #plot(agreement_future_skeetch)
 
 # 0 = pseudoabsence
-# 2 = bioclim30s present prediction of presence
-# 4 = bioclim30s future prediction of presence
+# 2 = WorldClim30s present prediction of presence
+# 4 = WorldClim30s future prediction of presence
 # 6 = agreement between both bioclim30s present and future predicted presence
 
 #skeetch_agreement_future <- ggplot() +
@@ -216,7 +216,7 @@ ggsave("outputs/agreement_future_585.png", plot = agreement_future)
   #geom_spatvector(data = skeetch_lines, aes(fill = NULL), colour = "white", show.legend = FALSE) +
   #theme_classic() +
   #scale_fill_manual(name = NULL, na.translate = FALSE,
-                    #labels = c("bioclim present", "overlap", "bioclim future", "pseudoabsence"), 
+                    #labels = c("WorldClim present", "overlap", "WorldClim future", "pseudoabsence"), 
                     #values = c("#FDE725", "#F8870E", "#C73E4C", "grey")) +
   #scale_x_continuous(name = "Longitude (°W)",
                     #labels = c("121.6", "121.4", "121.2", "121.0", "120.8", "120.6", "120.4", "120.2"),
@@ -226,7 +226,7 @@ ggsave("outputs/agreement_future_585.png", plot = agreement_future)
                     #labels = c("50.4", "50.6", "50.8", "51.0", "51.2", "51.4", "51.6"), 
                     #expand = c(0, 0)) +
   #labs(title = "Area of Agreement", 
-       #subtitle = "Bioclim30s Present and Future Models")
+       #subtitle = "WorldClim30s Present and Future Models")
   
 
 #skeetch_agreement_future
@@ -249,27 +249,24 @@ model_agreement_pres_temp <- model_agreement_presNA
 model_agreement_fut_temp <- model_agreement_futNA
 
 # change the names of our rasters:
-names(model_agreement_pres_temp) <- "Informed and Bioclim present"
-names(model_agreement_fut_temp) <- "Bioclim present and future"
+names(model_agreement_pres_temp) <- "Informed and WorldClim present"
+names(model_agreement_fut_temp) <- "WorldClim present and future"
 
 # create a multilayer raster object:
 agreement_full_extent <- c(model_agreement_pres_temp, model_agreement_fut_temp)
 levels(agreement_full_extent)
 
-# add a coordinate point for the Skeetchestn community
-
 agreement_facet_plot <- ggplot() +
   geom_spatraster(data = agreement_full_extent) +
   geom_spatvector(data = skeetch_coord_vect, color = "white", size = 1.75, shape = 17) +
   facet_wrap(~lyr, nrow = 1, ncol = 2, labeller = label_wrap_gen(width = 18)) +
-  #geom_spatvector(data = skeetch_lines, colour = "black") +
   theme(axis.line = element_line(colour = "black"),
         strip.background = element_blank(),
         panel.border = element_blank(), 
         strip.text = element_text(size = 10)) +
   scale_fill_manual(name = NULL, na.translate = FALSE,
-                    labels = c("Bioclim present", "Informed & Bioclim present", "Informed present", "Unsuitable", "Bioclim present & future", "Bioclim future"), 
-                    values = c("#FDE725", "#95D054","#2A7B8EFF", "#C73E4C", "#F8870E", "grey")) +
+                    labels = c("Bioclim present", "Informed & Bioclim present", "Informed present", "Bioclim present & future", "Bioclim future", "Unsuitable"), 
+                    values = c("#FDE725", "#95D054","#2A7B8EFF", "#F8870E", "#C73E4C", "grey")) +
   scale_x_continuous(name = "Longitude (°W)", 
                      labels = c("135", "130", "125", "120", "115", "110", "105"),
                      expand = c(0,0)) +
@@ -297,8 +294,8 @@ ggsave("outputs/agreement_full_extent_faceted_585.png", agreement_facet_plot,
 #agreement_fut_skeetch_temp <- agreement_future_skeetch
 
 # change the names of our rasters:
-#names(agreement_skeetch_temp) <- "Informed and Bioclim present"
-#names(agreement_fut_skeetch_temp) <- "Bioclim present and future"
+#names(agreement_skeetch_temp) <- "Informed and WorldClim present"
+#names(agreement_fut_skeetch_temp) <- "WorldClim present and future"
 
 # create a multilayer raster object:
 #agreement_skeetch <- c(agreement_skeetch_temp, agreement_fut_skeetch_temp)
@@ -312,7 +309,7 @@ ggsave("outputs/agreement_full_extent_faceted_585.png", agreement_facet_plot,
         #strip.background = element_blank(),
         #panel.border = element_blank()) +
   #scale_fill_manual(name = NULL, na.translate = FALSE,
-                    #labels = c("Bioclim present", "Informed & Bioclim present", "Informed present", "Unsuitable", "Bioclim present & future", "Bioclim future"), 
+                    #labels = c("WorldClim present", "Informed & WorldClim present", "Informed present", "Unsuitable", "WorldClim present & future", "WorldClim future"), 
                     #values = c("#FDE725", "#95D054","#2A7B8EFF", "grey", "#F8870E", "#C73E4C")) +
   #scale_x_continuous(name = "Longitude (°W)", 
                      # breaks = c(120.2, 120.4, 120.6, 120.8, 121.0, 121.2, 121.4),
