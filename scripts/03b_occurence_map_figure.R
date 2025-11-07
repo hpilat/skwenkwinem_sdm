@@ -64,11 +64,16 @@ skwenkwinem_vect <- terra::project(skwenkwinem_vect, new_crs)
 skwenkwinem_vect <- crop(skwenkwinem_vect, na_bound_vect)
 # plot(skwenkwinem_vect)
 
+# create a dataframe containing a coordinate for the Skeetchestn band office
+# 50.83951982786047, -120.95445365748702
+skeetch_coord <- data.frame(lat = 50.83951982786047, lon = -120.95445365748702)
+skeetch_coord_vect <- terra::vect(skeetch_coord, crs = "EPSG:4326")
 
 north_america_plot <- ggplot() +
   tidyterra::geom_spatvector(data = north_america, aes(fill = NULL), show.legend = FALSE) +
   tidyterra::geom_spatvector(data = na_bound_vect, aes(alpha = 0.5), fill = "lightgreen", show.legend = FALSE) +
   tidyterra::geom_spatvector(data = skwenkwinem_vect, alpha = 0.25, cex = 0.75) +
+  geom_spatvector(data = skeetch_coord_vect, color = "white", size = 1.75, shape = 17) +
   theme_classic() +
   scale_x_continuous(name = "Longitude (°W)",
                      expand = c(0,0)) +
