@@ -298,6 +298,9 @@ prediction_present_binary <- predict_raster(skwenkwinem_ensemble,
                                             class_thresh = c("tss_max") 
 )
 
+# get TSS max values:
+attributes(skwenkwinem_ensemble)
+
 ggplot() +
   geom_spatraster(data = prediction_present_binary, aes(fill = binary_mean)) +
   # geom_sf(data= pres_abs_pred %>% filter(class == "presence")) +
