@@ -1,18 +1,17 @@
 # Author: Hannah Pilat, Jason Pither, David Ensing
 # Date: April 12th, 2024
 
-# This is script 08/10
+# This is script 09/12
+
 # This script calculates area predicted to be suitable for skwenkwinem
 # over our full study extent
 # please first run the following scripts in the following order:
 # 01_data_download.R
-# 02_continental_divide.Rmd
-# 03a_cropped_extent.R
-# [03b is not necessary to run]
-# 04_data_processing
-# 05_tidysdm_ranunculus_informed.R
-# 06_tidysdm_ranunculus_bioclim30s.R
-# [07_continuous_plots.R] not required
+# 02_continental_divide.R
+# 03_cropped_extent.R
+# 05_data_processing
+# 06_informed_model.R
+# 07_bioclim30s_model.R
 
 library(terra)
 library(dplyr)

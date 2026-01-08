@@ -1,16 +1,16 @@
 # Author: Hannah Pilat, Jason Pither, David Ensing
 # Date: April 12th, 2024
 
-# This is script 06/10
+# This is script 07/12
+
 # Following tidysdm tutorial, we input Skwenkwinem (Claytonia lanceolata) occurrence records 
 # and WorldClim predictors at 30 arcsec resolution into the tidysdm pipeline
 # Please first run scripts in the following order: 
 # 01_data_download.R
-# 02_continental_divide.Rmd
+# 02_continental_divide.R
 # 03_cropped_extent.R
-# [03b is not necessary to run]
-# 04_data_processing.R
-# 05_informed_model.R
+# 05_data_processing.R
+# 06_informed_model.R
 
 library(tidysdm) # version >= 0.9.3
 library(tidyterra)

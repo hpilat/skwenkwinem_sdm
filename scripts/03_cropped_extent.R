@@ -1,7 +1,8 @@
 # Author: Hannah Pilat, Jason Pither, David Ensing
 # Date: April 12th, 2024
 
-# This is script 03/10
+# This is script 03/12
+
 # This script prepares our spatial extent for input into the tidysdm pipeline
 # it also creates north america layers for creating manuscript figure (map)
 # Please first run these scripts in the following order:

@@ -1,14 +1,14 @@
 # Author: Hannah Pilat, Jason Pither, David Ensing
 # Date: April 12th, 2024
 
-# This is script 04/10
+# This is script 05/12
+
 # This script prepares spatial extent, occurrence records, and predictor data
 # for input into the tidysdm pipeline
 # Please first run these scripts in the following order:
 # 01_data_download_ranunculus.R
-# 02_continental_divide.Rmd
-# 03a_cropped_extent.R
-# [03b is not necessary to run]
+# 02_continental_divide.R
+# 03_cropped_extent.R
 
 # goal is to have raster files in WGS84, with 0.0083 resolution, 
 # cropped and masked to na_bound_vect

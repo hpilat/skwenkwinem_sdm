@@ -1,17 +1,19 @@
 # Author: Hannah Pilat, Jason Pither, David Ensing
 # Date: April 12th, 2024
 
-# This is script 09/11
+# This is script 10/12
+# NOTE: this script will not run because the Skeetchestn extent file is not publicly available
+
 # This script calculates area predicted to be suitable for skwenkwinem
   # over Skeetchestn Territory
 # please first run the following scripts in the following order:
 # 01_data_download.R
-# 02_continental_divide.Rmd
+# 02_continental_divide.R
 # 03_cropped_extent.R
-# 04_data_processing
-# 05_tidysdm_ranunculus_informed.R
-# 06_tidysdm_ranunculus_bioclim30s.R
-# 08a_area_calculations_full_extent.R
+# 05_data_processing
+# 06_informed_model.R
+# 07_bioclim30s_model.R
+# 09_area_calculations_full_extent.R
 
 
 library(terra)

@@ -1,17 +1,17 @@
 # Author: Hannah Pilat, Jason Pither, David Ensing
 # Date: April 12th, 2024
 
-# This is script 05/10
+# This is script 06/12
+
 # Following tidysdm tutorial, we input skwenkwinem (Claytonia lanceolata) 
   # occurrence records and informed predictors into the tidysdm pipeline
 # note: Skeetchestn-specific code has been annotated out, indicated with 
   # a # with no space following
 # Please first run scripts in the following order: 
 # 01_data_download.R
-# 02_continental_divide.Rmd
-# 03a_cropped_extent.R
-# [03b is not necessary to run]
-# 04_data_processing.R
+# 02_continental_divide.R
+# 03_cropped_extent.R
+# 05_data_processing.R
 
 library(tidysdm) # version >= 0.9.3
 library(tidyterra)

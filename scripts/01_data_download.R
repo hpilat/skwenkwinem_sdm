@@ -2,6 +2,8 @@
 # Date: April 12th, 2024
 # Updated by Jason Pither May 21, 2025
 
+# This is script 01/12
+
 # This script downloads the occurrence and predictor data required to run tidysdm
 
 # increase file download timeout options for downloading large files

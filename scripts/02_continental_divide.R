@@ -2,7 +2,10 @@
 # Date: April 12th, 2024
 # Updated by Jason Pither May 21, 2025
 
-# This is script 03/10
+# This is script 02/12
+
+# Please first run:
+# 01_data_download.R
 
 # This script aims to create a geospatial vector dataset that provides the 
 # boundary for the continental divide of North America, buffered by 200km to 

@@ -1,16 +1,17 @@
 # Author: Hannah Pilat, Jason Pither, David Ensing
 # Date: April 12th, 2024
 
-# This is script 07/10
+# This is script 08/12
+
 # This script plots our ensemble metrics from both models together
   # and our continuous habitat suitability predictions
 # please first run the following scripts in the following order:
 # 01_data_download.R
-# 02_continental_divide.Rmd
+# 02_continental_divide.R
 # 03_cropped_extent.R
-# 04_data_processing
-# 05_tidysdm_ranunculus_informed.R
-# 06_tidysdm_ranunculus_bioclim30s.R
+# 05_data_processing
+# 06_informed_model.R
+# 07_bioclim30s_model.R
 
 
 library(tidyverse)

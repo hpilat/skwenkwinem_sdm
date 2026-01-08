@@ -2,13 +2,13 @@
 # Date: April 12th, 2024
 # Updated by Jason Pither on May 21, 2025
 
-# This is script 03b/10
+# This is script 04/12
 
 # This script produces the Map figure 
 # Please first run these scripts in the following order:
 # 01_data_download.R
 # 02_continental_divide.R
-# 03a_cropped_extent.R
+# 03_cropped_extent.R
 
 library(here)
 library(terra)
