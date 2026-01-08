@@ -3,7 +3,6 @@ This repository hosts scripts for running tidysdm with skwenkwínem
 (Claytonia lanceolata) occurrence records in a species distribution model. 
 
 Please run scripts 01 through 10 to reproduce the study published at https://doi.org/10.1002/ece3.72615.
-The remaining scripts are not relevant to reproducing the study as they are not final. 
 
 This study's pre-registration is located at: https://osf.io/rm9s2/overview 
 
