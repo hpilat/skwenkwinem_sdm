@@ -245,7 +245,7 @@ write.csv(skwenkwinem_ensemble_metrics, file = here::here("outputs", "skwenkwine
 
 # subset the model to only use the best models, based on AUC
 # set threshold of 0.8 for AUC
-# take the median of the available model predictions (mean is the default)
+# take the mean of the available model predictions (mean is the default)
 prediction_present_best <- predict_raster(skwenkwinem_ensemble, 
                                           climate_present_uncorr, 
                                           metric_thresh = c("roc_auc", 0.8), 
